@@ -160,7 +160,7 @@ public class OnlineUpdate {
     	Cursor spCursor = CursorBuilder.createCursor(spTable);
     	Map<String, Object> spRow = null;
         Map<String, Object> spRowPattern = new HashMap<String, Object>();
-    	boolean newSpRow = true;
+    	boolean needNewSpRow = true;
     	spRowPattern.put("hsec", hsec);
     	spRowPattern.put("dt", date);
     	double oldPrice = 0;
@@ -174,11 +174,11 @@ public class OnlineUpdate {
                		spRow = spCursor.getCurrentRow();
                		oldPrice = (double) spRow.get("dPrice");
                		oldDate = (Date) spRow.get("dt");
-               		newSpRow = false;
+               		needNewSpRow = false;
                		break;
         	}
     	}
-       	if (newSpRow) {
+       	if (needNewSpRow) {
     		// No matching SP row found - build new row
     		spRow = buildNewSpRow(spCursor, hsec, date);
     		oldDate = (Date) spRow.get("dt");
@@ -189,7 +189,7 @@ public class OnlineUpdate {
     		spRow.put("src", 6);
        	}
 
-       	logger.info("Found previous quote for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice + ", hsp = " + spRow.get("hsp"));
+       	logger.info("Found previous quote for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice);
        	
        	// Set price factor
        	double priceFactor = 1;
@@ -236,20 +236,26 @@ public class OnlineUpdate {
         // Update HSEC and SP tables
         secCursor.updateCurrentRow(secRow.values().toArray());
        	
-        if (newSpRow) {
+        if (needNewSpRow) {
         	spTable.addRowFromMap(spRow);
         	//spTable.addRow(spRow.values().toArray());
-        	logger.info("Added new quote for symbol " + symbol + ": " + date + ", new price = " + dPrice + ", hsp = " + spRow.get("hsp"));
+        	logger.info("Added new quote for symbol " + symbol + ": " + date + ", new price = " + dPrice + ", new hsp = " + spRow.get("hsp"));
         } else {
         	spCursor.updateCurrentRowFromMap(spRow);
         	//spCursor.updateCurrentRow(spRow.values().toArray());
-            logger.info("Updated previous quote for symbol " + symbol + ": " + date + ", new price = " + dPrice);
+            logger.info("Updated previous quote for symbol " + symbol + ": " + date + ", new price = " + dPrice + ", hsp = " + spRow.get("hsp"));
     	}        
         
         // Done
         return true;
     }
     
+    /** 
+     * Build a new SP table row.
+     * 
+     * Returns a row containing the previous price and date and the next hsp (index).
+     * 
+     */
     private Map<String, Object> buildNewSpRow(Cursor cursor, int hsec, Date date) throws IOException {
     	Map<String, Object> row = null;
     	Map<String, Object> newRow = null;
