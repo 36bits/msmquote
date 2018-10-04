@@ -3,7 +3,8 @@ package uk.co.pueblo.msmquote;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -86,7 +87,7 @@ public class OnlineUpdate {
 				} else {
 					exitFlag = updateSpRow(openDb, result);
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// Something unexpected has gone wrong so get the stack trace
 				e.printStackTrace();
 				exitCode = errorExit;
@@ -142,19 +143,13 @@ public class OnlineUpdate {
     		return false;
 	   	}
 
-    	logger.info("Found symbol " + symbol + ", hsec = " + hsec);
+    	logger.info("Found symbol " + symbol + ", sct = " + secRow.get("sct") + ", hsec = " + hsec);
     	
     	// Get quote date from JSON and set time to zero
-    	// TODO migrate to java.time
-    	Date date = new Date(quote.get("regularMarketTime").asLong() * 1000);
-	    Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        date = cal.getTime();
-        
+    	// NB Jackcess still uses Date objects
+    	Instant quoteInstant = Instant.ofEpochSecond(quote.get("regularMarketTime").asLong()).truncatedTo(ChronoUnit.DAYS);
+    	Date quoteDate = Date.from(quoteInstant);
+    	
     	// Find matching symbol and quote date in SP table
     	Table spTable = db.getTable("SP");
     	Cursor spCursor = CursorBuilder.createCursor(spTable);
@@ -162,7 +157,7 @@ public class OnlineUpdate {
         Map<String, Object> spRowPattern = new HashMap<String, Object>();
     	boolean needNewSpRow = true;
     	spRowPattern.put("hsec", hsec);
-    	spRowPattern.put("dt", date);
+    	spRowPattern.put("dt", quoteDate);
     	double oldPrice = 0;
     	Date oldDate = null;
     	// src: manual update = 5, online update = 6
@@ -180,12 +175,12 @@ public class OnlineUpdate {
     	}
        	if (needNewSpRow) {
     		// No matching SP row found - build new row
-    		spRow = buildNewSpRow(spCursor, hsec, date);
+    		spRow = buildNewSpRow(spCursor, hsec, quoteDate);
     		oldDate = (Date) spRow.get("dt");
     		oldPrice = (double) spRow.get("dPrice");
     		// Index autonumber test:
     		// spRow.put("hsp", null);
-    		spRow.put("dt", date);
+    		spRow.put("dt", quoteDate);
     		spRow.put("src", 6);
        	}
 
@@ -212,7 +207,7 @@ public class OnlineUpdate {
         spRow.put("dChange", quote.get("regularMarketChange").asDouble() * priceFactor);
         
         // HSEC fields common to EQUITY, BOND and INDEX quote types
-        secRow.put("dtLastUpdate", date);
+        secRow.put("dtLastUpdate", quoteDate);
         secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
         secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
         secRow.put("dBid", quote.get("bid").asDouble() * priceFactor);
@@ -234,16 +229,16 @@ public class OnlineUpdate {
         }
         
         // Update HSEC and SP tables
-        secCursor.updateCurrentRow(secRow.values().toArray());
+        secCursor.updateCurrentRowFromMap(secRow);
        	
         if (needNewSpRow) {
         	spTable.addRowFromMap(spRow);
         	//spTable.addRow(spRow.values().toArray());
-        	logger.info("Added new quote for symbol " + symbol + ": " + date + ", new price = " + dPrice + ", new hsp = " + spRow.get("hsp"));
+        	logger.info("Added new quote for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", new hsp = " + spRow.get("hsp"));
         } else {
         	spCursor.updateCurrentRowFromMap(spRow);
         	//spCursor.updateCurrentRow(spRow.values().toArray());
-            logger.info("Updated previous quote for symbol " + symbol + ": " + date + ", new price = " + dPrice + ", hsp = " + spRow.get("hsp"));
+            logger.info("Updated previous quote for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", hsp = " + spRow.get("hsp"));
     	}        
         
         // Done
@@ -262,7 +257,7 @@ public class OnlineUpdate {
     	int rowHsp = 0;
     	int maxHsp = 0;
     	Date rowDate = new Date(0);
-       	Date maxDate = new Date(0);
+    	Date maxDate = new Date(0);
        	cursor.beforeFirst();
     	while (true) {
     		row = cursor.getNextRow();
