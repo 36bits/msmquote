@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
@@ -145,10 +147,12 @@ public class OnlineUpdate {
 
     	logger.info("Found symbol " + symbol + ", sct = " + secRow.get("sct") + ", hsec = " + hsec);
     	
-    	// Get quote date from JSON and set time to zero
-    	// NB Jackcess still uses Date objects
+    	// Get quote date and adjust for local system time-zone offset
+    	// Note: Jackcess still uses Date objects
     	Instant quoteInstant = Instant.ofEpochSecond(quote.get("regularMarketTime").asLong()).truncatedTo(ChronoUnit.DAYS);
-    	Date quoteDate = Date.from(quoteInstant);
+    	ZoneOffset quoteZoneOffset = ZoneId.systemDefault().getRules().getOffset(quoteInstant);
+    	int offsetSeconds = quoteZoneOffset.getTotalSeconds();
+    	Date quoteDate = Date.from(quoteInstant.minusSeconds(offsetSeconds));
     	
     	// Find matching symbol and quote date in SP table
     	Table spTable = db.getTable("SP");
