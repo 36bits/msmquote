@@ -111,7 +111,7 @@ public class OnlineUpdate {
 
 	private JsonNode getQuotesJson(String quoteUrl) {
     	JsonNode quotesJson = null;
-    	// Using try-with-resources to get AutoClose
+    	// Using try-with-resources to get AutoClose of InputStream
     	try (InputStream quoteResp = new URL(quoteUrl).openStream();) {
 			ObjectMapper mapper = new ObjectMapper();
 			quotesJson = mapper.readTree(quoteResp);
@@ -149,10 +149,10 @@ public class OnlineUpdate {
     	
     	// Get quote date and adjust for local system time-zone offset
     	// Note: Jackcess still uses Date objects
-    	Instant quoteInstant = Instant.ofEpochSecond(quote.get("regularMarketTime").asLong()).truncatedTo(ChronoUnit.DAYS);
+    	Instant quoteInstant = Instant.ofEpochSecond(quote.get("regularMarketTime").asLong());
     	ZoneOffset quoteZoneOffset = ZoneId.systemDefault().getRules().getOffset(quoteInstant);
     	int offsetSeconds = quoteZoneOffset.getTotalSeconds();
-    	Date quoteDate = Date.from(quoteInstant.minusSeconds(offsetSeconds));
+    	Date quoteDate = Date.from(quoteInstant.truncatedTo(ChronoUnit.DAYS).minusSeconds(offsetSeconds));
     	
     	// Find matching symbol and quote date in SP table
     	Table spTable = db.getTable("SP");
@@ -202,7 +202,11 @@ public class OnlineUpdate {
         // Build HSEC and SP rows from JSON values
         double dPrice = quote.get("regularMarketPrice").asDouble() * priceFactor;
         
+        // dtSerial is assumed to be record creation/update time-stamp
+        Date dateSerial = new Date();
+        
         // SP fields common to EQUITY, BOND and INDEX quote types
+        spRow.put("dtSerial", dateSerial);
         spRow.put("dPrice", dPrice);
         spRow.put("dOpen", quote.get("regularMarketOpen").asDouble() * priceFactor);
         spRow.put("dHigh", quote.get("regularMarketDayHigh").asDouble() * priceFactor);
@@ -211,6 +215,7 @@ public class OnlineUpdate {
         spRow.put("dChange", quote.get("regularMarketChange").asDouble() * priceFactor);
         
         // HSEC fields common to EQUITY, BOND and INDEX quote types
+        secRow.put("dtSerial", dateSerial);
         secRow.put("dtLastUpdate", quoteDate);
         secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
         secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
