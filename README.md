@@ -29,6 +29,7 @@ The following exit codes are returned by **msmquote**:
 
 ## Tested Environments
 **msmquote** has been tested with the following MS Money versions and operating systems:
+* MS Money 2005 (14.0), UK version, on MS Windows 10.
 * MS Money 2004 (12.0), UK version, on MS Windows 10.
 
 ## Prerequisites
