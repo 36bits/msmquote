@@ -1,7 +1,7 @@
 # msmquote
 **msmquote** is a Java application for updating Microsoft Money files with quote data and currency exchange rates retrieved from Yahoo's JSON quote API.
 ## Getting Started
-Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine from and run as follows:
+Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine and run as follows:
 
 `java -cp msmquote-1.0.0-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password "https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X`"
 
