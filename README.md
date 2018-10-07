@@ -3,7 +3,7 @@
 ## Getting Started
 Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine and run as follows:
 
-`java -cp msmquote-1.0.0-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password "https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X`"
+`java -cp msmquote-1.0.0-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password "https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X"`
 
 Where _moneyfile.mny_ is the MS Money file you wish to update and _password_ is the file password if applicable; omit the password if the file is not password protected. Replace the symbols after the _symbols=_ statement with those for the quotes you want to update. The symbols must match those defined in your Money file.
 
