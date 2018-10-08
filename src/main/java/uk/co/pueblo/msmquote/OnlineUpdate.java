@@ -32,6 +32,8 @@ public class OnlineUpdate {
     private static final Logger logger = Logger.getLogger(OnlineUpdate.class);
     
     public static void main(String[] args) {
+    	
+    	double startTime = Instant.now().toEpochMilli();
 		
 		// Get arguments
     	String password = null;
@@ -50,6 +52,10 @@ public class OnlineUpdate {
     	int exitCode = 0; 
 	    OnlineUpdate doUpdate = new OnlineUpdate();
         exitCode = (doUpdate.update(args[0], password, url));
+        
+        double elapsedTime = (Instant.now().toEpochMilli() - startTime) / 1000;
+        logger.info("Elapsed time: " + elapsedTime + " s");
+        
        	System.exit(exitCode);
    }
 	
@@ -106,6 +112,7 @@ public class OnlineUpdate {
 	    	logger.error(e);
 	    	return errorExit;
 	    }
+	    	    
 	return exitCode;
 	}
 
