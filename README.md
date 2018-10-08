@@ -3,18 +3,14 @@
 ## Getting Started
 Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine and run as follows:
 
-`java -cp msmquote-1.0.0-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password "https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X"`
+`java -cp msmquote-1.0.0-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password quoteurl`
 
-Where _moneyfile.mny_ is the MS Money file you wish to update and _password_ is the file password if applicable; omit the password if the file is not password protected. Replace the symbols after the _symbols=_ statement with those for the quotes you want to update. The symbols must match those defined in your Money file.
+Where:
+* **moneyfile.mny** is the MS Money file you wish to update
+* **password** is the file password if applicable (omit this if the file is not password protected)
+* **quoteurl** is the URL for the Yahoo Finance quote API, for example to retrieve quotes for Walmart Inc., Tesco PLC, Carrefour SA, the FTSE-100 index and the Pound Sterling/Euro exchange rate you would use: `"https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X"`
 
-Symbol examples:
-* Walmart Inc.: WMT
-* Tesco PLC: TSCO.L  
-* Carrefour SA: CA.PA
-* FTSE-100 Index: ^FTSE
-* Pound Sterling/Euro exchange rate: GBPEUR=X
-
-It should be possible to include any symbol in the symbol list for which a quote is available on [Yahoo Finance](https://finance.yahoo.com/).
+Replace the symbols after the _symbols=_ statement in the quote URL with those for the quotes you want to update. It should be possible to include any symbol in the symbol list for which a quote is available on [Yahoo Finance](https://finance.yahoo.com/). The symbols must match those defined in your Money file.
 
 The following exit codes are returned by **msmquote**:
 
