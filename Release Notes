@@ -1,0 +1,9 @@
+Version 1.0.1-beta
+
+* Add edge case handling of SP table updates: no HSEC in SP table for quote; previous quote is a buy.
+* Add handling for quote type MUTUALFUND.
+* Add summary log messages.
+
+Version 1.0.0-beta
+
+* First release.

@@ -24,9 +24,6 @@ import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.InvalidCredentialsException;
 
 
-import uk.co.pueblo.msmquote.MnyDb;
-
-
 
 public class OnlineUpdate {
     private static final Logger logger = Logger.getLogger(OnlineUpdate.class);
@@ -195,7 +192,12 @@ public class OnlineUpdate {
     		spRow.put("src", 6);
        	}
 
-       	logger.info("Found previous quote for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice);
+       	if (oldPrice == -1) {
+       		logger.info("Cannot find previous quote for symbol " + symbol);
+       	}
+       	else {
+       		logger.info("Found previous quote for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice);
+       	}
        	
        	// Set price factor
        	double priceFactor = 1;
@@ -206,28 +208,34 @@ public class OnlineUpdate {
         	} 
         }
     	
-        // Build HSEC and SP rows from JSON values
+        // Build SEC and SP rows from JSON values
         double dPrice = quote.get("regularMarketPrice").asDouble() * priceFactor;
         
         // dtSerial is assumed to be record creation/update time-stamp
         Date dateSerial = new Date();
         
-        // SP fields common to EQUITY, BOND and INDEX quote types
+        // SP fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
         spRow.put("dtSerial", dateSerial);
-        spRow.put("dPrice", dPrice);
-        spRow.put("dOpen", quote.get("regularMarketOpen").asDouble() * priceFactor);
-        spRow.put("dHigh", quote.get("regularMarketDayHigh").asDouble() * priceFactor);
-        spRow.put("dLow", quote.get("regularMarketDayLow").asDouble() * priceFactor);
-        spRow.put("vol", quote.get("regularMarketVolume").asLong());
-        spRow.put("dChange", quote.get("regularMarketChange").asDouble() * priceFactor);
-        
-        // HSEC fields common to EQUITY, BOND and INDEX quote types
-        secRow.put("dtSerial", dateSerial);
+	    spRow.put("dPrice", dPrice);
+	    spRow.put("dChange", quote.get("regularMarketChange").asDouble() * priceFactor);
+		
+	    // SEC fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
+	    secRow.put("dtSerial", dateSerial);
         secRow.put("dtLastUpdate", quoteDate);
-        secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
-        secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
-        secRow.put("dBid", quote.get("bid").asDouble() * priceFactor);
-        secRow.put("dAsk", quote.get("ask").asDouble() * priceFactor);
+	    	    
+        // Fields common to EQUITY, BOND and INDEX quote types
+	    if (quoteType.equals("EQUITY") || quoteType.equals("BOND") || quoteType.equals("INDEX")) {
+		    // SP fields
+	    	spRow.put("dOpen", quote.get("regularMarketOpen").asDouble() * priceFactor);
+		    spRow.put("dHigh", quote.get("regularMarketDayHigh").asDouble() * priceFactor);
+		    spRow.put("dLow", quote.get("regularMarketDayLow").asDouble() * priceFactor);
+		    spRow.put("vol", quote.get("regularMarketVolume").asLong());
+		    // SEC fields
+	        secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
+	        secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
+	        secRow.put("dBid", quote.get("bid").asDouble() * priceFactor);
+	        secRow.put("dAsk", quote.get("ask").asDouble() * priceFactor);
+	    }
         
         // EQUITY only fields
         // TODO add EPS and beta
@@ -244,7 +252,7 @@ public class OnlineUpdate {
         	}
         }
         
-        // Update HSEC and SP tables
+        // Update SEC and SP tables
         secCursor.updateCurrentRowFromMap(secRow);
        	
         if (needNewSpRow) {
@@ -267,13 +275,19 @@ public class OnlineUpdate {
      * Returns a row containing the previous price and date and the next hsp (index).
      * 
      */
-    private Map<String, Object> buildNewSpRow(Cursor cursor, int hsec, Date date) throws IOException {
+    private Map<String, Object> buildNewSpRow(Cursor cursor, int hsec, Date quoteDate) throws IOException {
     	Map<String, Object> row = null;
-    	Map<String, Object> newRow = null;
+    	Map<String, Object> newRow = new HashMap<String, Object>();
     	int rowHsp = 0;
     	int maxHsp = 0;
     	Date rowDate = new Date(0);
     	Date maxDate = new Date(0);
+    	
+    	// Build minimal new row
+    	newRow.put("hsec", hsec);
+    	newRow.put("dPrice", (double) -1);
+    	    	
+    	// Find highest hsp and any previous quotes
        	cursor.beforeFirst();
     	while (true) {
     		row = cursor.getNextRow();
@@ -284,19 +298,25 @@ public class OnlineUpdate {
     		if (rowHsp > maxHsp) {
     			maxHsp = rowHsp;
     		}
-    		// src: manual update = 5, online update = 6
-			int src = (int) row.get("src"); 
-			if ((int) row.get("hsec") == hsec && (src == 5 || src == 6)) {
-		        rowDate = (Date) row.get("dt");
-		        if (rowDate.before(date) && rowDate.after(maxDate)) {
+    		// src: buy = 1, manual update = 5, online update = 6
+			int src = (int) row.get("src");
+			rowDate = (Date) row.get("dt");
+			if (((int) row.get("hsec") == hsec) && rowDate.after(maxDate)) {
+				// Test for previous manual or online quote
+				if ((src == 5 || src == 6) && rowDate.before(quoteDate)) {
 		        	maxDate = rowDate;
 		        	newRow = row;
-		        }
+			    }
+				// Test for previous buy
+		        if (src == 1 && (rowDate.before(quoteDate) || rowDate.equals(quoteDate))) {
+	        		maxDate = rowDate;
+		        	newRow = row;
+	        	}
 	        }
-		     
     	}
-    	newRow.put("hsp", maxHsp + 1);
-		return newRow;
+			
+    newRow.put("hsp", maxHsp + 1);
+	return newRow;
     }
 	
     private boolean updateFxRow(Database db, JsonNode quote) throws IOException {
