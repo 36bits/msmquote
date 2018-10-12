@@ -2,11 +2,11 @@
 
 ## New Features
 
-
 ## Enhancements
 * Update 52-week high/low data for mutual funds.
 
-## Fixed Issues
+## Bug Fixes
+* Fix dividend yield calculation for non-GBP quotes.
 
 ## Known Issues
 * None.
@@ -16,7 +16,7 @@
 ## New Features
 * Add elapsed time log message.
 
-## Fixed Issues
+## Bug Fixes
 * Fix edge case handling of SP table updates, eg. no HSEC in SP table for quote; previous quote is a buy.
 * Fix handling for quote type MUTUALFUND.
 

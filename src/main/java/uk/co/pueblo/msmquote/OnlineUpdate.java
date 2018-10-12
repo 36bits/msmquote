@@ -24,7 +24,6 @@ import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.InvalidCredentialsException;
 
 
-
 public class OnlineUpdate {
     private static final Logger logger = Logger.getLogger(OnlineUpdate.class);
     
@@ -201,10 +200,12 @@ public class OnlineUpdate {
        	
        	// Set price factor
        	double priceFactor = 1;
+       	int yieldFactor = 100;
                 
         if (quoteType.equals("EQUITY") || quoteType.equals("BOND")) {
         	if (quote.get("currency").asText().toUpperCase().equals("GBP")) {
         		priceFactor = 0.01;
+        		yieldFactor = 10000;
         	} 
         }
     	
@@ -222,6 +223,8 @@ public class OnlineUpdate {
 	    // SEC fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
 	    secRow.put("dtSerial", dateSerial);
         secRow.put("dtLastUpdate", quoteDate);
+        secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
+        secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
 	    	    
         // Fields common to EQUITY, BOND and INDEX quote types
 	    if (quoteType.equals("EQUITY") || quoteType.equals("BOND") || quoteType.equals("INDEX")) {
@@ -231,8 +234,6 @@ public class OnlineUpdate {
 		    spRow.put("dLow", quote.get("regularMarketDayLow").asDouble() * priceFactor);
 		    spRow.put("vol", quote.get("regularMarketVolume").asLong());
 		    // SEC fields
-	        secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
-	        secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
 	        secRow.put("dBid", quote.get("bid").asDouble() * priceFactor);
 	        secRow.put("dAsk", quote.get("ask").asDouble() * priceFactor);
 	    }
@@ -246,7 +247,7 @@ public class OnlineUpdate {
             	spRow.put("dPE", quote.get("trailingPE").asDouble());
            }
             if (quote.has("trailingAnnualDividendYield")) {
-            	secRow.put("dDividendYield", quote.get("trailingAnnualDividendYield").asDouble() * 10000);
+            	secRow.put("dDividendYield", quote.get("trailingAnnualDividendYield").asDouble() * yieldFactor);
             } else {
         		secRow.put("dDividendYield", 0);
         	}
