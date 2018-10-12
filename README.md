@@ -20,7 +20,8 @@ The following exit codes are returned by **msmquote**:
 
 ## Currently Updated Quote Data
 * **Equities:** price, open, high, low, volume, day change, 52 week high, 52 week low, bid, ask, capitalisation, shares outstanding, PE, dividend yield.
-* **Bonds, funds and indices:** price, open, high, low, volume, day change, 52 week high, 52 week low, bid, ask.
+* **Bonds and indices:** price, open, high, low, volume, day change, 52 week high, 52 week low, bid, ask.
+* **Mutual funds:** price, day change.
 * **Currencies:** exchange rate.
 
 ## Tested Environments

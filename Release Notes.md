@@ -1,0 +1,14 @@
+# Version 1.0.1-beta
+
+## New Features
+* Add elapsed time log message.
+
+## Fixed Issues
+* Fix edge case handling of SP table updates, eg. no HSEC in SP table for quote; previous quote is a buy.
+* Fix handling for quote type MUTUALFUND.
+
+## Known Issues
+* None.
+
+# Version 1.0.0-beta
+* First release.
