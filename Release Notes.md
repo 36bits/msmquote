@@ -7,7 +7,6 @@
 * Update 52-week high/low data for mutual funds.
 
 ## Fixed Issues
-* Correct dividend yield calculation for non-GBP quotes.
 
 ## Known Issues
 * None.
