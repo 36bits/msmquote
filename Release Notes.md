@@ -1,3 +1,16 @@
+# Version 1.0.2-beta
+
+## New Features
+
+
+## Enhancements
+* Update 52-week high/low data for mutual funds.
+
+## Fixed Issues
+
+## Known Issues
+* None.
+
 # Version 1.0.1-beta
 
 ## New Features
