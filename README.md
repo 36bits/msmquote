@@ -26,8 +26,20 @@ The following exit codes are returned by **msmquote**:
 
 ## Tested Environments
 **msmquote** has been tested with the following MS Money versions and operating systems:
-* MS Money 2005 (14.0), UK version, on MS Windows 10.
-* MS Money 2004 (12.0), UK version, on MS Windows 10.
+* MS Money 2005 (14.0), UK version, on MS Windows 10
+* MS Money 2004 (12.0), UK version, on MS Windows 10
+
+The following quote types have been tested:
+* UK equities and bonds
+* US equities and mutual funds
+* Global market indices
+* GBP exchange rates
+
+Maximum tables sizes in the Money files used for testing:
+* Security (SEC): 236 rows
+* Security price (SP): 106,000 rows
+* Currency (CRNC): 69 rows
+* Exchange rate (CRNC_EXCHG): 79 rows
 
 ## Prerequisites
 This project requires a Java runtime environment (JRE) of version 8 or later.
