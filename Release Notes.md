@@ -1,4 +1,4 @@
-# Version 1.0.2-beta
+# Version 1.0.2-SNAPSHOT
 
 ## New Features
 
