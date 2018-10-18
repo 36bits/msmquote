@@ -128,6 +128,11 @@ public class OnlineUpdate {
             	
         String quoteType = quote.get("quoteType").asText();
         String symbol = quote.get("symbol").asText();
+        
+        // Handle maximum Money symbol length of 12 characters
+    	if (symbol.length() > 12) {
+    		symbol = symbol.substring(0, 12);
+    	}
                 
     	// Find matching symbol in SEC table
         Map<String, Object> secRow = null;
@@ -156,7 +161,7 @@ public class OnlineUpdate {
     	ZoneOffset quoteZoneOffset = ZoneId.systemDefault().getRules().getOffset(quoteInstant);
     	int offsetSeconds = quoteZoneOffset.getTotalSeconds();
     	Date quoteDate = Date.from(quoteInstant.truncatedTo(ChronoUnit.DAYS).minusSeconds(offsetSeconds));
-    	
+    	    	
     	// Find matching symbol and quote date in SP table
     	Table spTable = db.getTable("SP");
     	Cursor spCursor = CursorBuilder.createCursor(spTable);

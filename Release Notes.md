@@ -1,3 +1,17 @@
+# Version 1.0.3-SNAPSHOT
+
+## New Features
+* None.
+
+## Enhancements
+* Handle maximum Money symbol length of 12 characters.
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 1.0.2-beta
 
 ## New Features

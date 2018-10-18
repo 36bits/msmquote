@@ -3,7 +3,7 @@
 ## Getting Started
 Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine and run as follows:
 
-`java -cp msmquote-1.0.2-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password quoteurl`
+`java -cp msmquote-1.0.3-beta.jar uk.co.pueblo.msmquote.OnlineUpdate moneyfile.mny password quoteurl`
 
 Where:
 * **moneyfile.mny** is the MS Money file you wish to update
@@ -11,6 +11,8 @@ Where:
 * **quoteurl** is the URL for the Yahoo Finance quote API, for example to retrieve quotes for Walmart Inc., Tesco PLC, Carrefour SA, the FTSE-100 index and the Pound Sterling/Euro exchange rate you would use: `"https://query2.finance.yahoo.com/v7/finance/quote?symbols=WMT,TSCO.L,CA.PA,^FTSE,GBPEUR=X"`
 
 Replace the symbols after the _symbols=_ statement in the quote URL with those for the quotes you want to update. It should be possible to include any symbol in the symbol list for which a quote is available on [Yahoo Finance](https://finance.yahoo.com/). The symbols must match those defined in your Money file.
+
+Money limits quote symbols to a maximum length of 12 characters. Any quotes retrieved from the Yahoo API where the symbol length is greater than 12 characters will be truncated, on the assumption that the truncated symbol is unique in the Money file.
 
 The following exit codes are returned by **msmquote**:
 
