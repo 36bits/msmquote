@@ -1,6 +1,7 @@
-# Version 1.0.2-SNAPSHOT
+# Version 1.0.2-beta
 
 ## New Features
+* None.
 
 ## Enhancements
 * Update 52-week high/low data for mutual funds.
