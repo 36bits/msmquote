@@ -5,6 +5,7 @@
 
 ## Enhancements
 * Handle maximum Money symbol length of 12 characters.
+* Don't update SP table when quote date is 01-Jan-1970
 
 ## Bug Fixes
 * None.

@@ -25,7 +25,26 @@ import com.healthmarketscience.jackcess.InvalidCredentialsException;
 
 
 public class OnlineUpdate {
-    private static final Logger logger = Logger.getLogger(OnlineUpdate.class);
+        
+    // Set quote-type constants
+    private static final String QT_EQUITY = "EQUITY";
+    private static final String QT_BOND = "BOND";
+    private static final String QT_MF = "MUTUALFUND";
+    private static final String QT_INDEX = "INDEX";
+    private static final String QT_CURRENCY = "CURRENCY";
+    
+    // Set SP table src constants
+    private static final int SRC_BUY = 1;
+    private static final int SRC_MANUAL = 5;
+    private static final int SRC_ONLINE = 6;
+	
+    // Set exit code constants
+    private static final int EXIT_OK = 0;
+    private static final int EXIT_WARNING = 1;
+    private static final int EXIT_ERROR = 2;
+    
+    // Set miscellaneous constants
+    private static final Logger LOGGER = Logger.getLogger(OnlineUpdate.class);
     
     public static void main(String[] args) {
     	
@@ -50,21 +69,17 @@ public class OnlineUpdate {
         exitCode = (doUpdate.update(args[0], password, url));
         
         double elapsedTime = (Instant.now().toEpochMilli() - startTime) / 1000;
-        logger.info("Elapsed time: " + elapsedTime + " s");
+        LOGGER.info("Elapsed time: " + elapsedTime + " s");
         
        	System.exit(exitCode);
    }
 	
 	private int update(String fileName, String password, String quoteUrl) {
-		
-		final int goodExit = 0;
-		final int warnExit = 1; 
-		final int errorExit = 2;
-				
+						
 		// Get quote data from Yahoo API
 		JsonNode quotesJson = getQuotesJson(quoteUrl);
 		if (quotesJson == null) {
-			return errorExit;
+			return EXIT_ERROR;
 		}
 		
 		// Open Money database
@@ -72,32 +87,64 @@ public class OnlineUpdate {
 		try {
 			openDb = MnyDb.open(fileName, password);
 		} catch (IOException | InvalidCredentialsException e) {
-			logger.fatal(e.getMessage());
-			return errorExit;
+			LOGGER.fatal(e.getMessage());
+			return EXIT_ERROR;
 		}		
 				
 		// Process quote data
-		boolean exitFlag = true;
-		int exitCode = goodExit;
+		int exitCode = EXIT_OK;
 						
 		//ArrayNode resultAn = (ArrayNode) quotesJson.at("/quoteResponse/result");
 		//Iterator<JsonNode> resultIt = resultAn.elements();
 		Iterator<JsonNode> resultIt = quotesJson.at("/quoteResponse/result").elements();
 		while (resultIt.hasNext()) {
-			JsonNode result = resultIt.next(); 
-			try {
-				if (result.get("quoteType").asText().equals("CURRENCY")) {
-					exitFlag = updateFxRow(openDb, result);
+			JsonNode result = resultIt.next();
+			
+			// Get quote type
+			String quoteType = result.get("quoteType").asText();			
+			
+			// Get quote date and adjust for local system time-zone offset
+	    	// Note: Jackcess still uses Date objects
+	    	Instant quoteInstant = Instant.ofEpochSecond(result.get("regularMarketTime").asLong());
+	    	ZoneOffset quoteZoneOffset = ZoneId.systemDefault().getRules().getOffset(quoteInstant);
+	    	int offsetSeconds = quoteZoneOffset.getTotalSeconds();
+	    	Date quoteDate = Date.from(quoteInstant.truncatedTo(ChronoUnit.DAYS).minusSeconds(offsetSeconds));
+	    	
+	    	// Set quote factor
+	    	double quoteFactor = 1;
+	    	if (quoteType.equals(QT_EQUITY) || quoteType.equals(QT_BOND)) {
+	        	if (result.get("currency").asText().toUpperCase().equals("GBP")) {
+	        		quoteFactor = 0.01;
+	        	} 
+	        }
+		
+	    	// Get quote symbol and truncate to maximum Money symbol length of 12 characters
+	    	String symbol = result.get("symbol").asText();
+	    	String origSymbol = symbol;
+	        if (symbol.length() > 12) {
+	    		symbol = symbol.substring(0, 12);
+	    		LOGGER.info("Truncated symbol " + origSymbol + " to " + symbol);
+	    	}	    	
+	    	
+	    	// Update tables in Money database
+	    	try {
+				if (quoteType.equals(QT_CURRENCY)) {
+					if (updateFxRow(openDb, result) == false) {
+						exitCode = EXIT_WARNING;
+					}
 				} else {
-					exitFlag = updateSpRow(openDb, result);
+					int hsec = updateSecRow(openDb, result, symbol, quoteType, quoteDate, quoteFactor);
+					if (hsec == -1) {
+						exitCode = EXIT_WARNING;
+					} else {
+						if(updateSpRow(openDb, result, symbol, quoteType, quoteDate, quoteFactor, hsec) == false);
+							exitCode = EXIT_WARNING;
+					}
 				}
 			} catch (Exception e) {
 				// Something unexpected has gone wrong so get the stack trace
 				e.printStackTrace();
-				exitCode = errorExit;
-			}
-			if (!exitFlag && exitCode == goodExit) {
-				exitCode = warnExit;
+				exitCode = EXIT_ERROR;
 			}
 		}
 				
@@ -105,8 +152,8 @@ public class OnlineUpdate {
 	    try {
 	    	MnyDb.close(openDb);
 	    } catch (IOException e) {
-	    	logger.error(e);
-	    	return errorExit;
+	    	LOGGER.error(e);
+	    	return EXIT_ERROR;
 	    }
 	    	    
 	return exitCode;
@@ -119,159 +166,149 @@ public class OnlineUpdate {
 			ObjectMapper mapper = new ObjectMapper();
 			quotesJson = mapper.readTree(quoteResp);
     	} catch (IOException e) {
-    		logger.fatal(e);
+    		LOGGER.fatal(e);
     	}
 		return quotesJson;
     }
-
-    private boolean updateSpRow(Database db, JsonNode quote) throws IOException {
-            	
-        String quoteType = quote.get("quoteType").asText();
-        String symbol = quote.get("symbol").asText();
-        
-        // Handle maximum Money symbol length of 12 characters
-    	if (symbol.length() > 12) {
-    		symbol = symbol.substring(0, 12);
-    	}
-                
+	
+	private int updateSecRow(Database db, JsonNode quote, String symbol, String quoteType, Date quoteDate, double quoteFactor) throws IOException {
+		
     	// Find matching symbol in SEC table
-        Map<String, Object> secRow = null;
-        Map<String, Object> secRowPattern = new HashMap<String, Object>();
-        logger.info("Processing quote for symbol " + symbol + ", quote type = " + quoteType);
+        Map<String, Object> row = null;
+        Map<String, Object> rowPattern = new HashMap<String, Object>();
+        LOGGER.info("Processing quote data for symbol " + symbol + ", quote type = " + quoteType);
     	int hsec = -1;
-    	Table secTable = db.getTable("SEC");
-    	Cursor secCursor = CursorBuilder.createCursor(secTable);
+    	Table table = db.getTable("SEC");
+    	Cursor cursor = CursorBuilder.createCursor(table);
     	
-        secRowPattern.put("szSymbol", symbol);
-    	if (secCursor.findFirstRow(secRowPattern)) {
-            secRow = secCursor.getCurrentRow();
-            hsec = (int) secRow.get("hsec");
+        rowPattern.put("szSymbol", symbol);
+    	if (cursor.findFirstRow(rowPattern)) {
+            row = cursor.getCurrentRow();
+            hsec = (int) row.get("hsec");
         }
     		
     	if (hsec == -1) {
-    		logger.warn("Cannot find symbol " + symbol);
-    		return false;
+    		LOGGER.warn("Cannot find symbol " + symbol + " in SEC table");
+    		return hsec;
 	   	}
 
-    	logger.info("Found symbol " + symbol + ", sct = " + secRow.get("sct") + ", hsec = " + hsec);
+    	LOGGER.info("Found symbol " + symbol + " in SEC table: sct = " + row.get("sct") + ", hsec = " + hsec);
     	
-    	// Get quote date and adjust for local system time-zone offset
-    	// Note: Jackcess still uses Date objects
-    	Instant quoteInstant = Instant.ofEpochSecond(quote.get("regularMarketTime").asLong());
-    	ZoneOffset quoteZoneOffset = ZoneId.systemDefault().getRules().getOffset(quoteInstant);
-    	int offsetSeconds = quoteZoneOffset.getTotalSeconds();
-    	Date quoteDate = Date.from(quoteInstant.truncatedTo(ChronoUnit.DAYS).minusSeconds(offsetSeconds));
-    	    	
+    	// Build SEC fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
+    	// dtSerial is assumed to be record creation/update time-stamp
+	    row.put("dtSerial", new Date());
+        row.put("dtLastUpdate", quoteDate);
+        row.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * quoteFactor);
+        row.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * quoteFactor);
+	    	    
+        // Build SEC fields common to EQUITY, BOND and INDEX quote types
+	    if (quoteType.equals(QT_EQUITY) || quoteType.equals(QT_BOND) || quoteType.equals(QT_INDEX)) {
+		    row.put("dBid", quote.get("bid").asDouble() * quoteFactor);
+	        row.put("dAsk", quote.get("ask").asDouble() * quoteFactor);
+	    }
+	    
+	    // Build EQUITY-only SEC fields
+        // TODO add EPS and beta
+        if (quoteType.equals("EQUITY")) {
+        	row.put("dCapitalization", quote.get("marketCap").asDouble());
+            row.put("dSharesOutstanding", quote.get("sharesOutstanding").asDouble());
+            if (quote.has("trailingAnnualDividendYield")) {
+            	row.put("dDividendYield", quote.get("trailingAnnualDividendYield").asDouble() * 100 / quoteFactor);
+            } else {
+        		row.put("dDividendYield", 0);
+        	}
+        }
+        
+        // Update SEC table
+        cursor.updateCurrentRowFromMap(row);
+        LOGGER.info("Updated quote data in SEC table for symbol " + symbol);
+
+	return hsec;
+	}
+
+    private boolean updateSpRow(Database db, JsonNode quote, String symbol, String quoteType, Date quoteDate, double quoteFactor, int hsec) throws IOException {
+    	
+    	if (quote.get("regularMarketTime").asLong() == 0) {
+    		LOGGER.warn("Skipped SP table update for symbol " + symbol + ", quote date = " + quoteDate);
+    		return false;
+    	}
+           	
     	// Find matching symbol and quote date in SP table
-    	Table spTable = db.getTable("SP");
-    	Cursor spCursor = CursorBuilder.createCursor(spTable);
-    	Map<String, Object> spRow = null;
-        Map<String, Object> spRowPattern = new HashMap<String, Object>();
+    	Table table = db.getTable("SP");
+    	Cursor cursor = CursorBuilder.createCursor(table);
+    	Map<String, Object> row = null;
+        Map<String, Object> rowPattern = new HashMap<String, Object>();
     	boolean needNewSpRow = true;
-    	spRowPattern.put("hsec", hsec);
-    	spRowPattern.put("dt", quoteDate);
+    	rowPattern.put("hsec", hsec);
+    	rowPattern.put("dt", quoteDate);
     	double oldPrice = 0;
     	Date oldDate = null;
-    	// src: manual update = 5, online update = 6
-    	int[] srcs = { 5, 6 };
-        for (int src : srcs) {
-        	spRowPattern.put("src", src);
-               	if (spCursor.findFirstRow(spRowPattern)) {
+    	int[] srcs = { SRC_MANUAL, SRC_ONLINE };
+
+    	for (int src : srcs) {
+        	rowPattern.put("src", src);
+               	if (cursor.findFirstRow(rowPattern)) {
                		// Matching SP row found
-               		spRow = spCursor.getCurrentRow();
-               		oldPrice = (double) spRow.get("dPrice");
-               		oldDate = (Date) spRow.get("dt");
+               		row = cursor.getCurrentRow();
+               		oldPrice = (double) row.get("dPrice");
+               		oldDate = (Date) row.get("dt");
                		needNewSpRow = false;
                		break;
         	}
     	}
        	if (needNewSpRow) {
     		// No matching SP row found - build new row
-    		spRow = buildNewSpRow(spCursor, hsec, quoteDate);
-    		oldDate = (Date) spRow.get("dt");
-    		oldPrice = (double) spRow.get("dPrice");
+    		row = buildNewSpRow(cursor, hsec, quoteDate);
+    		oldDate = (Date) row.get("dt");
+    		oldPrice = (double) row.get("dPrice");
     		// Index autonumber test:
     		// spRow.put("hsp", null);
-    		spRow.put("dt", quoteDate);
-    		spRow.put("src", 6);
+    		row.put("dt", quoteDate);
+    		row.put("src", SRC_ONLINE);
        	}
 
+       	
+       	
        	if (oldPrice == -1) {
-       		logger.info("Cannot find previous quote for symbol " + symbol);
+       		LOGGER.info("Cannot find previous quote in SP table for symbol " + symbol);
        	}
        	else {
-       		logger.info("Found previous quote for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice);
+       		LOGGER.info("Found previous quote in SP table for symbol " + symbol + ": " + oldDate + ", price = " + oldPrice);
        	}
        	
-       	// Set price factor
-       	double priceFactor = 1;
-       	int yieldFactor = 100;
+        double dPrice = quote.get("regularMarketPrice").asDouble() * quoteFactor;
                 
-        if (quoteType.equals("EQUITY") || quoteType.equals("BOND")) {
-        	if (quote.get("currency").asText().toUpperCase().equals("GBP")) {
-        		priceFactor = 0.01;
-        		yieldFactor = 10000;
-        	} 
-        }
-    	
-        // Build SEC and SP rows from JSON values
-        double dPrice = quote.get("regularMarketPrice").asDouble() * priceFactor;
-        
+        // Build SP fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
         // dtSerial is assumed to be record creation/update time-stamp
-        Date dateSerial = new Date();
-        
-        // SP fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
-        spRow.put("dtSerial", dateSerial);
-	    spRow.put("dPrice", dPrice);
-	    spRow.put("dChange", quote.get("regularMarketChange").asDouble() * priceFactor);
-		
-	    // SEC fields common to EQUITY, BOND, MUTUALFUND and INDEX quote types
-	    secRow.put("dtSerial", dateSerial);
-        secRow.put("dtLastUpdate", quoteDate);
-        secRow.put("d52WeekLow", quote.get("fiftyTwoWeekLow").asDouble() * priceFactor);
-        secRow.put("d52WeekHigh", quote.get("fiftyTwoWeekHigh").asDouble() * priceFactor);
+        row.put("dtSerial", new Date());
+	    row.put("dPrice", dPrice);
+	    row.put("dChange", quote.get("regularMarketChange").asDouble() * quoteFactor);
 	    	    
-        // Fields common to EQUITY, BOND and INDEX quote types
-	    if (quoteType.equals("EQUITY") || quoteType.equals("BOND") || quoteType.equals("INDEX")) {
-		    // SP fields
-	    	spRow.put("dOpen", quote.get("regularMarketOpen").asDouble() * priceFactor);
-		    spRow.put("dHigh", quote.get("regularMarketDayHigh").asDouble() * priceFactor);
-		    spRow.put("dLow", quote.get("regularMarketDayLow").asDouble() * priceFactor);
-		    spRow.put("vol", quote.get("regularMarketVolume").asLong());
-		    // SEC fields
-	        secRow.put("dBid", quote.get("bid").asDouble() * priceFactor);
-	        secRow.put("dAsk", quote.get("ask").asDouble() * priceFactor);
+        // Build SP fields common to EQUITY, BOND and INDEX quote types
+	    if (quoteType.equals(QT_EQUITY) || quoteType.equals(QT_BOND) || quoteType.equals(QT_INDEX)) {
+	    	row.put("dOpen", quote.get("regularMarketOpen").asDouble() * quoteFactor);
+		    row.put("dHigh", quote.get("regularMarketDayHigh").asDouble() * quoteFactor);
+		    row.put("dLow", quote.get("regularMarketDayLow").asDouble() * quoteFactor);
+		    row.put("vol", quote.get("regularMarketVolume").asLong());
 	    }
         
-        // EQUITY only fields
+        // Build EQUITY-only SP fields
         // TODO add EPS and beta
-        if (quoteType.equals("EQUITY")) {
-        	secRow.put("dCapitalization", quote.get("marketCap").asDouble());
-            secRow.put("dSharesOutstanding", quote.get("sharesOutstanding").asDouble());
+        if (quoteType.equals(QT_EQUITY)) {
             if (quote.has("trailingPE")) {
-            	spRow.put("dPE", quote.get("trailingPE").asDouble());
+            	row.put("dPE", quote.get("trailingPE").asDouble());
            }
-            if (quote.has("trailingAnnualDividendYield")) {
-            	secRow.put("dDividendYield", quote.get("trailingAnnualDividendYield").asDouble() * yieldFactor);
-            } else {
-        		secRow.put("dDividendYield", 0);
-        	}
         }
         
-        // Update SEC and SP tables
-        secCursor.updateCurrentRowFromMap(secRow);
-       	
+        // Update SP row
         if (needNewSpRow) {
-        	spTable.addRowFromMap(spRow);
-        	//spTable.addRow(spRow.values().toArray());
-        	logger.info("Added new quote for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", new hsp = " + spRow.get("hsp"));
+        	table.addRowFromMap(row);
+           	LOGGER.info("Added new quote data in SP table for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", new hsp = " + row.get("hsp"));
         } else {
-        	spCursor.updateCurrentRowFromMap(spRow);
-        	//spCursor.updateCurrentRow(spRow.values().toArray());
-            logger.info("Updated previous quote for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", hsp = " + spRow.get("hsp"));
+        	cursor.updateCurrentRowFromMap(row);
+            LOGGER.info("Updated previous quote data in SP table for symbol " + symbol + ": " + quoteDate + ", new price = " + dPrice + ", hsp = " + row.get("hsp"));
     	}        
         
-        // Done
         return true;
     }
     
@@ -309,12 +346,12 @@ public class OnlineUpdate {
 			rowDate = (Date) row.get("dt");
 			if (((int) row.get("hsec") == hsec) && rowDate.after(maxDate)) {
 				// Test for previous manual or online quote
-				if ((src == 5 || src == 6) && rowDate.before(quoteDate)) {
+				if ((src == SRC_MANUAL || src == SRC_ONLINE) && rowDate.before(quoteDate)) {
 		        	maxDate = rowDate;
 		        	newRow = row;
 			    }
 				// Test for previous buy
-		        if (src == 1 && (rowDate.before(quoteDate) || rowDate.equals(quoteDate))) {
+		        if (src == SRC_BUY && (rowDate.before(quoteDate) || rowDate.equals(quoteDate))) {
 	        		maxDate = rowDate;
 		        	newRow = row;
 	        	}
@@ -327,7 +364,7 @@ public class OnlineUpdate {
 	
     private boolean updateFxRow(Database db, JsonNode quote) throws IOException {
     	String currencyPair = quote.get("symbol").asText();
-    	logger.info("Processing quote for currency pair " + currencyPair);
+    	LOGGER.info("Processing quote for currency pair " + currencyPair);
     
         int n = 0;
     	
@@ -345,9 +382,9 @@ public class OnlineUpdate {
             if (crncCursor.findFirstRow(crncRowPattern)) {
                 crncRow = crncCursor.getCurrentRow();
                 hcrncs[n] = (int) crncRow.get("hcrnc");
-                logger.info("Found currency " + isoCode + ", hcrnc = " + hcrncs[n]);
+                LOGGER.info("Found currency " + isoCode + ", hcrnc = " + hcrncs[n]);
             } else {
-            	logger.warn("Cannot find currency " + isoCode);
+            	LOGGER.warn("Cannot find currency " + isoCode);
         		return false;
     	   	}
         }	
@@ -362,7 +399,7 @@ public class OnlineUpdate {
 
         for (n = 0; n < 3; n++) {
         	if (n == 2) {
-        		logger.warn("Cannot find previous rate for currency pair " + currencyPair);
+        		LOGGER.warn("Cannot find previous rate for currency pair " + currencyPair);
         		return false;
         	}
            	rateRowPattern.put("hcrncFrom", hcrncs[n]);
@@ -374,10 +411,10 @@ public class OnlineUpdate {
                 	// Reversed rate
                 	newRate = 1 / newRate;                	
                 }
-                logger.info("Found currency pair: from hcrnc = " + hcrncs[n] + ", to hcrnc = " + hcrncs[(n + 1) % 2]);
+                LOGGER.info("Found currency pair: from hcrnc = " + hcrncs[n] + ", to hcrnc = " + hcrncs[(n + 1) % 2]);
                 Column column = rateTable.getColumn("rate");
                 rateCursor.setCurrentRowValue(column, newRate);
-                logger.info("Updated currency pair " + currencyPair + ": previous rate = " + oldRate + ", new rate = " + newRate);
+                LOGGER.info("Updated currency pair " + currencyPair + ": previous rate = " + oldRate + ", new rate = " + newRate);
                 return true;
             }	
         }
