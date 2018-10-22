@@ -101,7 +101,9 @@ public class OnlineUpdate {
 			JsonNode result = resultIt.next();
 			
 			// Get quote type
+			String symbol = result.get("symbol").asText();
 			String quoteType = result.get("quoteType").asText();			
+			LOGGER.info("Processing quote data for symbol " + symbol + ", quote type = " + quoteType);
 			
 			// Get quote date and adjust for local system time-zone offset
 	    	// Note: Jackcess still uses Date objects
@@ -118,8 +120,7 @@ public class OnlineUpdate {
 	        	} 
 	        }
 		
-	    	// Get quote symbol and truncate to maximum Money symbol length of 12 characters
-	    	String symbol = result.get("symbol").asText();
+	    	// Truncate symbol to maximum Money symbol length of 12 characters
 	    	String origSymbol = symbol;
 	        if (symbol.length() > 12) {
 	    		symbol = symbol.substring(0, 12);
@@ -176,8 +177,7 @@ public class OnlineUpdate {
     	// Find matching symbol in SEC table
         Map<String, Object> row = null;
         Map<String, Object> rowPattern = new HashMap<String, Object>();
-        LOGGER.info("Processing quote data for symbol " + symbol + ", quote type = " + quoteType);
-    	int hsec = -1;
+        int hsec = -1;
     	Table table = db.getTable("SEC");
     	Cursor cursor = CursorBuilder.createCursor(table);
     	
