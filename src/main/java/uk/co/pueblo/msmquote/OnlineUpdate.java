@@ -20,6 +20,7 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Cursor;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
+import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.InvalidCredentialsException;
 
@@ -179,7 +180,7 @@ public class OnlineUpdate {
         Map<String, Object> rowPattern = new HashMap<String, Object>();
         int hsec = -1;
     	Table table = db.getTable("SEC");
-    	Cursor cursor = CursorBuilder.createCursor(table);
+    	IndexCursor cursor = CursorBuilder.createCursor(table.getPrimaryKeyIndex());
     	
         rowPattern.put("szSymbol", symbol);
     	if (cursor.findFirstRow(rowPattern)) {
@@ -187,7 +188,7 @@ public class OnlineUpdate {
             hsec = (int) row.get("hsec");
         }
     		
-    	if (hsec == -1) {
+    	if (cursor.isBeforeFirst()) {
     		LOGGER.warn("Cannot find symbol " + symbol + " in SEC table");
     		return hsec;
 	   	}
@@ -235,7 +236,7 @@ public class OnlineUpdate {
            	
     	// Find matching symbol and quote date in SP table
     	Table table = db.getTable("SP");
-    	Cursor cursor = CursorBuilder.createCursor(table);
+    	IndexCursor cursor = CursorBuilder.createCursor(table.getPrimaryKeyIndex());
     	Map<String, Object> row = null;
         Map<String, Object> rowPattern = new HashMap<String, Object>();
     	boolean needNewSpRow = true;
