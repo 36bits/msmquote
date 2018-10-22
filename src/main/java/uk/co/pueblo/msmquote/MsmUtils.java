@@ -10,10 +10,10 @@ import com.healthmarketscience.jackcess.CryptCodecProvider;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 
-public class MnyDb {
-	static final Logger logger = Logger.getLogger(MnyDb.class);
+public class MsmUtils {
+	static final Logger logger = Logger.getLogger(MsmUtils.class);
 		
-	public static Database open(String fileName, String password) throws IOException {
+	public static Database openDb(String fileName, String password) throws IOException {
 				
 		// Create lock file
 		String lockFileName = null;
@@ -50,7 +50,7 @@ public class MnyDb {
 	return db;
 	}
 
-	public static void close(Database db) throws IOException {
+	public static void closeDb(Database db) throws IOException {
 		logger.info("Closing Money file: " + db.getFile());
 		db.close();
 	}

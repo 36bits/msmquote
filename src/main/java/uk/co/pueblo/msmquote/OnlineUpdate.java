@@ -83,9 +83,9 @@ public class OnlineUpdate {
 		}
 		
 		// Open Money database
-		Database openDb = null;
+		Database msmDb = null;
 		try {
-			openDb = MnyDb.open(fileName, password);
+			msmDb = MsmUtils.openDb(fileName, password);
 		} catch (IOException | InvalidCredentialsException e) {
 			LOGGER.fatal(e.getMessage());
 			return EXIT_ERROR;
@@ -130,15 +130,15 @@ public class OnlineUpdate {
 	    	// Update tables in Money database
 	    	try {
 				if (quoteType.equals(QT_CURRENCY)) {
-					if (updateFxRow(openDb, result) == false) {
+					if (updateFxRow(msmDb, result) == false) {
 						exitCode = EXIT_WARNING;
 					}
 				} else {
-					int hsec = updateSecRow(openDb, result, symbol, quoteType, quoteDate, quoteFactor);
+					int hsec = updateSecRow(msmDb, result, symbol, quoteType, quoteDate, quoteFactor);
 					if (hsec == -1) {
 						exitCode = EXIT_WARNING;
 					} else {
-						if(updateSpRow(openDb, result, symbol, quoteType, quoteDate, quoteFactor, hsec) == false);
+						if(updateSpRow(msmDb, result, symbol, quoteType, quoteDate, quoteFactor, hsec) == false);
 							exitCode = EXIT_WARNING;
 					}
 				}
@@ -151,7 +151,7 @@ public class OnlineUpdate {
 				
 		// Close Money database
 	    try {
-	    	MnyDb.close(openDb);
+	    	MsmUtils.closeDb(msmDb);
 	    } catch (IOException e) {
 	    	LOGGER.error(e);
 	    	return EXIT_ERROR;
