@@ -6,8 +6,8 @@ param (
 
 
 $log = $env:USERPROFILE + "\scripts\log\msmquote.log"
-$javaopts = "--show-version"
-$jar = $env:ProgramFiles + "\msmquote\msmquote-1.0.0.jar"
+$javaopts = "-showversion"
+$jar = $env:ProgramFiles + "\msmquote\msmquote.jar"
 $class = "uk.co.pueblo.msmquote.OnlineUpdate"
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started. File: $mnyfile."
