@@ -6,12 +6,13 @@ param (
 
 
 $log = $env:USERPROFILE + "\scripts\log\msmquote.log"
-$javaopts = "-showversion"
+#$javaopts = "-showversion"
+$javaopts = ""
 $jar = $env:ProgramFiles + "\msmquote\msmquote.jar"
 $class = "uk.co.pueblo.msmquote.OnlineUpdate"
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started. File: $mnyfile."
-java $javaopts -cp $jar $class $mnyfile $mnypswd $url | Out-File -append $log
+java $javaopts -cp $jar $class $mnyfile $mnypswd $url *>> $log
 $saved_exitcode = $lastexitcode
 
 if ($saved_exitcode -eq 1) {

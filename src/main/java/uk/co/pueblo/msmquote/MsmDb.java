@@ -10,11 +10,14 @@ import com.healthmarketscience.jackcess.CryptCodecProvider;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 
-public class MsmUtils {
-	static final Logger logger = Logger.getLogger(MsmUtils.class);
+public class MsmDb extends DatabaseBuilder {
+	private static final Logger LOGGER = Logger.getLogger(MsmDb.class);
+	
+	private Database db;
 		
-	public static Database openDb(String fileName, String password) throws IOException {
-				
+	// Constructor
+	public MsmDb(String fileName, String password) throws IOException {
+		
 		// Create lock file
 		String lockFileName = null;
 		int i = fileName.lastIndexOf('.');
@@ -25,12 +28,11 @@ public class MsmUtils {
         	lockFileName = fileName.substring(0, i);
         }
 		File lockFile = new File(lockFileName + ".lrd");
-		logger.info("Creating lock file: " + lockFile.getAbsolutePath());
+		LOGGER.info("Creating lock file: " + lockFile.getAbsolutePath());
 		if (!lockFile.createNewFile()) {
 			throw new FileAlreadyExistsException("Lock file already exists");
 		}
 		lockFile.deleteOnExit();
-				
 		
 		// Open Money database
 		File dbFile = new File(fileName);
@@ -42,16 +44,18 @@ public class MsmUtils {
 		else {
 			cryptCp = new CryptCodecProvider(password);
 		}
-		logger.info("Opening Money file: " + dbFile.getAbsolutePath());
-		Database db = new DatabaseBuilder(dbFile)
-				.setCodecProvider(cryptCp)
-				.open();
-				
+		LOGGER.info("Opening Money file: " + dbFile.getAbsolutePath());
+		db = new DatabaseBuilder(dbFile).setCodecProvider(cryptCp).open();		
+		return;
+	}
+		
+	public Database getDb() {
 	return db;
 	}
 
-	public static void closeDb(Database db) throws IOException {
-		logger.info("Closing Money file: " + db.getFile());
+	public void closeDb() throws IOException {
+		LOGGER.info("Closing Money file: " + db.getFile());
 		db.close();
+		return;
 	}
 }
