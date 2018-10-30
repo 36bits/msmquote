@@ -1,8 +1,10 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -11,7 +13,9 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
+import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
+import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmTables {
 	private static final Logger LOGGER = Logger.getLogger(MsmTables.class);
@@ -24,7 +28,10 @@ public class MsmTables {
 	private IndexCursor spCursor;
 	private IndexCursor crncCursor;
 	private IndexCursor rateCursor;
-	int hsp = 0;
+	
+	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
+	IterableBuilder spItBuilder;
+	private int hsp = 0;
 		
 	// Set SP table src constants
     private static final int BUY = 1;
@@ -41,8 +48,11 @@ public class MsmTables {
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 		crncCursor = CursorBuilder.createCursor(crncTable.getPrimaryKeyIndex());
 		rateCursor = CursorBuilder.createCursor(rateTable.getPrimaryKeyIndex());
-	
+				
+		spItBuilder = new IterableBuilder(spCursor);
+		
 		// Get current hsp (SP table index)
+		// TODO Use index to get current hsp
 		int rowHsp = 0;
 		Column column = spTable.getColumn("hsp");
 		spCursor.beforeFirst();
@@ -64,6 +74,16 @@ public class MsmTables {
 		}
 	}
 
+	public void addNewSpRows() throws IOException{
+		if (spRowList.isEmpty()) {
+			LOGGER.info("No new rows to add SP table");
+		} else {
+			LOGGER.info("Adding new rows to SP table");
+			spTable.addRowsFromMaps(spRowList);
+		}
+		return;
+	}
+	
 	private boolean updateQuoteRows(Map<String, Object> quoteRow) throws IOException {
 		
 		Map<String, Object> row = null;
@@ -71,7 +91,7 @@ public class MsmTables {
 		int hsec;
 		
 		// Update SEC table
-		if ((row = getSecRow(symbol)) == null) {
+		if ((row = getSecRowToUpdate(symbol)) == null) {
 			LOGGER.warn("Cannot find symbol " + symbol + " in SEC table");
 			return false;
 		} else {
@@ -106,8 +126,9 @@ public class MsmTables {
 			row.put("hsp", hsp);
 		   	row.put("src", ONLINE);
 		   	row.put("dtSerial", new Date());		    	// dtSerial is assumed to be record creation/update time-stamp
-	    	spTable.addRowFromMap(row);
-	       	LOGGER.info("Added new quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice") + ", new hsp = " + row.get("hsp"));
+	    	//spTable.addRowFromMap(row);
+		   	spRowList.add(row);
+	       	LOGGER.info("Added new quote to SP table update for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice") + ", new hsp = " + row.get("hsp"));
 		}				
 		
 		return true;
@@ -119,7 +140,7 @@ public class MsmTables {
      * @param	symbol	symbol to find
      * @return	SEC row if found or null if not found
      */
-    private Map<String, Object> getSecRow(String symbol) throws IOException {
+    private Map<String, Object> getSecRowToUpdate(String symbol) throws IOException {
     	Map<String, Object> returnRow = null;
         Map<String, Object> rowPattern = new HashMap<>();
 		
@@ -130,7 +151,7 @@ public class MsmTables {
 	   	}
     	return returnRow;
     }
-        
+            
     /** 
      * Searches the SP table for a row matching the supplied hsec and date.
      *
@@ -152,7 +173,7 @@ public class MsmTables {
     	}
     	return null;
     }
- 
+    
     /** 
      * Searches the SP table for a row matching the supplied hsec and
      * the most recent date previous to the supplied date.
@@ -161,16 +182,17 @@ public class MsmTables {
      * @param	date	date for search
      * @return	SP row if match found or null if not found
      */
-	private Map<String, Object> getSpRowToCopy(int hsec, Date date) throws IOException {
+    private Map<String, Object> getSpRowToCopy(int hsec, Date date) throws IOException {
     	Map<String, Object> row = null;
     	Map<String, Object> returnRow = null;
     	Map<String, Object> rowPattern = new HashMap<>();
     	Date rowDate = new Date(0);
     	Date maxDate = new Date(0);
-    	spCursor.beforeFirst();
+    	
     	rowPattern.put("hsec", hsec);
-    	while (spCursor.findNextRow(rowPattern)) {
-    		row = spCursor.getCurrentRow();
+    	Iterator<Row> spIt = spItBuilder.setMatchPattern(rowPattern).iterator();
+    	while (spIt.hasNext()) {
+    		row = spIt.next();
     		int src = (int) row.get("src");
 			rowDate = (Date) row.get("dt");
 			if (rowDate.after(maxDate)) {
@@ -187,7 +209,7 @@ public class MsmTables {
 			}
 	   	}
     	return returnRow;
-    }
+    }	
     
     private boolean updateFxRow(Map<String, Object> quoteRow) throws IOException {
     	

@@ -48,10 +48,11 @@ public class Update {
 		}
     	
 		// Process quote data
-		Map<String, Object> quoteRow = new HashMap<String, Object>();
+		Map<String, Object> quoteRow = new HashMap<>();
+		MsmTables msmTables = null;
 		
 		try {
-			MsmTables msmTables = new MsmTables(openMsmDb);
+			msmTables = new MsmTables(openMsmDb);
 			YahooQuote yahooQuote = new YahooQuote(source);
 			while (true) {
 				if ((quoteRow = yahooQuote.getNext()) == null) {
@@ -66,8 +67,9 @@ public class Update {
 			LOGGER.fatal(e);
 			exitCode = ERROR;
 		} finally {
-			// Close Money database
+			// Add any new rows to the SP table and close the Money database
 			try {
+				msmTables.addNewSpRows();
 				msmDb.closeDb();
 			} catch (IOException e) {
 				LOGGER.fatal(e);
