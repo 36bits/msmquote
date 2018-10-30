@@ -121,7 +121,7 @@ public class MsmTables {
      */
     private Map<String, Object> getSecRow(String symbol) throws IOException {
     	Map<String, Object> returnRow = null;
-        Map<String, Object> rowPattern = new HashMap<String, Object>();
+        Map<String, Object> rowPattern = new HashMap<>();
 		
 		// Find matching symbol in SEC table
     	rowPattern.put("szSymbol", symbol);
@@ -139,7 +139,7 @@ public class MsmTables {
      * @return	SP row if match found or null if not found
      */
     private Map<String, Object> getSpRowToUpdate(int hsec, Date date) throws IOException {
-    	Map<String, Object> rowPattern = new HashMap<String, Object>();
+    	Map<String, Object> rowPattern = new HashMap<>();
     
         rowPattern.put("hsec", hsec);
     	rowPattern.put("dt", date);
@@ -164,7 +164,7 @@ public class MsmTables {
 	private Map<String, Object> getSpRowToCopy(int hsec, Date date) throws IOException {
     	Map<String, Object> row = null;
     	Map<String, Object> returnRow = null;
-    	Map<String, Object> rowPattern = new HashMap<String, Object>();
+    	Map<String, Object> rowPattern = new HashMap<>();
     	Date rowDate = new Date(0);
     	Date maxDate = new Date(0);
     	spCursor.beforeFirst();
@@ -197,7 +197,7 @@ public class MsmTables {
             	
         // Find currencies in CRNC table
         Map<String, Object> crncRow = null;
-        Map<String, Object> crncRowPattern = new HashMap<String, Object>();
+        Map<String, Object> crncRowPattern = new HashMap<>();
         String isoCode = null;
         int[] hcrncs = {0, 0};
         int n = 0;    
@@ -216,7 +216,7 @@ public class MsmTables {
                                       
         // Now find and update rate for currency pair in CRNC_EXCHG table
         Map<String, Object> rateRow = null;
-        Map<String, Object> rateRowPattern = new HashMap<String, Object>();
+        Map<String, Object> rateRowPattern = new HashMap<>();
         Column column = rateTable.getColumn("rate");
         double oldRate = 0;
         double newRate = (double) quoteRow.get("rate");

@@ -99,7 +99,7 @@ public class YahooQuote {
 		}
 		JsonNode result = resultIt.next();
 		
-		Map<String, Object> quoteRow = new HashMap<String, Object>();
+		Map<String, Object> quoteRow = new HashMap<>();
 				
 		// Get quote type
 		String symbol = result.get("symbol").asText();
@@ -181,7 +181,7 @@ public class YahooQuote {
 		
 	private Map<String, Object> getNextCsvQuote() throws IOException {
 		
-		Map<String, Object> quoteRow = new HashMap<String, Object>();
+		Map<String, Object> quoteRow = new HashMap<>();
 				
 		while (true) {
 			// Get next row from CSV file
