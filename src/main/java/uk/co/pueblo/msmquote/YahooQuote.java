@@ -43,7 +43,7 @@ public class YahooQuote {
 	private double quoteFactor = 1;
 				
 	// Constructor
-	public YahooQuote(String source) {
+	public YahooQuote(String source) throws IOException {
 		
 		if (source.startsWith("https://") || source.startsWith("http://")) {
 			// Source type is API
@@ -53,24 +53,18 @@ public class YahooQuote {
 			try (InputStream quoteIs = new URL(source).openStream();) {
 				ObjectMapper mapper = new ObjectMapper();
 				quotesJson = mapper.readTree(quoteIs);
-	    	} catch (IOException e) {
-	    		LOGGER.fatal(e);
-	    	}
+	    	} 
 	    	resultIt = quotesJson.at("/quoteResponse/result").elements();
 	    	quoteFormat = JSON;
 		} else {
-			File csvFile = new File(source);
 			// Assume source is CSV file
-			try {
-				csvFile = new File(source);
-				csvBr = new BufferedReader(new FileReader(csvFile));
-				if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
-					LOGGER.warn("Yahoo CSV header not found in file" + source);
-					csvBr.close();
-				}				
-			} catch (IOException e) {
-				LOGGER.fatal(e);
-	    	}
+			File csvFile = new File(source);
+			csvFile = new File(source);
+			csvBr = new BufferedReader(new FileReader(csvFile));
+			if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
+				LOGGER.warn("Yahoo CSV header not found in file " + source);
+				csvBr.close();
+			}				
 			
 			// Get quote symbol from CSV file name & truncate if required
 			symbol = csvFile.getName();
@@ -144,6 +138,7 @@ public class YahooQuote {
 	    	// Columns common to EQUITY, BOND, MUTUALFUND and INDEX quote types
 			// SEC table
 	    	quoteRow.put("szSymbol", symbol);
+			// Assume dtLastUpdate is date of quote data in SEC row
 			quoteRow.put("dtLastUpdate", quoteDate);
 	        quoteRow.put("d52WeekLow", result.get("fiftyTwoWeekLow").asDouble() * quoteFactor);
 	        quoteRow.put("d52WeekHigh", result.get("fiftyTwoWeekHigh").asDouble() * quoteFactor);
@@ -192,7 +187,9 @@ public class YahooQuote {
 			// Get next row from CSV file
 			String csvRow = csvBr.readLine();
 			if (csvRow == null) {
-				break;
+				// End of file
+				csvBr.close();
+				return null;
 			}
 			String[] csvColumn = csvRow.split(",");
 					
@@ -202,6 +199,7 @@ public class YahooQuote {
 			
 			// SEC table columns
 			quoteRow.put("szSymbol", symbol);
+			// Assume dtLastUpdate is date of quote data in SEC row
 			quoteRow.put("dtLastUpdate", quoteDate);
 	
 			// SP table columns
@@ -213,15 +211,20 @@ public class YahooQuote {
 			    quoteRow.put("dPrice", Double.parseDouble(csvColumn[4]) * quoteFactor);
 			    quoteRow.put("vol", Long.parseLong(csvColumn[6]));
 			} catch (NumberFormatException e ) {
+				LOGGER.warn(e);
 				continue;
 			}
 			return quoteRow;
 		}
-		return null;
 	}
 
+	/** 
+     * Truncate a symbol to the maximum Money symbol length of 12 characters if required.
+     * 
+     * @param	symbol	the symbol to be truncated
+     * @return			the truncated symbol
+     */
 	private String truncateSymbol(String symbol) {
-		// Maximum Money symbol length is 12 characters
 		String origSymbol = symbol;
 	    if (symbol.length() > 12) {
 			symbol = symbol.substring(0, 12);
@@ -231,6 +234,3 @@ public class YahooQuote {
     }
 	
 }
-
-
-

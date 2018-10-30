@@ -36,34 +36,31 @@ public class Update {
 
     	int exitCode = OK; 
     	
-    	// Open Money database and get quote data from Yahoo API
+    	// Open Money database
     	MsmDb msmDb = null;
     	Database openMsmDb = null;
-    	MsmTables msmTables = null;
-    	YahooQuote yahooQuote = null;
 		try {
 			msmDb = new MsmDb(args[0], password);
 			openMsmDb = msmDb.getDb();
-			msmTables = new MsmTables(openMsmDb);
-			yahooQuote = new YahooQuote(source);
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			System.exit(ERROR);
 		}
     	
-		// Process quota data
+		// Process quote data
 		Map<String, Object> quoteRow = new HashMap<String, Object>();
 		
 		try {
+			MsmTables msmTables = new MsmTables(openMsmDb);
+			YahooQuote yahooQuote = new YahooQuote(source);
 			while (true) {
-				quoteRow = yahooQuote.getNext();
-				if (quoteRow == null) {
+				if ((quoteRow = yahooQuote.getNext()) == null) {
 					break;
 				}
 				if (!msmTables.update(quoteRow)) {
 					exitCode = WARNING;
 				}
-				quoteRow.clear();
+				//quoteRow.clear();
 			}
 		} catch (IOException e) {
 			LOGGER.fatal(e);
