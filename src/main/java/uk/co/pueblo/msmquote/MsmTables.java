@@ -76,9 +76,9 @@ public class MsmTables {
 
 	public void addNewSpRows() throws IOException{
 		if (spRowList.isEmpty()) {
-			LOGGER.info("No new rows to add SP table");
+			LOGGER.info("No new quotes to add SP table");
 		} else {
-			LOGGER.info("Adding new rows to SP table");
+			LOGGER.info("Adding new quotes to SP table");
 			spTable.addRowsFromMaps(spRowList);
 		}
 		return;
