@@ -1,6 +1,7 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class Update {
         
     public static void main(String[] args) {
     	
-    	double startTime = Instant.now().toEpochMilli();
+    	Instant startTime = Instant.now();
 		
 		// Get arguments
     	String password = null;
@@ -77,9 +78,7 @@ public class Update {
 			}
 		}
 					
-        double elapsedTime = (Instant.now().toEpochMilli() - startTime) / 1000;
-        LOGGER.info("Elapsed time: " + elapsedTime + " s");
-        
+        LOGGER.info("Duration: " + Duration.between(startTime, Instant.now()).toString());
        	System.exit(exitCode);
    }
 }

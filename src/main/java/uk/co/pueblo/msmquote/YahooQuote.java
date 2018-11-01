@@ -211,6 +211,7 @@ public class YahooQuote {
 			    quoteRow.put("dPrice", Double.parseDouble(csvColumn[4]) * quoteFactor);
 			    quoteRow.put("vol", Long.parseLong(csvColumn[6]));
 			} catch (NumberFormatException e ) {
+				// TODO Need to somehow reflect this in system exit code
 				LOGGER.warn(e);
 				continue;
 			}
