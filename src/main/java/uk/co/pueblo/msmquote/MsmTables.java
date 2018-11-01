@@ -1,6 +1,8 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,7 +32,6 @@ public class MsmTables {
 	private IndexCursor rateCursor;
 	
 	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
-	IterableBuilder spItBuilder;
 	private int hsp = 0;
 		
 	// Set SP table src constants
@@ -48,8 +49,6 @@ public class MsmTables {
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 		crncCursor = CursorBuilder.createCursor(crncTable.getPrimaryKeyIndex());
 		rateCursor = CursorBuilder.createCursor(rateTable.getPrimaryKeyIndex());
-				
-		spItBuilder = new IterableBuilder(spCursor);
 		
 		// Get current hsp (SP table index)
 		// TODO Use index to get current hsp
@@ -102,36 +101,38 @@ public class MsmTables {
 	        LOGGER.info("Updated quote in SEC table for symbol " + symbol);
 		}
 		
-		// Update SP table
+		// Build SP row
 		Date quoteDate = (Date) quoteRow.get("dt");
-		if ((row = getSpRowToUpdate(hsec, quoteDate)) != null) {
-			LOGGER.info("Found previous quote to update in SP table for symbol " + symbol + ": " + row.get("dt") + ", price = " + row.get("dPrice") + ", hsp = " + row.get("hsp"));
-	    	// Merge quote row into SP row and write to SP table
-       		row.putAll(quoteRow);
-	    	row.put("dtSerial", new Date());		    	// dtSerial is assumed to be record creation/update time-stamp
-       		spCursor.updateCurrentRowFromMap(row);
-            LOGGER.info("Updated previous quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice"));
-		} else {
-			if ((row = getSpRowToCopy(hsec, quoteDate)) == null) {
-				LOGGER.info("Cannot find previous quote in SP table for symbol " + symbol);
-				row = quoteRow;
-	    	   	row.put("hsec", hsec);
+		if ((row = getSpRow(hsec, quoteDate)) == null) {
+			LOGGER.info("Cannot find previous quote in SP table for symbol " + symbol);
+			row = quoteRow;
+    	   	row.put("hsec", hsec);
+		} else {  
+			if (row.containsKey("hsp")) {
+				LOGGER.info("Found previous quote to update in SP table for symbol " + symbol + ": " + row.get("dt") + ", price = " + row.get("dPrice") + ", hsp = " + row.get("hsp"));
 			} else {
 				LOGGER.info("Found previous quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", price = " + row.get("dPrice") + ", hsp = " + row.get("hsp"));
-				row.putAll(quoteRow);
 			}
+	    	// Merge quote row into SP row
+       		row.putAll(quoteRow);
+		}
+			
+		// Update SP row
+		row.put("dtSerial", new Date());	// dtSerial is assumed to be record creation/update time-stamp
+		if (row.containsKey("hsp")) {
+			spCursor.updateCurrentRowFromMap(row);
+            LOGGER.info("Updated previous quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice"));
+		} else {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
 		   	row.put("src", ONLINE);
-		   	row.put("dtSerial", new Date());		    	// dtSerial is assumed to be record creation/update time-stamp
-	    	//spTable.addRowFromMap(row);
 		   	spRowList.add(row);
 	       	LOGGER.info("Added new quote to SP table update for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice") + ", new hsp = " + row.get("hsp"));
 		}				
 		
 		return true;
 	}		
-	
+				
     /** 
      * Searches the SEC table for the row matching the supplied symbol.
      * 
@@ -155,60 +156,81 @@ public class MsmTables {
      *
      * @param	hsec	hsec for search
      * @param	date	date for search
-     * @return	SP row if match found or null if not found
+     * @return	SP row if match for quote date found; hsp key is removed if row is for reference only; null if no row for hsec found
      */
-    private Map<String, Object> getSpRowToUpdate(int hsec, Date date) throws IOException {
+    private Map<String, Object> getSpRow(int hsec, Date quoteDate) throws IOException {
+    	
+    	Map<String, Object> row;
     	Map<String, Object> rowPattern = new HashMap<>();
-    
-        rowPattern.put("hsec", hsec);
-    	rowPattern.put("dt", date);
-    	int[] srcs = { ONLINE, MANUAL };
-    	for (int src : srcs) {
-        	rowPattern.put("src", src);
-               	if (spCursor.findFirstRow(rowPattern)) {
-               		return spCursor.getCurrentRow();
-	           	}
-    	}
-    	return null;
-    }
-    
-    /** 
-     * Searches the SP table for a row matching the supplied hsec and
-     * the most recent date previous to the supplied date.
-     *
-     * @param	hsec	hsec for search
-     * @param	date	date for search
-     * @return	SP row if match found or null if not found
-     */
-    private Map<String, Object> getSpRowToCopy(int hsec, Date date) throws IOException {
-    	Map<String, Object> row = null;
-    	Map<String, Object> returnRow = null;
-    	Map<String, Object> rowPattern = new HashMap<>();
-    	Date rowDate = new Date(0);
-    	Date maxDate = new Date(0);
+    	Iterator<Row> spIt;
+    	Instant firstInstant;
+    	Instant lastInstant;
     	
     	rowPattern.put("hsec", hsec);
-    	Iterator<Row> spIt = spItBuilder.setMatchPattern(rowPattern).iterator();
+    	
+		// Get instants for date from first and last rows for this hsec 
+    	spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+    	if (!spIt.hasNext()) {
+    		return null;	// No rows in SP table for this hsec
+    	} else {
+    		row = spIt.next();
+    		firstInstant = ((Date) row.get("dt")).toInstant();
+    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+    		row = spIt.next();
+        	lastInstant = ((Date) row.get("dt")).toInstant();
+    	}
+    	    	    	
+    	// Build iterator with the closest date to the quote date
+    	Instant quoteInstant = quoteDate.toInstant();
+    	long firstDays = Math.abs(ChronoUnit.DAYS.between(firstInstant, quoteInstant));
+    	long lastDays = Math.abs(ChronoUnit.DAYS.between(lastInstant, quoteInstant));
+    	LOGGER.debug("Instants: first = " + firstInstant + ", last = " + lastInstant + ", quote = " + quoteInstant);
+    	LOGGER.debug("Days: first->quote = " + firstDays + ", last->quote = " + lastDays);
+    	
+    	if (lastDays < firstDays) {
+    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+    	} else {
+    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+    	}
+    	    	
+    	Map<String, Object> refQuoteRow = null;
+    	Instant rowInstant = Instant.ofEpochMilli(0);
+    	Instant maxInstant = Instant.ofEpochMilli(0);
+    	    	
     	while (spIt.hasNext()) {
     		row = spIt.next();
-    		int src = (int) row.get("src");
-			rowDate = (Date) row.get("dt");
-			if (rowDate.after(maxDate)) {
-				// Test for previous manual or online quote
-				if ((src == ONLINE || src == MANUAL) && rowDate.before(date)) {
-		        	maxDate = rowDate;
-		        	returnRow = row;
-			    }
-				// Test for previous buy
-		        if (src == BUY && (rowDate.before(date) || rowDate.equals(date))) {
-	        		maxDate = rowDate;
-	        		returnRow = row;
-	        	}
+    		LOGGER.debug(row);
+			if ((rowInstant = ((Date) row.get("dt")).toInstant()).isBefore(maxInstant)) {
+				continue;
+			}
+			int src = (int) row.get("src");
+			if ((src == ONLINE || src == MANUAL) && rowInstant.equals(quoteInstant)) {
+				return row;		// Found existing quote for this hsec and quote date
+			}
+			// Test for previous manual or online quote
+			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
+	        	maxInstant = rowInstant;
+	        	refQuoteRow = row;
+		        if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 1) {
+		        	break;
+		        }
+		    }
+			// Test for previous buy
+	        if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
+	        	maxInstant = rowInstant;
+        		refQuoteRow = row;
+        		if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 0) {
+		        	break;
+		        }
 			}
 	   	}
-    	return returnRow;
+    	
+    	if (refQuoteRow != null) {
+    		refQuoteRow.remove("hsp");	// Remove hsp key and value to indicate returned row is for reference only	
+    	}    	
+    	return refQuoteRow;
     }	
-    
+
     private boolean updateFxRow(Map<String, Object> quoteRow) throws IOException {
     	
     	String currencyPair = (String) quoteRow.get("symbol");
