@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
@@ -20,7 +22,7 @@ import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmTables {
-	private static final Logger LOGGER = Logger.getLogger(MsmTables.class);
+	private static final Logger LOGGER = LogManager.getLogger(MsmTables.class);
 	
 	private Table secTable;
 	private Table spTable;
@@ -89,29 +91,29 @@ public class MsmTables {
 		
 		// Update SEC table
 		if ((row = getSecRowToUpdate(symbol)) == null) {
-			LOGGER.warn("Cannot find symbol " + symbol + " in SEC table");
+			LOGGER.warn("Cannot find symbol {} in SEC table", symbol);
 			return false;
 		} else {
 			hsec = (int) row.get("hsec");
-			LOGGER.info("Found symbol " + symbol + " in SEC table: sct = " + row.get("sct") + ", hsec = " + hsec);
+			LOGGER.info("Found symbol {} in SEC table: sct = {}, hsec = {}", symbol, row.get("sct"), hsec);
 	    	// Merge quote row into SEC row and write to SEC table
 	    	row.putAll(quoteRow);
 	    	row.put("dtSerial", new Date());		    	// dtSerial is assumed to be record creation/update time-stamp
 	    	secCursor.updateCurrentRowFromMap(row);
-	        LOGGER.info("Updated quote in SEC table for symbol " + symbol);
+	        LOGGER.info("Updated quote in SEC table for symbol {}", symbol);
 		}
 		
 		// Build SP row
 		Date quoteDate = (Date) quoteRow.get("dt");
 		if ((row = getSpRow(hsec, quoteDate)) == null) {
-			LOGGER.info("Cannot find previous quote in SP table for symbol " + symbol);
+			LOGGER.info("Cannot find previous quote in SP table for symbol {}", symbol);
 			row = quoteRow;
     	   	row.put("hsec", hsec);
 		} else {  
 			if (row.containsKey("hsp")) {
-				LOGGER.info("Found previous quote to update in SP table for symbol " + symbol + ": " + row.get("dt") + ", price = " + row.get("dPrice") + ", hsp = " + row.get("hsp"));
+				LOGGER.info("Found previous quote to update in SP table for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 			} else {
-				LOGGER.info("Found previous quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", price = " + row.get("dPrice") + ", hsp = " + row.get("hsp"));
+				LOGGER.info("Found previous quote in SP table for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 			}
 	    	// Merge quote row into SP row
        		row.putAll(quoteRow);
@@ -121,13 +123,13 @@ public class MsmTables {
 		row.put("dtSerial", new Date());	// dtSerial is assumed to be record creation/update time-stamp
 		if (row.containsKey("hsp")) {
 			spCursor.updateCurrentRowFromMap(row);
-            LOGGER.info("Updated previous quote in SP table for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice"));
+            LOGGER.info("Updated previous quote in SP table for symbol {}: {}, new price = {}", symbol, row.get("dt"), row.get("dPrice"));
 		} else {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
 		   	row.put("src", ONLINE);
 		   	spRowList.add(row);
-	       	LOGGER.info("Added new quote to SP table update for symbol " + symbol + ": " + row.get("dt") + ", new price = " + row.get("dPrice") + ", new hsp = " + row.get("hsp"));
+            LOGGER.info("Added new quote to SP table update for symbol {}: {}, new price = {}, new hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 		}				
 		
 		return true;
@@ -184,8 +186,8 @@ public class MsmTables {
     	Instant quoteInstant = quoteDate.toInstant();
     	long firstDays = Math.abs(ChronoUnit.DAYS.between(firstInstant, quoteInstant));
     	long lastDays = Math.abs(ChronoUnit.DAYS.between(lastInstant, quoteInstant));
-    	LOGGER.debug("Instants: first = " + firstInstant + ", last = " + lastInstant + ", quote = " + quoteInstant);
-    	LOGGER.debug("Days: first->quote = " + firstDays + ", last->quote = " + lastDays);
+    	LOGGER.debug("Instants: first = {}, last = {}, quote = {}", firstInstant, lastInstant, quoteInstant);
+    	LOGGER.debug("Days: first->quote = {}, last->quote = {}", firstDays, lastDays);
     	
     	if (lastDays < firstDays) {
     		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
@@ -200,12 +202,13 @@ public class MsmTables {
     	while (spIt.hasNext()) {
     		row = spIt.next();
     		LOGGER.debug(row);
-			if ((rowInstant = ((Date) row.get("dt")).toInstant()).isBefore(maxInstant)) {
-				continue;
-			}
-			int src = (int) row.get("src");
+    		int src = (int) row.get("src");
+    		rowInstant = ((Date) row.get("dt")).toInstant();
 			if ((src == ONLINE || src == MANUAL) && rowInstant.equals(quoteInstant)) {
 				return row;		// Found existing quote for this hsec and quote date
+			}
+			if (rowInstant.isBefore(maxInstant)) {
+				continue;
 			}
 			// Test for previous manual or online quote
 			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
@@ -235,7 +238,7 @@ public class MsmTables {
     	
     	String currencyPair = (String) quoteRow.get("symbol");
     	
-		LOGGER.info("Processing quote for currency pair " + currencyPair);
+		LOGGER.info("Processing quote for currency pair {}", currencyPair);
             	
         // Find currencies in CRNC table
         Map<String, Object> crncRow = null;
@@ -249,9 +252,9 @@ public class MsmTables {
             if (crncCursor.findFirstRow(crncRowPattern)) {
                 crncRow = crncCursor.getCurrentRow();
                 hcrncs[n] = (int) crncRow.get("hcrnc");
-                LOGGER.info("Found currency " + isoCode + ", hcrnc = " + hcrncs[n]);
+                LOGGER.info("Found currency {}, hcrnc = {}", isoCode, hcrncs[n]);
             } else {
-            	LOGGER.warn("Cannot find currency " + isoCode);
+            	LOGGER.warn("Cannot find currency {}", isoCode);
         		return false;
     	   	}
         }	
@@ -265,7 +268,7 @@ public class MsmTables {
         
         for (n = 0; n < 3; n++) {
         	if (n == 2) {
-        		LOGGER.warn("Cannot find previous rate for currency pair " + currencyPair);
+        		LOGGER.warn("Cannot find previous rate for currency pair {}", currencyPair);
         		return false;
         	}
            	rateRowPattern.put("hcrncFrom", hcrncs[n]);
@@ -277,13 +280,12 @@ public class MsmTables {
                 	// Reversed rate
                 	newRate = 1 / newRate;                	
                 }
-                LOGGER.info("Found currency pair: from hcrnc = " + hcrncs[n] + ", to hcrnc = " + hcrncs[(n + 1) % 2]);
+                LOGGER.info("Found currency pair: from hcrnc = {}, to hcrnc = {}", hcrncs[n], hcrncs[(n + 1) % 2]);
                 rateCursor.setCurrentRowValue(column, newRate);
-                LOGGER.info("Updated currency pair " + currencyPair + ": previous rate = " + oldRate + ", new rate = " + newRate);
+                LOGGER.info("Updated currency pair {}: previous rate = {}, new rate = {}", currencyPair, oldRate, newRate);
                 return true;
             }	
         }
         return true;
     }
-    
 }

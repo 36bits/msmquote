@@ -5,12 +5,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
 public class Update {
-    private static final Logger LOGGER = Logger.getLogger(Update.class);
+    private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	
     // Define exit code fields
     private static final int OK = 0;
@@ -78,7 +80,7 @@ public class Update {
 			}
 		}
 					
-        LOGGER.info("Duration: " + Duration.between(startTime, Instant.now()).toString());
+        LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
        	System.exit(exitCode);
    }
 }

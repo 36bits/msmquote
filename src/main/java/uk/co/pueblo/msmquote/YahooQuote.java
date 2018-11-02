@@ -14,14 +14,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class YahooQuote {
 	
-	private static final Logger LOGGER = Logger.getLogger(YahooQuote.class);
+	private static final Logger LOGGER = LogManager.getLogger(YahooQuote.class);
 	
 	// Set Yahoo quote-type fields
     private static final String EQUITY = "EQUITY";
@@ -62,7 +64,7 @@ public class YahooQuote {
 			csvFile = new File(source);
 			csvBr = new BufferedReader(new FileReader(csvFile));
 			if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
-				LOGGER.warn("Yahoo CSV header not found in file " + source);
+				LOGGER.warn("Yahoo CSV header not found in file {}", source);
 				csvBr.close();
 			}				
 			
@@ -104,7 +106,7 @@ public class YahooQuote {
 		// Get quote type
 		String symbol = result.get("symbol").asText();
 		String quoteType = result.get("quoteType").asText();			
-		LOGGER.info("Processing quote data for symbol " + symbol + ", quote type = " + quoteType);
+		LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
 						    	
 		if (quoteType.equals(CURRENCY)) {
 			quoteRow.put("symbol", result.get("symbol").asText());
@@ -229,7 +231,7 @@ public class YahooQuote {
 		String origSymbol = symbol;
 	    if (symbol.length() > 12) {
 			symbol = symbol.substring(0, 12);
-			LOGGER.info("Truncated symbol " + origSymbol + " to " + symbol);
+			LOGGER.info("Truncated symbol {} to {}", origSymbol, symbol);
 		}
 	    return symbol;
     }

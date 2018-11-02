@@ -4,14 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.CryptCodecProvider;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 
 public class MsmDb extends DatabaseBuilder {
-	private static final Logger LOGGER = Logger.getLogger(MsmDb.class);
+	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
 	
 	private Database db;
 		
@@ -28,7 +30,7 @@ public class MsmDb extends DatabaseBuilder {
         	lockFileName = fileName.substring(0, i);
         }
 		File lockFile = new File(lockFileName + ".lrd");
-		LOGGER.info("Creating lock file: " + lockFile.getAbsolutePath());
+		LOGGER.info("Creating lock file: {}", lockFile.getAbsolutePath());
 		if (!lockFile.createNewFile()) {
 			throw new FileAlreadyExistsException("Lock file already exists");
 		}
@@ -44,7 +46,7 @@ public class MsmDb extends DatabaseBuilder {
 		else {
 			cryptCp = new CryptCodecProvider(password);
 		}
-		LOGGER.info("Opening Money file: " + dbFile.getAbsolutePath());
+		LOGGER.info("Opening Money file: {}", dbFile.getAbsolutePath());
 		db = new DatabaseBuilder(dbFile).setCodecProvider(cryptCp).open();		
 		return;
 	}
@@ -54,7 +56,7 @@ public class MsmDb extends DatabaseBuilder {
 	}
 
 	public void closeDb() throws IOException {
-		LOGGER.info("Closing Money file: " + db.getFile());
+		LOGGER.info("Closing Money file: {}", db.getFile());
 		db.close();
 		return;
 	}
