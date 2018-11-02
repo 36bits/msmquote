@@ -164,7 +164,7 @@ public class YahooQuote {
 		    // Columns for EQUITY quote types
 	       if (quoteType.equals("EQUITY")) {
 	        	// SEC table
-		        // TODO add EPS and beta
+		        // TODO Add EPS and beta
 	        	quoteRow.put("dCapitalization", result.get("marketCap").asDouble());
 	            quoteRow.put("dSharesOutstanding", result.get("sharesOutstanding").asDouble());
 	            if (result.has("trailingAnnualDividendYield")) {
