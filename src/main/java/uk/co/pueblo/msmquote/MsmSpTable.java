@@ -39,16 +39,13 @@ public class MsmSpTable {
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 			
 		// Get current hsp (SP table index)
-		// TODO Use index to get current hsp
 		int rowHsp = 0;
 		Column column = spTable.getColumn("hsp");
-		spCursor.beforeFirst();
-		while (spCursor.moveToNextRow()) {
+		spCursor.afterLast();
+		if (spCursor.getPreviousRow() != null) {
 			hsp = (int) spCursor.getCurrentRowValue(column);
-			if (rowHsp > hsp) {
-		 		hsp = rowHsp;
-		 	}
-		 }
+		}
+		LOGGER.debug("Current hsp = {}", rowHsp);
 	}
 	
     public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
@@ -57,15 +54,18 @@ public class MsmSpTable {
     	    	
 		// Build SP row
 		Date quoteDate = (Date) quoteRow.get("dt");
+		boolean addRow = false;
 		if ((row = getSpRow(hsec, quoteDate)) == null) {
 			LOGGER.info("Cannot find previous quote for symbol {}", symbol);
 			row = quoteRow;
 			row.put("hsec", hsec);
+			addRow = true;
 		} else {  
-			if (row.containsKey("hsp")) {
-				LOGGER.info("Found previous quote to update for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
-			} else {
+			if (row.containsKey("fAddRow")) {
 				LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
+				addRow = true;
+			} else {
+				LOGGER.info("Found previous quote to update for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 			}
 			// Merge quote row into SP row
 			row.putAll(quoteRow);
@@ -73,15 +73,15 @@ public class MsmSpTable {
 			
 		// Update SP row
 		row.put("dtSerial", new Date());	// dtSerial is assumed to be record creation/update time-stamp
-		if (row.containsKey("hsp")) {
-			spCursor.updateCurrentRowFromMap(row);
-			LOGGER.info("Updated previous quote for symbol {}: {}, new price = {}", symbol, row.get("dt"), row.get("dPrice"));
-		} else {
+		if (addRow) {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
 			row.put("src", ONLINE);
 			spRowList.add(row);
-			LOGGER.info("Added new quote to SP table update for symbol {}: {}, new price = {}, new hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
+			LOGGER.info("Added new quote for symbol {} to table update list: {}, new price = {}, new hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
+		} else {
+			spCursor.updateCurrentRowFromMap(row);
+			LOGGER.info("Updated previous quote for symbol {}: {}, new price = {}", symbol, row.get("dt"), row.get("dPrice"));
 		}		
 
 		return;
@@ -89,8 +89,8 @@ public class MsmSpTable {
     
     public void addNewRows() throws IOException{
 		if (!spRowList.isEmpty()) {
-			LOGGER.info("Adding new quotes to SP table");
 			spTable.addRowsFromMaps(spRowList);
+			LOGGER.info("Added new quotes from table update list");
 		}
 		return;
 	}
@@ -100,7 +100,7 @@ public class MsmSpTable {
      *
      * @param	hsec	hsec for search
      * @param	date	date for search
-     * @return	SP row if match for quote date found; hsp key is removed if row is for reference only; null if no row for hsec found
+     * @return	SP row if match for quote date found, null if no row for hsec found. Row has fAddQuote key if row is for reference only. 
      */
     private Map<String, Object> getSpRow(int hsec, Date quoteDate) throws IOException {
     	Map<String, Object> row;
@@ -169,7 +169,7 @@ public class MsmSpTable {
 	   	}
     	
     	if (refQuoteRow != null) {
-    		refQuoteRow.remove("hsp");	// Remove hsp key and value to indicate returned row is for reference only	
+    		refQuoteRow.put("fAddRow", true);		// Add key to indicate returned row is for reference only
     	}    	
     	return refQuoteRow;
     }	
