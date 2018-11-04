@@ -48,6 +48,12 @@ public class MsmSpTable {
 		LOGGER.debug("Current hsp = {}", rowHsp);
 	}
 	
+    /** 
+     * Updates the SP table with the supplied quote row
+     *
+     * @param	quoteRow	SP table row containing the quote data to be updated
+     * @param	hsec		the hsec to be updated
+     */
     public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
     	String symbol = (String) quoteRow.get("szSymbol");
     	Map<String, Object> row = null;
