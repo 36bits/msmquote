@@ -135,7 +135,7 @@ public class MsmSpTable {
     		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
     	}
     	    	
-    	Map<String, Object> refQuoteRow = null;
+    	Map<String, Object> returnRow = null;
     	Instant rowInstant = Instant.ofEpochMilli(0);
     	Instant maxInstant = Instant.ofEpochMilli(0);
     	    	
@@ -153,7 +153,7 @@ public class MsmSpTable {
 			// Test for previous manual or online quote
 			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
 	        	maxInstant = rowInstant;
-	        	refQuoteRow = row;
+	        	returnRow = row;
 		        if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 1) {
 		        	break;
 		        }
@@ -161,16 +161,16 @@ public class MsmSpTable {
 			// Test for previous buy
 	        if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
 	        	maxInstant = rowInstant;
-        		refQuoteRow = row;
+        		returnRow = row;
         		if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 0) {
 		        	break;
 		        }
 			}
 	   	}
     	
-    	if (refQuoteRow != null) {
-    		refQuoteRow.put("fAddRow", true);		// Add key to indicate returned row is for reference only
+    	if (returnRow != null) {
+    		returnRow.put("fAddRow", true);		// Add key to indicate returned row is for reference only
     	}    	
-    	return refQuoteRow;
+    	return returnRow;
     }	
 }
