@@ -40,31 +40,43 @@ public class Update {
     	int exitCode = OK; 
     	
     	// Open Money database
-    	MsmDb msmDb = null;
-    	Database openMsmDb = null;
+    	MsmDb db = null;
+    	Database openedDb = null;
 		try {
-			msmDb = new MsmDb(args[0], password);
-			openMsmDb = msmDb.getDb();
+			db = new MsmDb(args[0], password);
+			openedDb = db.getDb();
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			System.exit(ERROR);
 		}
     	
 		// Process quote data
+		int hsec;
 		Map<String, Object> quoteRow = new HashMap<>();
-		MsmTables msmTables = null;
+		MsmSecTable secTable = null;
+		MsmSpTable spTable = null;
+		MsmFxTable fxTable = null;
 		
 		try {
-			msmTables = new MsmTables(openMsmDb);
+			secTable = new MsmSecTable(openedDb);
+			spTable = new MsmSpTable(openedDb);
+			fxTable = new MsmFxTable(openedDb);
 			YahooQuote yahooQuote = new YahooQuote(source);
 			while (true) {
 				if ((quoteRow = yahooQuote.getNext()) == null) {
 					break;
 				}
-				if (!msmTables.update(quoteRow)) {
-					exitCode = WARNING;
+				if (quoteRow.get("rate") == null) {
+					if((hsec = secTable.update(quoteRow)) != -1) {
+						spTable.update(quoteRow, hsec);
+					} else {
+						exitCode = WARNING;
+					}
+				} else {		
+					if (!fxTable.update(quoteRow)) {
+						exitCode = WARNING;
+					}
 				}
-				//quoteRow.clear();
 			}
 		} catch (IOException e) {
 			LOGGER.fatal(e);
@@ -72,8 +84,8 @@ public class Update {
 		} finally {
 			// Add any new rows to the SP table and close the Money database
 			try {
-				msmTables.addNewSpRows();
-				msmDb.closeDb();
+				spTable.addNewRows();
+				db.closeDb();
 			} catch (IOException e) {
 				LOGGER.fatal(e);
 				exitCode = ERROR;
