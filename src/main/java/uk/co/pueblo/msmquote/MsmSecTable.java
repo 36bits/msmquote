@@ -1,17 +1,24 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
+import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
+import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmSecTable {
 	private static final Logger LOGGER = LogManager.getLogger(MsmSecTable.class);
@@ -47,5 +54,21 @@ public class MsmSecTable {
 	   	}
 			
 		return hsec;
+    }
+    
+    public List<String> getSymbolList() throws IOException {
+    	Map<String, Object> row = null;
+    	Map<String, Object> rowPattern = new HashMap<>();
+    	Iterator<Row> secIt;
+    	List<String> symbolList = new ArrayList<>();
+    	    	    	
+		// Build list of symbols 
+    	rowPattern.put("fOLQuotes", true);
+    	secIt = new IterableBuilder(secCursor).setMatchPattern(rowPattern).forward().iterator();
+    	while (secIt.hasNext()) {
+    		row = secIt.next();
+    		symbolList.add((String) row.get("szSymbol"));
+    	}
+    	return symbolList;
     }
 }
