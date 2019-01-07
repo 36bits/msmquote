@@ -130,7 +130,7 @@ public class YahooQuote {
 	    		    	
 	    	// Set quote factor for GB quotes
 	    	double quoteFactor = 1;
-	    	if (quoteType.equals(EQUITY) || quoteType.equals(BOND)) {
+	    	if (quoteType.equals(EQUITY) || quoteType.equals(BOND) || quoteType.equals(MF)) {
 	        	if (result.get("currency").asText().toUpperCase().equals("GBP")) {
 	        		quoteFactor = 0.01;
 	        	} 

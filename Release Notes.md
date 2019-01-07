@@ -1,3 +1,18 @@
+# Version 2.0.1-beta
+
+## New Features
+* None.
+
+## Enhancements
+* Update Jackson library to 2.9.8.
+* Update Jackcess library to 2.2.1.
+
+## Bug Fixes
+* Fix GBP mutual find price calculation.
+
+## Known Issues
+* None.
+
 # Version 2.0.0-beta
 
 ## New Features
