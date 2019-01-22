@@ -160,17 +160,12 @@ public class MsmSpTable {
 			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
 	        	maxInstant = rowInstant;
 	        	returnRow = row;
-		        if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 1) {
-		        	break;
-		        }
+	        	continue;
 		    }
 			// Test for previous buy
 	        if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
 	        	maxInstant = rowInstant;
         		returnRow = row;
-        		if (ChronoUnit.DAYS.between(maxInstant, quoteInstant) == 0) {
-		        	break;
-		        }
 			}
 	   	}
     	

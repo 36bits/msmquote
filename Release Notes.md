@@ -1,3 +1,17 @@
+# Version 2.0.2-beta
+
+## New Features
+* None.
+
+## Enhancements
+* Update Jackcess library to 2.2.2.
+
+## Bug Fixes
+* Fix bug causing multiple additions of quotes with the same date.
+
+## Known Issues
+* None.
+
 # Version 2.0.1-beta
 
 ## New Features
