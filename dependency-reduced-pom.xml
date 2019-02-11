@@ -4,7 +4,7 @@
   <groupId>uk.co.pueblo</groupId>
   <artifactId>msmquote</artifactId>
   <name>msmquote</name>
-  <version>2.0.2-beta</version>
+  <version>2.0.3-SNAPSHOT</version>
   <build>
     <pluginManagement>
       <plugins>
