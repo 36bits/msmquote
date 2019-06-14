@@ -1,4 +1,4 @@
-# Version 2.0.3-SNAPSHOT
+# Version 2.0.3-beta
 
 ## New Features
 * None.
