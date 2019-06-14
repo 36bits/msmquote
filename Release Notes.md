@@ -1,3 +1,17 @@
+# Version 2.0.4-SNAPSHOT
+
+## New Features
+* None.
+
+## Enhancements
+* None.
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 2.0.3-beta
 
 ## New Features
