@@ -1,3 +1,19 @@
+# Version 2.0.3-SNAPSHOT
+
+## New Features
+* None.
+
+## Enhancements
+* Update jackcess library to 3.0.1.
+* Update jackson-databind library to 2.9.9.
+* Upgrade log4j-core library to 2.11.2. 
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 2.0.2-beta
 
 ## New Features
