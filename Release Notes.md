@@ -4,7 +4,8 @@
 * None.
 
 ## Enhancements
-* Update log4j-core library to 2.12.0.
+* Update log4j-core library to 2.12.1.
+* Update jackson-databind library to 2.9.9.3.
 
 ## Bug Fixes
 * None.
