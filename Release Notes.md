@@ -1,11 +1,11 @@
-# Version 2.0.4-SNAPSHOT
+# Version 2.0.4
 
 ## New Features
 * None.
 
 ## Enhancements
 * Update log4j-core library to 2.12.1.
-* Update jackson-databind library to 2.10.0.
+* Update jackson-databind library to 2.10.1.
 
 ## Bug Fixes
 * None.
