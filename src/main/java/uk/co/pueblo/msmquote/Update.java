@@ -37,7 +37,8 @@ public class Update {
 	        return;
 	    }    	
 
-    	int exitCode = OK; 
+    	int exitCode = OK;
+    	LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
     	
     	// Open Money database
     	MsmDb db = null;
