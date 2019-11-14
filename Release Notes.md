@@ -1,3 +1,17 @@
+# Version 2.0.5
+
+## New Features
+* None.
+
+## Enhancements
+* Add version log message.
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 2.0.4
 
 ## New Features
