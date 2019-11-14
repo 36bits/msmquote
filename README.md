@@ -3,7 +3,7 @@
 ## Getting Started
 Download the latest **msmquote** [JAR](https://github.com/36bits/msmquote/releases) to your machine and run as follows:
 
-`java -cp msmquote-2.0.5.jar uk.co.pueblo.msmquote.Update moneyfile.mny password source`
+`java -cp msmquote-2.0.6.jar uk.co.pueblo.msmquote.Update moneyfile.mny password source`
 
 Parameters:
 * **moneyfile.mny** is the MS Money file you wish to update

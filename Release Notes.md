@@ -1,3 +1,17 @@
+# Version 2.0.6
+
+## New Features
+* None.
+
+## Enhancements
+* None.
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 2.0.5
 
 ## New Features
