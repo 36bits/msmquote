@@ -4,7 +4,7 @@
 * None.
 
 ## Enhancements
-* None.
+* Update log4j-core library to 2.13.0.
 
 ## Bug Fixes
 * None.
