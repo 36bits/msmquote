@@ -5,7 +5,7 @@
 
 ## Enhancements
 * Update log4j-core to 2.13.1.
-* Update jackson-databind to 2.10.2.
+* Update jackson-databind to 2.10.3.
 
 ## Bug Fixes
 * None.
