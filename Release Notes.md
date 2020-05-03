@@ -1,4 +1,4 @@
-# Version 2.0.6
+# Version 3.0.0
 
 ## New Features
 * None.

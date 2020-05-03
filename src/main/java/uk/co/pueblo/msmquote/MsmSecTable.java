@@ -49,24 +49,27 @@ public class MsmSecTable {
 	        LOGGER.info("Updated quote for symbol {}", symbol);
 	   	} else {
 	   		LOGGER.warn("Cannot find symbol {}", symbol);
-	   	}
-			
+	   	}			
 		return hsec;
     }
     
-    public List<String> getSymbolList() throws IOException {
+    public List<String> getSymbols() throws IOException {
     	Map<String, Object> row = null;
     	Map<String, Object> rowPattern = new HashMap<>();
     	Iterator<Row> secIt;
-    	List<String> symbolList = new ArrayList<>();
+    	List<String> symbols = new ArrayList<>();
+    	String symbol;
     	    	    	
 		// Build list of symbols 
     	rowPattern.put("fOLQuotes", true);
     	secIt = new IterableBuilder(secCursor).setMatchPattern(rowPattern).forward().iterator();
     	while (secIt.hasNext()) {
     		row = secIt.next();
-    		symbolList.add((String) row.get("szSymbol"));
+    		symbol = (String) row.get("szSymbol");
+    		if (symbol != null) {
+    			symbols.add((String) row.get("szSymbol"));
+    		}
     	}
-    	return symbolList;
+    	return symbols;
     }
 }
