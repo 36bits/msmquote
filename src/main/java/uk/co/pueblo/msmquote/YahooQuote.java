@@ -59,8 +59,8 @@ public class YahooQuote {
 			csvBr = new BufferedReader(new FileReader(csvFile));
 			if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
 				LOGGER.warn("Yahoo CSV header not found in file {}", source);
-				// TODO Test invalid header
 				csvBr.close();
+				// TODO Now what happens? This needs to be tested.
 			}				
 			
 			// Get quote symbol from CSV file name & truncate if required

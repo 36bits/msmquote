@@ -12,54 +12,54 @@ import org.apache.logging.log4j.Logger;
 import com.healthmarketscience.jackcess.Database;
 
 public class Update {
-    private static final Logger LOGGER = LogManager.getLogger(Update.class);
-	
-    // Define exit codes
-    private static final int OK = 0;
-    private static final int WARNING = 1;
-    private static final int ERROR = 2;
-    
-    private static final String DELIM = ",";
-            
-    public static void main(String[] args) {
-    	
-    	LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
-    	
-    	Instant startTime = Instant.now();
-    	int exitCode = OK;
-	 	MsmDb db = null;
-		
-    	try {	    	
+	private static final Logger LOGGER = LogManager.getLogger(Update.class);
+
+	// Define exit codes
+	private static final int OK = 0;
+	private static final int WARNING = 1;
+	private static final int ERROR = 2;
+
+	private static final String DELIM = ",";
+
+	public static void main(String[] args) {
+
+		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
+
+		Instant startTime = Instant.now();
+		int exitCode = OK;
+		MsmDb db = null;
+
+		try {	    	
 			// Process command-line arguments
-	    	String password = null;
-	    	String source = null;
-		    
-	    	if (args.length == 3) {
-		    	password = args[1];
-		    	source = args[2];
-	    	} else if (args.length == 2) {
-	    		source = args[1];
-	    	} else {
-		    	throw new IllegalArgumentException("Usage: filename [password] source"); 
-		    }
-	    	
-	    	// Open Money database
-	       	Database openedDb = null;			
+			String password = null;
+			String source = null;
+
+			if (args.length == 3) {
+				password = args[1];
+				source = args[2];
+			} else if (args.length == 2) {
+				source = args[1];
+			} else {
+				throw new IllegalArgumentException("Usage: filename [password] source"); 
+			}
+
+			// Open Money database
+			Database openedDb = null;			
 			db = new MsmDb(args[0], password);
 			openedDb = db.getDb();
-	    	
-	    	try {
+
+			try {
 				// Instantiate table objects
 				MsmSecTable secTable = new MsmSecTable(openedDb);
 				MsmSpTable spTable = new MsmSpTable(openedDb);
 				MsmFxTable fxTable = new MsmFxTable(openedDb);
 				MsmCrncTable crncTable = new MsmCrncTable(openedDb);
 				MsmDhdTable dhdTable = new MsmDhdTable(openedDb);
-	 	
+
 				// Process quote source types
 				YahooQuote yahooQuote = null;
-		    	String sourceLow = source.toLowerCase();
-		    	if (sourceLow.startsWith("https://") || sourceLow.startsWith("http://")) {
+				String sourceLow = source.toLowerCase();
+				if (sourceLow.startsWith("https://") || sourceLow.startsWith("http://")) {
 					if (sourceLow.endsWith("symbols=")) {
 						int n;
 						String delim;
@@ -73,7 +73,7 @@ public class Update {
 							}
 							stockSymbols = stockSymbols + delim + symbolsList.get(n);
 						}
-						LOGGER.info("Stock symbols: {}", stockSymbols);
+						LOGGER.info("Will get quote data for these stock symbols: {}", stockSymbols);
 						// Build currency symbols string
 						String defIsoCode = null;
 						String fxSymbols = "";
@@ -90,7 +90,7 @@ public class Update {
 							}
 							fxSymbols = fxSymbols + delim + defIsoCode + isoCodesList.get(n - 1) + "=X";
 						}
-						LOGGER.info("FX symbols: {}", fxSymbols);
+						LOGGER.info("Will get quote data for these FX symbols: {}", fxSymbols);
 						// Append symbols to Yahoo API URL
 						delim = DELIM;
 						if (stockSymbols.isEmpty()) {
@@ -105,7 +105,7 @@ public class Update {
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
-			        	
+
 				// Process quote data
 				int hsec;
 				String currencyPair;
@@ -140,25 +140,25 @@ public class Update {
 						exitCode = WARNING;
 					}
 				}
-				
+
 				// Add any new rows to the SP table
 				spTable.addNewRows();
-			
-				} catch (Exception e) {
-					LOGGER.fatal(e);
-					LOGGER.debug("Exception occured!", e);
-					exitCode = ERROR;
-				}
-    		
-	    	// Close Money database
+
+			} catch (Exception e) {
+				LOGGER.fatal(e);
+				LOGGER.debug("Exception occured!", e);
+				exitCode = ERROR;
+			}
+
+			// Close Money database
 			db.closeDb();
-				    	
-    	} catch (Exception e) {
-    		LOGGER.fatal(e);
+
+		} catch (Exception e) {
+			LOGGER.fatal(e);
 			LOGGER.debug("Exception occured!", e);
 			exitCode = ERROR;
-    	}									
-        LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-       	System.exit(exitCode);
-    }
+		}									
+		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
+		System.exit(exitCode);
+	}
 }
