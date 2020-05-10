@@ -92,10 +92,11 @@ public class YahooQuote {
 		JsonNode result = resultIt.next();
 		
 		Map<String, Object> quoteRow = new HashMap<>();
+		String symbol = null;
 				
 		try {		
 			// Get quote type
-			String symbol = result.get("symbol").asText();
+			symbol = result.get("symbol").asText();
 			String quoteType = result.get("quoteType").asText();			
 			LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
 									    	
@@ -170,9 +171,9 @@ public class YahooQuote {
 		        }
 			}
 		} catch (NullPointerException e) {
-			LOGGER.warn(e);
+			LOGGER.warn("Incomplete quote data for symbol {}", symbol);
 			LOGGER.debug("Exception occured!", e);
-			quoteRow.put("error", null);
+			quoteRow.put("xError", null);
 		}
     	return quoteRow;
 	}

@@ -22,22 +22,22 @@ import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmSpTable {
 	private static final Logger LOGGER = LogManager.getLogger(MsmSpTable.class);
-	
+
 	private Table spTable;
 	private IndexCursor spCursor;
 	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
 	private int hsp = 0;
-		
+
 	// Set SP table src constants
-    private static final int BUY = 1;
-    private static final int MANUAL = 5;
-    private static final int ONLINE = 6;
-	
- // Constructor
-    public MsmSpTable(Database mnyDb) throws IOException {
+	private static final int BUY = 1;
+	private static final int MANUAL = 5;
+	private static final int ONLINE = 6;
+
+	// Constructor
+	public MsmSpTable(Database mnyDb) throws IOException {
 		spTable = mnyDb.getTable("SP");
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
-			
+
 		// Get current hsp (SP table index)
 		int rowHsp = 0;
 		Column column = spTable.getColumn("hsp");
@@ -47,17 +47,17 @@ public class MsmSpTable {
 		}
 		LOGGER.debug("Current hsp = {}", rowHsp);
 	}
-	
-    /** 
-     * Updates the SP table with the supplied quote row
-     *
-     * @param	quoteRow	SP table row containing the quote data to be updated
-     * @param	hsec		the hsec to be updated
-     */
-    public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
-    	String symbol = (String) quoteRow.get("szSymbol");
-    	Map<String, Object> row = null;
-    	    	
+
+	/** 
+	 * Updates the SP table with the supplied quote row
+	 *
+	 * @param	quoteRow	SP table row containing the quote data to be updated
+	 * @param	hsec		the hsec to be updated
+	 */
+	public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
+		String symbol = (String) quoteRow.get("szSymbol");
+		Map<String, Object> row = null;
+
 		// Build SP row
 		Date quoteDate = (Date) quoteRow.get("dt");
 		boolean addRow = false;
@@ -67,7 +67,7 @@ public class MsmSpTable {
 			row.put("hsec", hsec);
 			addRow = true;
 		} else {  
-			if (row.containsKey("fAddRow")) {
+			if (row.containsKey("xAddRow")) {
 				LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 				addRow = true;
 			} else {
@@ -76,7 +76,7 @@ public class MsmSpTable {
 			// Merge quote row into SP row
 			row.putAll(quoteRow);
 		}
-			
+
 		// Update SP row
 		row.put("dtSerial", new Date());	// dtSerial is assumed to be record creation/update time-stamp
 		if (addRow) {
@@ -91,65 +91,65 @@ public class MsmSpTable {
 		}		
 
 		return;
-    }
-    
-    public void addNewRows() throws IOException{
+	}
+
+	public void addNewRows() throws IOException{
 		if (!spRowList.isEmpty()) {
 			spTable.addRowsFromMaps(spRowList);
 			LOGGER.info("Added new quotes from table update list");
 		}
 		return;
 	}
-        
-    /** 
-     * Searches the SP table for a row matching the supplied hsec and date.
-     *
-     * @param	hsec	hsec for search
-     * @param	date	date for search
-     * @return	SP row if match for quote date found, null if no row for hsec found. Row has fAddQuote key if row is for reference only. 
-     */
-    private Map<String, Object> getSpRow(int hsec, Date quoteDate) throws IOException {
-    	Map<String, Object> row;
-    	Map<String, Object> rowPattern = new HashMap<>();
-    	Iterator<Row> spIt;
-    	Instant firstInstant;
-    	Instant lastInstant;
-    	    	
+
+	/** 
+	 * Searches the SP table for a row matching the supplied hsec and date.
+	 *
+	 * @param	hsec	hsec for search
+	 * @param	date	date for search
+	 * @return	SP row if match for quote date found, null if no row for hsec found. Row has fAddQuote key if row is for reference only. 
+	 */
+	private Map<String, Object> getSpRow(int hsec, Date quoteDate) throws IOException {
+		Map<String, Object> row;
+		Map<String, Object> rowPattern = new HashMap<>();
+		Iterator<Row> spIt;
+		Instant firstInstant;
+		Instant lastInstant;
+
 		// Get instants for date from first and last rows for hsec
-    	rowPattern.put("hsec", hsec);
-    	spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
-    	if (!spIt.hasNext()) {
-    		return null;	// No rows in SP table for this hsec
-    	} else {
-    		row = spIt.next();
-    		firstInstant = ((Date) row.get("dt")).toInstant();
-    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
-    		row = spIt.next();
-        	lastInstant = ((Date) row.get("dt")).toInstant();
-    	}
-    	    	    	
-    	// Build iterator with the closest date to the quote date
-    	Instant quoteInstant = quoteDate.toInstant();
-    	long firstDays = Math.abs(ChronoUnit.DAYS.between(firstInstant, quoteInstant));
-    	long lastDays = Math.abs(ChronoUnit.DAYS.between(lastInstant, quoteInstant));
-    	LOGGER.debug("Instants: first = {}, last = {}, quote = {}", firstInstant, lastInstant, quoteInstant);
-    	LOGGER.debug("Days: first->quote = {}, last->quote = {}", firstDays, lastDays);
-    	
-    	if (lastDays < firstDays) {
-    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
-    	} else {
-    		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
-    	}
-    	    	
-    	Map<String, Object> returnRow = null;
-    	Instant rowInstant = Instant.ofEpochMilli(0);
-    	Instant maxInstant = Instant.ofEpochMilli(0);
-    	    	
-    	while (spIt.hasNext()) {
-    		row = spIt.next();
-    		LOGGER.debug(row);
-    		int src = (int) row.get("src");
-    		rowInstant = ((Date) row.get("dt")).toInstant();
+		rowPattern.put("hsec", hsec);
+		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+		if (!spIt.hasNext()) {
+			return null;	// No rows in SP table for this hsec
+		} else {
+			row = spIt.next();
+			firstInstant = ((Date) row.get("dt")).toInstant();
+			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+			row = spIt.next();
+			lastInstant = ((Date) row.get("dt")).toInstant();
+		}
+
+		// Build iterator with the closest date to the quote date
+		Instant quoteInstant = quoteDate.toInstant();
+		long firstDays = Math.abs(ChronoUnit.DAYS.between(firstInstant, quoteInstant));
+		long lastDays = Math.abs(ChronoUnit.DAYS.between(lastInstant, quoteInstant));
+		LOGGER.debug("Instants: first = {}, last = {}, quote = {}", firstInstant, lastInstant, quoteInstant);
+		LOGGER.debug("Days: first->quote = {}, last->quote = {}", firstDays, lastDays);
+
+		if (lastDays < firstDays) {
+			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+		} else {
+			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+		}
+
+		Map<String, Object> returnRow = null;
+		Instant rowInstant = Instant.ofEpochMilli(0);
+		Instant maxInstant = Instant.ofEpochMilli(0);
+
+		while (spIt.hasNext()) {
+			row = spIt.next();
+			LOGGER.debug(row);
+			int src = (int) row.get("src");
+			rowInstant = ((Date) row.get("dt")).toInstant();
 			if ((src == ONLINE || src == MANUAL) && rowInstant.equals(quoteInstant)) {
 				return row;		// Found existing quote for this hsec and quote date
 			}
@@ -158,20 +158,20 @@ public class MsmSpTable {
 			}
 			// Test for previous manual or online quote
 			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
-	        	maxInstant = rowInstant;
-	        	returnRow = row;
-	        	continue;
-		    }
-			// Test for previous buy
-	        if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
-	        	maxInstant = rowInstant;
-        		returnRow = row;
+				maxInstant = rowInstant;
+				returnRow = row;
+				continue;
 			}
-	   	}
-    	
-    	if (returnRow != null) {
-    		returnRow.put("fAddRow", true);		// Add key to indicate returned row is for reference only
-    	}    	
-    	return returnRow;
-    }	
+			// Test for previous buy
+			if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
+				maxInstant = rowInstant;
+				returnRow = row;
+			}
+		}
+
+		if (returnRow != null) {
+			returnRow.put("xAddRow", null);		// Add key to indicate returned row is for reference only
+		}    	
+		return returnRow;
+	}	
 }

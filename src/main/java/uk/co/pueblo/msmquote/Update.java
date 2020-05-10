@@ -2,6 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,14 +12,25 @@ import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
+enum ExitCode {
+	OK(0),
+	WARNING(1),
+	ERROR(2);
+
+	private final int code;
+
+	ExitCode(int code) {
+		this.code = code;
+	}
+
+	public int getCode() {
+		return code;
+	}
+}
+
 public class Update {
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
-
-	// Define exit codes
-	private static final int OK = 0;
-	private static final int WARNING = 1;
-	private static final int ERROR = 2;
-
+	
 	private static final String DELIM = ",";
 
 	public static void main(String[] args) {
@@ -26,7 +38,7 @@ public class Update {
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
 		Instant startTime = Instant.now();
-		int exitCode = OK;
+		int exitCode = ExitCode.OK.getCode();
 		MsmDb db = null;
 
 		try {	    	
@@ -55,7 +67,8 @@ public class Update {
 				MsmFxTable fxTable = new MsmFxTable(openedDb);
 				MsmCrncTable crncTable = new MsmCrncTable(openedDb);
 				MsmDhdTable dhdTable = new MsmDhdTable(openedDb);
-
+				MsmCliDatTable cliDatTable = new MsmCliDatTable(openedDb);
+				
 				// Process quote source types
 				YahooQuote yahooQuote = null;
 				String sourceLow = source.toLowerCase();
@@ -116,15 +129,15 @@ public class Update {
 					if ((quoteRow = yahooQuote.getNext()) == null) {
 						break;
 					}
-					if (quoteRow.containsKey("error")) {
-						exitCode = WARNING;
+					if (quoteRow.containsKey("xError")) {
+						exitCode = ExitCode.WARNING.getCode();
 					}
 					if (quoteRow.get("dPrice") != null) {
 						// Update stock quote data
 						if((hsec = secTable.update(quoteRow)) != -1) {
 							spTable.update(quoteRow, hsec);
 						} else {
-							exitCode = WARNING;
+							exitCode = ExitCode.WARNING.getCode();
 						}
 					} else if (quoteRow.get("rate") != null) {
 						// Get hcrncs of currency pair
@@ -134,20 +147,23 @@ public class Update {
 						hcrncs = crncTable.getHcrncs(isoCodes);
 						// Update exchange rate table
 						if (!fxTable.update(hcrncs, (double) quoteRow.get("rate"))) {
-							exitCode = WARNING;
+							exitCode = ExitCode.WARNING.getCode();
 						}
 					} else {
-						exitCode = WARNING;
+						exitCode = ExitCode.WARNING.getCode();
 					}
 				}
 
 				// Add any new rows to the SP table
 				spTable.addNewRows();
+				
+				// Update online update time-stamp
+				cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), new Date());
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occured!", e);
-				exitCode = ERROR;
+				exitCode = ExitCode.ERROR.getCode();
 			}
 
 			// Close Money database
@@ -156,7 +172,7 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occured!", e);
-			exitCode = ERROR;
+			exitCode = ExitCode.ERROR.getCode();
 		}									
 		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
 		System.exit(exitCode);
