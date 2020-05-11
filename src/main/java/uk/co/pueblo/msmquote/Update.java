@@ -2,7 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,7 +142,7 @@ public class Update {
 				spTable.addNewRows();
 				
 				// Update online update time-stamp
-				cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), new Date());
+				cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);

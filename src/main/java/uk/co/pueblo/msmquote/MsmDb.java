@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.healthmarketscience.jackcess.CryptCodecProvider;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
+import com.healthmarketscience.jackcess.DateTimeType;
 
 public class MsmDb extends DatabaseBuilder {
 	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
@@ -47,7 +48,8 @@ public class MsmDb extends DatabaseBuilder {
 			cryptCp = new CryptCodecProvider(password);
 		}
 		LOGGER.info("Opening Money file: {}", dbFile.getAbsolutePath());
-		db = new DatabaseBuilder(dbFile).setCodecProvider(cryptCp).open();		
+		db = new DatabaseBuilder(dbFile).setCodecProvider(cryptCp).open();
+		db.setDateTimeType(DateTimeType.LOCAL_DATE_TIME);
 		return;
 	}
 		

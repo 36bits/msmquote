@@ -2,9 +2,11 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,6 +34,8 @@ public class MsmSpTable {
 	private static final int BUY = 1;
 	private static final int MANUAL = 5;
 	private static final int ONLINE = 6;
+	
+	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 
 	// Constructor
 	public MsmSpTable(Database mnyDb) throws IOException {
@@ -59,7 +63,7 @@ public class MsmSpTable {
 		Map<String, Object> row = null;
 
 		// Build SP row
-		Date quoteDate = (Date) quoteRow.get("dt");
+		LocalDateTime quoteDate = (LocalDateTime) quoteRow.get("dt");
 		boolean addRow = false;
 		if ((row = getSpRow(hsec, quoteDate)) == null) {
 			LOGGER.info("Cannot find previous quote for symbol {}", symbol);
@@ -78,7 +82,7 @@ public class MsmSpTable {
 		}
 
 		// Update SP row
-		row.put("dtSerial", new Date());	// dtSerial is assumed to be record creation/update time-stamp
+		row.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of record creation/update
 		if (addRow) {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
@@ -108,7 +112,7 @@ public class MsmSpTable {
 	 * @param	date	date for search
 	 * @return	SP row if match for quote date found, null if no row for hsec found. Row has fAddQuote key if row is for reference only. 
 	 */
-	private Map<String, Object> getSpRow(int hsec, Date quoteDate) throws IOException {
+	private Map<String, Object> getSpRow(int hsec, LocalDateTime quoteDate) throws IOException {
 		Map<String, Object> row;
 		Map<String, Object> rowPattern = new HashMap<>();
 		Iterator<Row> spIt;
@@ -122,14 +126,14 @@ public class MsmSpTable {
 			return null;	// No rows in SP table for this hsec
 		} else {
 			row = spIt.next();
-			firstInstant = ((Date) row.get("dt")).toInstant();
+			firstInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
 			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
 			row = spIt.next();
-			lastInstant = ((Date) row.get("dt")).toInstant();
-		}
+			lastInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
+		}		
 
 		// Build iterator with the closest date to the quote date
-		Instant quoteInstant = quoteDate.toInstant();
+		Instant quoteInstant = ZonedDateTime.of(quoteDate, SYS_ZONE_ID).toInstant();
 		long firstDays = Math.abs(ChronoUnit.DAYS.between(firstInstant, quoteInstant));
 		long lastDays = Math.abs(ChronoUnit.DAYS.between(lastInstant, quoteInstant));
 		LOGGER.debug("Instants: first = {}, last = {}, quote = {}", firstInstant, lastInstant, quoteInstant);
@@ -149,7 +153,7 @@ public class MsmSpTable {
 			row = spIt.next();
 			LOGGER.debug(row);
 			int src = (int) row.get("src");
-			rowInstant = ((Date) row.get("dt")).toInstant();
+			rowInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
 			if ((src == ONLINE || src == MANUAL) && rowInstant.equals(quoteInstant)) {
 				return row;		// Found existing quote for this hsec and quote date
 			}
@@ -170,7 +174,7 @@ public class MsmSpTable {
 		}
 
 		if (returnRow != null) {
-			returnRow.put("xAddRow", null);		// Add key to indicate returned row is for reference only
+			returnRow.put("xAddRow", null);		// "xAddRow" key indicates returned row is for reference only
 		}    	
 		return returnRow;
 	}	
