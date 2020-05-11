@@ -12,10 +12,29 @@ import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
+import uk.co.pueblo.msmquote.MsmCliDatTable.IdData;
+
 public class Update {
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	
 	private static final String DELIM = ",";
+	
+	// enums for exit codes
+	enum ExitCode {
+		OK(0),
+		WARNING(1),
+		ERROR(2);
+
+		private final int code;
+
+		ExitCode(int code) {
+			this.code = code;
+		}
+
+		public int getCode() {
+			return code;
+		}
+	}
 
 	public static void main(String[] args) {
 
@@ -70,7 +89,7 @@ public class Update {
 							}
 							stockSymbols = stockSymbols + delim + symbolsList.get(n);
 						}
-						LOGGER.info("Will get quote data for these stock symbols: {}", stockSymbols);
+						LOGGER.info("Building URL with these stock symbols: {}", stockSymbols);
 						// Build currency symbols string
 						String defIsoCode = null;
 						String fxSymbols = "";
@@ -87,7 +106,7 @@ public class Update {
 							}
 							fxSymbols = fxSymbols + delim + defIsoCode + isoCodesList.get(n - 1) + "=X";
 						}
-						LOGGER.info("Will get quote data for these FX symbols: {}", fxSymbols);
+						LOGGER.info("Building URL with these FX symbols: {}", fxSymbols);
 						// Append symbols to Yahoo API URL
 						delim = DELIM;
 						if (stockSymbols.isEmpty()) {
