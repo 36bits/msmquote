@@ -12,22 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
-enum ExitCode {
-	OK(0),
-	WARNING(1),
-	ERROR(2);
-
-	private final int code;
-
-	ExitCode(int code) {
-		this.code = code;
-	}
-
-	public int getCode() {
-		return code;
-	}
-}
-
 public class Update {
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	
