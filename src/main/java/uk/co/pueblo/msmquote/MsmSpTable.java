@@ -24,18 +24,29 @@ import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmSpTable {
 	private static final Logger LOGGER = LogManager.getLogger(MsmSpTable.class);
+	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 
 	private Table spTable;
 	private IndexCursor spCursor;
 	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
 	private int hsp = 0;
 
-	// Set SP table src constants
-	private static final int BUY = 1;
-	private static final int MANUAL = 5;
-	private static final int ONLINE = 6;
-	
-	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
+	// enums for SP table values
+	enum Src {
+		BUY(1),
+		MANUAL(5),
+		ONLINE(6);
+
+		private final int code;
+
+		Src(int code) {
+			this.code = code;				
+		}
+
+		public int getCode() {
+			return code;
+		}
+	}
 
 	// Constructor
 	public MsmSpTable(Database mnyDb) throws IOException {
@@ -86,7 +97,7 @@ public class MsmSpTable {
 		if (addRow) {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
-			row.put("src", ONLINE);
+			row.put("src", Src.ONLINE.getCode());
 			spRowList.add(row);
 			LOGGER.info("Added new quote for symbol {} to table update list: {}, new price = {}, new hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 		} else {
@@ -154,20 +165,20 @@ public class MsmSpTable {
 			LOGGER.debug(row);
 			int src = (int) row.get("src");
 			rowInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
-			if ((src == ONLINE || src == MANUAL) && rowInstant.equals(quoteInstant)) {
+			if ((src == Src.ONLINE.getCode() || src == Src.MANUAL.getCode()) && rowInstant.equals(quoteInstant)) {
 				return row;		// Found existing quote for this hsec and quote date
 			}
 			if (rowInstant.isBefore(maxInstant)) {
 				continue;
 			}
 			// Test for previous manual or online quote
-			if ((src == ONLINE || src == MANUAL) && rowInstant.isBefore(quoteInstant)) {
+			if ((src == Src.ONLINE.getCode() || src == Src.MANUAL.getCode()) && rowInstant.isBefore(quoteInstant)) {
 				maxInstant = rowInstant;
 				returnRow = row;
 				continue;
 			}
 			// Test for previous buy
-			if (src == BUY && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
+			if (src == Src.BUY.getCode() && (rowInstant.isBefore(quoteInstant) || rowInstant.equals(quoteInstant))) {
 				maxInstant = rowInstant;
 				returnRow = row;
 			}

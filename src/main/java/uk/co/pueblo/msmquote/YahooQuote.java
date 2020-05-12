@@ -22,17 +22,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class YahooQuote {
-
 	private static final Logger LOGGER = LogManager.getLogger(YahooQuote.class);
-
-	// Set Yahoo quote-type fields
-	private static final String EQUITY = "EQUITY";
-	private static final String BOND = "BOND";
-	private static final String MF = "MUTUALFUND";
-	private static final String INDEX = "INDEX";
-	private static final String CURRENCY = "CURRENCY";
-	
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
+	
+	// enums for Yahoo quoteType fields
+	enum QuoteType {
+		EQUITY,
+		BOND,
+		MUTUALFUND,
+		INDEX,
+		CURRENCY;
+	}
 
 	private Iterator<JsonNode> resultIt;
 	private BufferedReader csvBr;
@@ -100,7 +100,7 @@ public class YahooQuote {
 			String quoteType = result.get("quoteType").asText();			
 			LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
 
-			if (quoteType.equals(CURRENCY)) {
+			if (quoteType.equals(QuoteType.CURRENCY.toString())) {
 				quoteRow.put("symbol", result.get("symbol").asText());
 				quoteRow.put("rate", result.get("regularMarketPrice").asDouble());
 			} else {
@@ -112,7 +112,7 @@ public class YahooQuote {
 				
 				// Set quote factor for GB quotes
 				double quoteFactor = 1;
-				if (quoteType.equals(EQUITY) || quoteType.equals(BOND) || quoteType.equals(MF)) {
+				if (quoteType.equals(QuoteType.EQUITY.toString()) || quoteType.equals(QuoteType.BOND.toString()) || quoteType.equals(QuoteType.MUTUALFUND.toString())) {
 					if (result.get("currency").asText().toUpperCase().equals("GBP")) {
 						quoteFactor = 0.01;
 					} 
@@ -131,7 +131,7 @@ public class YahooQuote {
 				quoteRow.put("dChange", result.get("regularMarketChange").asDouble() * quoteFactor);
 
 				// Columns common to EQUITY, BOND and INDEX quote types
-				if (quoteType.equals(EQUITY) || quoteType.equals(BOND) || quoteType.equals(INDEX)) {
+				if (quoteType.equals(QuoteType.EQUITY.toString()) || quoteType.equals(QuoteType.BOND.toString()) || quoteType.equals(QuoteType.INDEX.toString())) {
 					// SEC table
 					quoteRow.put("dBid", result.get("bid").asDouble() * quoteFactor);	// Not visible in Money 2004
 					quoteRow.put("dAsk", result.get("ask").asDouble() * quoteFactor);	// Not visible in Money 2004
@@ -143,7 +143,7 @@ public class YahooQuote {
 				}
 
 				// Columns for EQUITY quote types
-				if (quoteType.equals("EQUITY")) {
+				if (quoteType.equals(QuoteType.EQUITY.toString())) {
 					// SEC table
 					// TODO Add EPS and beta
 					quoteRow.put("dCapitalization", result.get("marketCap").asDouble());
