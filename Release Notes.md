@@ -1,9 +1,10 @@
 # Version 3.0.0
 
 ## New Features
-* None.
+* Auto-complete of Yahoo Finance stock quote API URL with investment and FX symbols automatically generated from MS Money file.
 
 ## Enhancements
+* Add update for 'Online price update' time-stamp in Portfolio.
 * Update log4j-core to 2.13.1.
 * Update jackson-databind to 2.10.3.
 
