@@ -24,9 +24,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class YahooQuote {
 	private static final Logger LOGGER = LogManager.getLogger(YahooQuote.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
-	
-	// enums for Yahoo quoteType fields
-	enum QuoteType {
+
+	// Yahoo quote sources
+	enum YahooSource {
+		API,
+		FILE;
+	}
+
+	// Yahoo quoteType fields
+	private enum QuoteType {
 		EQUITY,
 		BOND,
 		MUTUALFUND,
@@ -37,13 +43,13 @@ public class YahooQuote {
 	private Iterator<JsonNode> resultIt;
 	private BufferedReader csvBr;
 	private String symbol;
-	private boolean useApi;
 	private double quoteFactor = 1;
+	private YahooSource quoteSource;
 
 	// Constructor 
-	public YahooQuote(String source, boolean flag) throws IOException {
-		useApi = flag;
-		if (useApi) {
+	public YahooQuote(String source, YahooSource quoteSource) throws IOException {
+		this.quoteSource = quoteSource;
+		if (quoteSource == YahooSource.API) {
 			// Source is API
 			JsonNode quotesJson = null;
 			// Using try-with-resources to get AutoClose of InputStream
@@ -53,38 +59,36 @@ public class YahooQuote {
 				quotesJson = mapper.readTree(quoteIs);
 			} 
 			resultIt = quotesJson.at("/quoteResponse/result").elements();
-		} else {
-			// Source is CSV file
-			File csvFile = new File(source);
-			csvFile = new File(source);
-			csvBr = new BufferedReader(new FileReader(csvFile));
-			if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
-				LOGGER.warn("Yahoo CSV header not found in file {}", source);
-				csvBr.close();
-			}				
-
-			// Get quote symbol from CSV file name & truncate if required
-			symbol = csvFile.getName();
-			symbol = symbol.substring(0, symbol.length() - 4);
-			symbol = truncateSymbol(symbol);
-
-			// Set quote factor for GB quotes
-			if (symbol.toUpperCase().endsWith(".L")) {
-				quoteFactor = 0.01;
-			}
+			return;
 		}
-		return;
+		// Default to CSV file source
+		File csvFile = new File(source);
+		csvFile = new File(source);
+		csvBr = new BufferedReader(new FileReader(csvFile));
+		if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
+			LOGGER.warn("Yahoo CSV header not found in file {}", source);
+			csvBr.close();
+		}				
+
+		// Get quote symbol from CSV file name & truncate if required
+		symbol = csvFile.getName();
+		symbol = symbol.substring(0, symbol.length() - 4);
+		symbol = truncateSymbol(symbol);
+
+		// Set quote factor for GB quotes
+		if (symbol.toUpperCase().endsWith(".L")) {
+			quoteFactor = 0.01;
+		}
 	}
 
 	public Map<String, Object> getNext() throws IOException {
-		if (useApi) {
+		if (quoteSource == YahooSource.API) {
 			return getNextJsonQuote();
 		}
 		return getNextCsvQuote();				
 	}
 
 	private Map<String, Object> getNextJsonQuote() {
-
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
 			return null;
@@ -109,7 +113,7 @@ public class YahooQuote {
 
 				// Get quote date set to 00:00 in local system time-zone
 				LocalDateTime quoteDate = Instant.ofEpochSecond(result.get("regularMarketTime").asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-				
+
 				// Set quote factor for GB quotes
 				double quoteFactor = 1;
 				if (quoteType.equals(QuoteType.EQUITY.toString()) || quoteType.equals(QuoteType.BOND.toString()) || quoteType.equals(QuoteType.MUTUALFUND.toString())) {

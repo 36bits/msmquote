@@ -31,8 +31,8 @@ public class MsmSpTable {
 	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
 	private int hsp = 0;
 
-	// enums for SP table values
-	enum Src {
+	// Define SP table src values
+	private enum Src {
 		BUY(1),
 		MANUAL(5),
 		ONLINE(6);

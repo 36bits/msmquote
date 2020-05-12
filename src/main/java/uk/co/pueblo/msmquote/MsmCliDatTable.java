@@ -19,7 +19,7 @@ public class MsmCliDatTable {
 	private Table cliDatTable;
 	private IndexCursor cliDatCursor;
 	
-	// enums for CLI_DAT values
+	// Define CLI_DAT values
 	enum IdData {
 		FILENAME(65541, 8, "rgbVal"),
 		OLUPDATE(917505, 7, "dtVal");
