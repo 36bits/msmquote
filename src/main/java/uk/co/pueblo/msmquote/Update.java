@@ -136,15 +136,13 @@ public class Update {
 						delim = "";
 					}
 					sourceArg = sourceArg + stockSymbols + delim + fxSymbols;
-					LOGGER.debug("{}", sourceArg);
 				}
-				
+
 				// Now update quote data in Money database
 				if (symbolSource != SymbolSource.QUERY) {
-	
 					// Get quote data
 					yahooQuote = new YahooQuote(sourceArg, yahooSource);
-	
+
 					// Process quote data
 					int hsec;
 					String currencyPair;
@@ -178,11 +176,11 @@ public class Update {
 						} else {
 							exitCode = ExitCode.WARNING.getCode();
 						}
-					}
-	
+					} 
+
 					// Add any new rows to the SP table
 					spTable.addNewRows();
-	
+
 					// Update online update time-stamp
 					cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
 				}
