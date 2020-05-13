@@ -116,6 +116,6 @@
 				
 	</build>
 	<scm>
-		<developerConnection>scm:git:ssh://jc@s10/git/msmquote.git</developerConnection>
+		<developerConnection>scm:git:file:///home/git/msmquote.git</developerConnection>
 	</scm>
 </project>
