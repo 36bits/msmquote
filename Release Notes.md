@@ -1,3 +1,17 @@
+# Version 3.0.1
+
+## New Features
+* None.
+
+## Improvements
+* None.
+
+## Bug Fixes
+* None.
+
+## Known Issues
+* None.
+
 # Version 3.0.0
 
 ## New Features
