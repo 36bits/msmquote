@@ -4,7 +4,7 @@
 * None.
 
 ## Improvements
-* None.
+* Add summary log messages to Yahoo API quote data processing.
 
 ## Bug Fixes
 * None.

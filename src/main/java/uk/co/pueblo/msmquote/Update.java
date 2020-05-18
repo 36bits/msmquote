@@ -183,6 +183,7 @@ public class Update {
 
 					// Update online update time-stamp
 					cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
+					
 				}
 
 			} catch (Exception e) {
@@ -190,6 +191,8 @@ public class Update {
 				LOGGER.debug("Exception occured!", e);
 				exitCode = ExitCode.ERROR.getCode();
 			}
+			
+			
 
 			// Close Money database
 			db.closeDb();

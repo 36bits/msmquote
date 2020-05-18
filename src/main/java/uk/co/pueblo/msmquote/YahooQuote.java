@@ -27,17 +27,12 @@ public class YahooQuote {
 
 	// Yahoo quote sources
 	enum YahooSource {
-		API,
-		FILE;
+		API, FILE
 	}
 
-	// Yahoo quoteType fields
+	// Yahoo quoteType fields that we recognise
 	private enum QuoteType {
-		EQUITY,
-		BOND,
-		MUTUALFUND,
-		INDEX,
-		CURRENCY;
+		EQUITY, BOND, MUTUALFUND, INDEX, CURRENCY
 	}
 
 	private Iterator<JsonNode> resultIt;
@@ -45,6 +40,7 @@ public class YahooQuote {
 	private String symbol;
 	private double quoteFactor = 1;
 	private YahooSource quoteSource;
+	private Map<String, Integer> summary = new HashMap<>();
 
 	// Constructor 
 	public YahooQuote(String source, YahooSource quoteSource) throws IOException {
@@ -91,17 +87,19 @@ public class YahooQuote {
 	private Map<String, Object> getNextJsonQuote() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
+			summary.forEach((key, value) -> LOGGER.info("Summary for quote type {}: processed = {}", key, value));
 			return null;
 		}
 		JsonNode result = resultIt.next();
 
 		Map<String, Object> quoteRow = new HashMap<>();
 		String symbol = null;
+		String quoteType = null;
 
 		try {		
 			// Get quote type
 			symbol = result.get("symbol").asText();
-			String quoteType = result.get("quoteType").asText();			
+			quoteType = result.get("quoteType").asText();			
 			LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
 
 			if (quoteType.equals(QuoteType.CURRENCY.toString())) {
@@ -168,6 +166,10 @@ public class YahooQuote {
 			LOGGER.debug("Exception occured!", e);
 			quoteRow.put("xError", null);
 		}
+		
+		summary.putIfAbsent(quoteType, 0);
+		summary.put(quoteType, summary.get(quoteType) + 1);
+		
 		return quoteRow;
 	}
 
