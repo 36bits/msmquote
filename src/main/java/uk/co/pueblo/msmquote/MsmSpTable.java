@@ -33,9 +33,7 @@ public class MsmSpTable {
 
 	// Define SP table src values
 	private enum Src {
-		BUY(1),
-		MANUAL(5),
-		ONLINE(6);
+		BUY(1), MANUAL(5), ONLINE(6);
 
 		private final int code;
 
@@ -82,7 +80,7 @@ public class MsmSpTable {
 			row.put("hsec", hsec);
 			addRow = true;
 		} else {  
-			if (row.containsKey("xAddRow")) {
+			if (row.containsKey("xRefOnly")) {
 				LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 				addRow = true;
 			} else {
@@ -93,7 +91,6 @@ public class MsmSpTable {
 		}
 
 		// Update SP row
-		row.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of record creation/update
 		if (addRow) {
 			hsp = hsp + 1;
 			row.put("hsp", hsp);
@@ -121,7 +118,7 @@ public class MsmSpTable {
 	 *
 	 * @param	hsec	hsec for search
 	 * @param	date	date for search
-	 * @return	SP row if match for quote date found, null if no row for hsec found. Row has fAddQuote key if row is for reference only. 
+	 * @return	SP row if match for quote date found, null if no row for hsec found. Row contains 'xRefOnly' key if row is for reference only. 
 	 */
 	private Map<String, Object> getSpRow(int hsec, LocalDateTime quoteDate) throws IOException {
 		Map<String, Object> row;
@@ -185,7 +182,7 @@ public class MsmSpTable {
 		}
 
 		if (returnRow != null) {
-			returnRow.put("xAddRow", null);		// "xAddRow" key indicates returned row is for reference only
+			returnRow.put("xRefOnly", null);		// 'xRefOnly' key indicates returned row is for reference only
 		}    	
 		return returnRow;
 	}	

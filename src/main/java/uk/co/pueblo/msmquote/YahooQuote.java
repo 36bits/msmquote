@@ -122,6 +122,8 @@ public class YahooQuote {
 
 				// Build quote row
 				// Columns common to EQUITY, BOND, MUTUALFUND and INDEX quote types
+				// SEC and SP table
+				quoteRow.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of record creation/update
 				// SEC table
 				quoteRow.put("szSymbol", symbol);
 				quoteRow.put("dtLastUpdate", quoteDate);	// TODO Confirm assumption that dtLastUpdate is date of quote data in SEC row

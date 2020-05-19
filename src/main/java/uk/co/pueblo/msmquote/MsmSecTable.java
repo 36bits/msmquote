@@ -1,7 +1,6 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,7 +43,6 @@ public class MsmSecTable {
 			LOGGER.info("Found symbol {}: sct = {}, hsec = {}", symbol, row.get("sct"), hsec);
 	    	// Merge quote row into SEC row and write to SEC table
 	    	row.putAll(quoteRow);
-	    	row.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of record creation/update
 	    	secCursor.updateCurrentRowFromMap(row);
 	        LOGGER.info("Updated quote for symbol {}", symbol);
 	   	} else {
