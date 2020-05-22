@@ -2,6 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,8 +19,11 @@ import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmCrncTable {
+
+	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmCrncTable.class);
 
+	// Instance variables
 	private Table crncTable;
 	private IndexCursor crncCursor;
 
@@ -37,14 +41,11 @@ public class MsmCrncTable {
 	 * @return				the corresponding hcrncs
 	 */
 	public int[] getHcrncs(String[] isoCodes) throws IOException {
-		Map<String, Object> row = null;
-		Map<String, Object> rowPattern = new HashMap<>();
 		int[] hcrncs = new int[isoCodes.length];
 		for (int n = 0; n < isoCodes.length; n++) {
-			rowPattern.put("szIsoCode", isoCodes[n]);
-			if (crncCursor.findFirstRow(rowPattern)) {
-				row = crncCursor.getCurrentRow();
-				hcrncs[n] = (int) row.get("hcrnc");
+			boolean found = crncCursor.findFirstRow(Collections.singletonMap("szIsoCode", isoCodes[n]));
+			if (found) {
+				hcrncs[n] = (int) crncCursor.getCurrentRowValue(crncTable.getColumn("hcrnc"));
 				LOGGER.info("Found currency {}, hcrnc = {}", isoCodes[n], hcrncs[n]);
 			} else {
 				hcrncs[n] = 0;

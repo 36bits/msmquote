@@ -1,8 +1,8 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
+
 
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
@@ -14,8 +14,8 @@ import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Table;
 
 public class MsmCliDatTable {
-	//private static final Logger LOGGER = LogManager.getLogger(MsmCliDatTable.class);
 
+	// Instance variables
 	private Table cliDatTable;
 	private IndexCursor cliDatCursor;
 	
@@ -26,12 +26,12 @@ public class MsmCliDatTable {
 
 		private final int code;
 		private final int oft;
-		private final String column;
+		private final String valCol;
 		
 		IdData(int code, int oft, String valCol) {
 			this.code = code;
 			this.oft = oft;
-			this.column = valCol;
+			this.valCol = valCol;
 		}
 
 		public int getCode() {
@@ -41,7 +41,7 @@ public class MsmCliDatTable {
 			return oft;
 		}
 		public String getColumn() {
-			return column;
+			return valCol;
 		}
 	}	
 
@@ -58,9 +58,8 @@ public class MsmCliDatTable {
 	 * @return				
 	 */
 	public boolean update(int idData, int oft, String column, Object val) throws IOException {
-		Map<String, Object> rowPattern = new HashMap<>();
-		rowPattern.put("idData", idData);
-		if (cliDatCursor.findFirstRow(rowPattern)) {
+		boolean found = cliDatCursor.findFirstRow(Collections.singletonMap("idData", idData));
+		if (found) {
 			Column cliDatCol = cliDatTable.getColumn("oft");
 			cliDatCursor.setCurrentRowValue(cliDatCol, oft);
 			cliDatCol = cliDatTable.getColumn(column);

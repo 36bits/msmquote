@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,16 +12,15 @@ import org.apache.logging.log4j.Logger;
 import com.healthmarketscience.jackcess.Database;
 
 import uk.co.pueblo.msmquote.MsmCliDatTable.IdData;
-import uk.co.pueblo.msmquote.YahooQuote.YahooSource;
+import uk.co.pueblo.msmquote.MsmDhdTable.DhdColumn;
 
 public class Update {
+
+	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
-	private static final String DELIM = ",";
 
 	private enum ExitCode {
-		OK(0),
-		WARNING(1),
-		ERROR(2);
+		OK(0), WARNING(1), ERROR(2);
 
 		private final int code;
 
@@ -33,12 +31,6 @@ public class Update {
 		public int getCode() {
 			return code;
 		}
-	}
-
-	private enum SymbolSource {
-		AUTO,
-		QUERY,
-		USER;		
 	}
 
 	public static void main(String[] args) {
@@ -63,87 +55,40 @@ public class Update {
 				throw new IllegalArgumentException("Usage: filename [password] source");
 			}
 
-			// Establish quote source
-			YahooSource yahooSource = null;
-			SymbolSource symbolSource = null;
-			String sourceArgLow = sourceArg.toLowerCase();
-
-			if (sourceArgLow.startsWith("https://") || sourceArgLow.startsWith("http://")) {
-				yahooSource = YahooSource.API;
-				if (sourceArgLow.endsWith("symbols=")) {
-					symbolSource = SymbolSource.AUTO;
-				} else if (sourceArgLow.endsWith("symbols=?")) {
-					symbolSource = SymbolSource.QUERY;
-				} else {
-					symbolSource = SymbolSource.USER;
-				}					
-			} else if (sourceArgLow.endsWith(".csv")) {
-				yahooSource = YahooSource.FILE;				
-			} else {
-				throw new IllegalArgumentException("Unrecogonised quote source");
-			}
-
 			// Open Money database
 			Database openedDb = null;			
 			db = new MsmDb(args[0], password);
 			openedDb = db.getDb();
 
 			try {
-				// Instantiate table objects
+				// Instantiate table objects needed to process source quote type
 				MsmSecTable secTable = new MsmSecTable(openedDb);
-				MsmSpTable spTable = new MsmSpTable(openedDb);
-				MsmFxTable fxTable = new MsmFxTable(openedDb);
 				MsmCrncTable crncTable = new MsmCrncTable(openedDb);
 				MsmDhdTable dhdTable = new MsmDhdTable(openedDb);
-				MsmCliDatTable cliDatTable = new MsmCliDatTable(openedDb);
+				MsmCntryTable cntryTable = new MsmCntryTable(openedDb);
 
-				// Process quote source types and build URL if required
+				// Process quote source types
 				YahooQuote yahooQuote = null;
-				if (symbolSource == SymbolSource.AUTO || symbolSource == SymbolSource.QUERY) {
-					int n;
-					String delim;
-					// Build Yahoo stock symbols string
-					List<String> symbolsList = secTable.getSymbols();
-					String stockSymbols = "";
-					for ( n = 0; n < symbolsList.size(); n++) {
-						delim = DELIM;
-						if (n == 0) {
-							delim = "";
-						}
-						stockSymbols = stockSymbols + delim + symbolsList.get(n);
+
+				if (sourceArg.startsWith("https://") || sourceArg.startsWith("http://")) {
+					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
+						yahooQuote = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+					} else {
+						yahooQuote = new YahooApiQuote(sourceArg);
 					}
-					LOGGER.info("Building URL with these stock symbols: {}", stockSymbols);
-					// Build Yahoo currency symbols string
-					String defIsoCode = null;
-					String fxSymbols = "";
-					List<String> isoCodesList = crncTable.getIsoCodes(dhdTable.getDefHcrnc());
-					int isoCodesSz = isoCodesList.size();
-					for (n = isoCodesSz; n > 0; n--) {
-						if ( n == isoCodesSz) {
-							defIsoCode = isoCodesList.get(n - 1);
-							continue;
-						}
-						delim = DELIM;
-						if (n == isoCodesSz - 1) {
-							delim = "";
-						}
-						fxSymbols = fxSymbols + delim + defIsoCode + isoCodesList.get(n - 1) + "=X";
-					}
-					LOGGER.info("Building URL with these FX symbols: {}", fxSymbols);
-					// Append symbols to Yahoo API URL
-					delim = DELIM;
-					if (stockSymbols.isEmpty()) {
-						delim = "";
-					}
-					sourceArg = sourceArg + stockSymbols + delim + fxSymbols;
+				} else if (sourceArg.endsWith(".csv")) {
+					yahooQuote = new YahooCsvQuote(sourceArg);
+				} else {
+					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
-				// Now update quote data in Money database
-				if (symbolSource != SymbolSource.QUERY) {
-					// Get quote data
-					yahooQuote = new YahooQuote(sourceArg, yahooSource);
+				if (!yahooQuote.isQuery()) {
+					// Instantiate table objects needed to process quote data
+					MsmSpTable spTable = new MsmSpTable(openedDb);
+					MsmFxTable fxTable = new MsmFxTable(openedDb);
+					MsmCliDatTable cliDatTable = new MsmCliDatTable(openedDb);
 
-					// Process quote data
+					// Now update quote data in Money database
 					int hsec;
 					String currencyPair;
 					String[] isoCodes = {"", ""};
@@ -183,26 +128,23 @@ public class Update {
 
 					// Update online update time-stamp
 					cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
-					
 				}
+
+				} catch (Exception e) {
+					LOGGER.fatal(e);
+					LOGGER.debug("Exception occured!", e);
+					exitCode = ExitCode.ERROR.getCode();
+				}
+
+				// Close Money database
+				db.closeDb();
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occured!", e);
 				exitCode = ExitCode.ERROR.getCode();
-			}
-			
-			
-
-			// Close Money database
-			db.closeDb();
-
-		} catch (Exception e) {
-			LOGGER.fatal(e);
-			LOGGER.debug("Exception occured!", e);
-			exitCode = ExitCode.ERROR.getCode();
-		}									
-		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-		System.exit(exitCode);
+			}									
+			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
+			System.exit(exitCode);
+		}
 	}
-}

@@ -14,33 +14,36 @@ import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.DateTimeType;
 
 public class MsmDb extends DatabaseBuilder {
+
+	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
-	
+
+	// Instance variables
 	private Database db;
-		
+
 	// Constructor
 	public MsmDb(String fileName, String password) throws IOException {
-		
+
 		// Create lock file
 		String lockFileName = null;
 		int i = fileName.lastIndexOf('.');
-        if (i <= 0) {
-            lockFileName = fileName;
-        }
-        else {
-        	lockFileName = fileName.substring(0, i);
-        }
+		if (i <= 0) {
+			lockFileName = fileName;
+		}
+		else {
+			lockFileName = fileName.substring(0, i);
+		}
 		File lockFile = new File(lockFileName + ".lrd");
 		LOGGER.info("Creating lock file: {}", lockFile.getAbsolutePath());
 		if (!lockFile.createNewFile()) {
 			throw new FileAlreadyExistsException("Lock file already exists");
 		}
 		lockFile.deleteOnExit();
-		
+
 		// Open Money database
 		File dbFile = new File(fileName);
 		CryptCodecProvider cryptCp = null;
-				
+
 		if (password == null) {
 			cryptCp = new CryptCodecProvider();
 		}
@@ -52,9 +55,9 @@ public class MsmDb extends DatabaseBuilder {
 		db.setDateTimeType(DateTimeType.LOCAL_DATE_TIME);
 		return;
 	}
-		
+
 	public Database getDb() {
-	return db;
+		return db;
 	}
 
 	public void closeDb() throws IOException {

@@ -14,7 +14,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
@@ -23,13 +22,16 @@ import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
 public class MsmSpTable {
+
+	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmSpTable.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 
+	// Instance variables
 	private Table spTable;
 	private IndexCursor spCursor;
-	private ArrayList<Map<String, Object>> spRowList = new ArrayList<>();
-	private int hsp = 0;
+	private ArrayList<Map<String, Object>> spRowList;
+	private int hsp;
 
 	// Define SP table src values
 	private enum Src {
@@ -46,19 +48,25 @@ public class MsmSpTable {
 		}
 	}
 
-	// Constructor
+	/**
+	 * Constructor
+	 * 
+	 * @param mnyDb
+	 * @throws IOException
+	 */
 	public MsmSpTable(Database mnyDb) throws IOException {
 		spTable = mnyDb.getTable("SP");
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 
 		// Get current hsp (SP table index)
-		int rowHsp = 0;
-		Column column = spTable.getColumn("hsp");
+		int hsp = 0;
 		spCursor.afterLast();
 		if (spCursor.getPreviousRow() != null) {
-			hsp = (int) spCursor.getCurrentRowValue(column);
+			hsp = (int) spCursor.getCurrentRowValue(spTable.getColumn("hsp"));
 		}
-		LOGGER.debug("Current hsp = {}", rowHsp);
+		LOGGER.debug("Current highest hsp = {}", hsp);
+
+		spRowList = new ArrayList<>();
 	}
 
 	/** 
@@ -118,7 +126,8 @@ public class MsmSpTable {
 	 *
 	 * @param	hsec	hsec for search
 	 * @param	date	date for search
-	 * @return	SP row if match for quote date found, null if no row for hsec found. Row contains 'xRefOnly' key if row is for reference only. 
+	 * @return	 		the SP row if match found, null if no row for hsec found or
+	 * 					row containing 'xRefOnly' key if hsec found but not date 
 	 */
 	private Map<String, Object> getSpRow(int hsec, LocalDateTime quoteDate) throws IOException {
 		Map<String, Object> row;
