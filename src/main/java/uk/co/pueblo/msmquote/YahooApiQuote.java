@@ -31,7 +31,7 @@ public class YahooApiQuote implements YahooQuote {
 	
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private Map<String, Integer> summary;
+	private Map<String, Integer> logSummary;
 	private boolean isQuery;	
 	
 	static {
@@ -107,7 +107,7 @@ public class YahooApiQuote implements YahooQuote {
 		}
 		
 		isQuery = false;
-		summary = new HashMap<>();
+		logSummary = new HashMap<>();
 		resultIt = getApiQuote(apiUrl + invSymbols + delim + fxSymbols);		
 	}
 
@@ -119,7 +119,7 @@ public class YahooApiQuote implements YahooQuote {
 	 */
 	public YahooApiQuote(String apiUrl) throws IOException {
 		isQuery = false;
-		summary = new HashMap<>();
+		logSummary = new HashMap<>();
 		resultIt = getApiQuote(apiUrl);
 	}
 
@@ -147,7 +147,7 @@ public class YahooApiQuote implements YahooQuote {
 	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
-			summary.forEach((key, value) -> LOGGER.info("Summary for quote type {}: processed = {}", key, value));
+			logSummary.forEach((key, value) -> LOGGER.info("Summary for quote type {}: processed = {}", key, value));
 			return null;
 		}
 		JsonNode result = resultIt.next();
@@ -230,8 +230,8 @@ public class YahooApiQuote implements YahooQuote {
 			quoteRow.put("xError", null);
 		}
 
-		summary.putIfAbsent(quoteType, 0);
-		summary.put(quoteType, summary.get(quoteType) + 1);
+		logSummary.putIfAbsent(quoteType, 0);
+		logSummary.put(quoteType, logSummary.get(quoteType) + 1);
 
 		return quoteRow;
 	}

@@ -27,8 +27,7 @@ public class YahooCsvQuote implements YahooQuote {
 	private BufferedReader csvBr;
 	private String csvSymbol;
 	private int quoteDivisor;
-	// TODO Implement summary log message
-	//private Map<String, Integer> summary = new HashMap<>();
+	private int quoteCount;
 	private boolean isQuery;
 	
 	static {
@@ -67,6 +66,7 @@ public class YahooCsvQuote implements YahooQuote {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 		
+		quoteCount = 0;
 		isQuery = false;
 	}
 
@@ -87,6 +87,7 @@ public class YahooCsvQuote implements YahooQuote {
 			if (csvRow == null) {
 				// End of file
 				csvBr.close();
+				LOGGER.info("Quotes processed = {}", quoteCount);
 				return null;
 			}
 			String[] csvColumn = csvRow.split(",");
@@ -113,6 +114,8 @@ public class YahooCsvQuote implements YahooQuote {
 				quoteRow.put("xError", null);
 				continue;
 			}
+			
+			quoteCount++;			
 			return quoteRow;
 		}
 	}
