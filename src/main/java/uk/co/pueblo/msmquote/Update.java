@@ -69,23 +69,23 @@ public class Update {
 				MsmCntryTable cntryTable = new MsmCntryTable(openedDb);
 
 				// Process quote source types
-				YahooUpdate yahooQuote = null;
+				YahooUpdate yahooUpdate = null;
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooQuote = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+						yahooUpdate = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
-						yahooQuote = new YahooApiQuote(sourceArg);
+						yahooUpdate = new YahooApiQuote(sourceArg);
 					}
 				} else if (sourceArg.contains("finance.yahoo.com/v7/finance/chart")) {
-					yahooQuote = new YahooApiHist(sourceArg);						
+					yahooUpdate = new YahooApiHist(sourceArg);						
 				} else if (sourceArg.endsWith(".csv")) {
-					yahooQuote = new YahooCsvHist(sourceArg);
+					yahooUpdate = new YahooCsvHist(sourceArg);
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
-				if (!yahooQuote.isQuery()) {
+				if (!yahooUpdate.isQuery()) {
 					// Instantiate table objects needed to process quote data
 					MsmSpTable spTable = new MsmSpTable(openedDb);
 					MsmFxTable fxTable = new MsmFxTable(openedDb);
@@ -98,7 +98,7 @@ public class Update {
 					int[] hcrncs = {0, 0};
 					Map<String, Object> quoteRow = new HashMap<>();				
 					while (true) {
-						if ((quoteRow = yahooQuote.getNext()) == null) {
+						if ((quoteRow = yahooUpdate.getNext()) == null) {
 							break;
 						}
 						if (quoteRow.containsKey("xError")) {

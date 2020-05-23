@@ -61,7 +61,6 @@ public class MsmSpTable {
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 
 		// Get current hsp (SP table index)
-		//int hsp = 0;
 		spCursor.afterLast();
 		if (spCursor.getPreviousRow() != null) {
 			hsp = (int) spCursor.getCurrentRowValue(spTable.getColumn("hsp"));
