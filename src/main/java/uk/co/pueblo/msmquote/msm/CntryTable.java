@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -8,14 +8,14 @@ import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Table;
 
-public class MsmCntryTable {
+public class CntryTable {
 	
 	// Instance variables
 	private Table cntryTable;
 	private IndexCursor cntryCursor;		
 
 	// Constructor
-	public MsmCntryTable(Database mnyDb) throws IOException {
+	public CntryTable(Database mnyDb) throws IOException {
 		cntryTable = mnyDb.getTable("CNTRY");
 		cntryCursor = CursorBuilder.createCursor(cntryTable.getPrimaryKeyIndex());		
 		return;

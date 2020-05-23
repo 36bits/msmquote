@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -13,14 +13,14 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Table;
 
-public class MsmCliDatTable {
+public class CliDatTable {
 
 	// Instance variables
 	private Table cliDatTable;
 	private IndexCursor cliDatCursor;
 	
 	// Define CLI_DAT values
-	enum IdData {
+	public enum IdData {
 		FILENAME(65541, 8, "rgbVal"),
 		OLUPDATE(917505, 7, "dtVal");
 
@@ -46,7 +46,7 @@ public class MsmCliDatTable {
 	}	
 
 	// Constructor
-	public MsmCliDatTable(Database mnyDb) throws IOException {
+	public CliDatTable(Database mnyDb) throws IOException {
 		cliDatTable = mnyDb.getTable("CLI_DAT");
 		cliDatCursor = CursorBuilder.createCursor(cliDatTable.getPrimaryKeyIndex());
 		return;

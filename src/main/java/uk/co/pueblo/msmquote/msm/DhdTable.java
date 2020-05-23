@@ -1,17 +1,17 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 
-public class MsmDhdTable {
+public class DhdTable {
 
 	// Instance variables
 	private Table dhdTable;
 
 	// Define DHD table columns
-	enum DhdColumn {
+	public enum DhdColumn {
 		BASE_CURRENCY("hcrncDef");
 		
 		private final String column;
@@ -31,7 +31,7 @@ public class MsmDhdTable {
 	 * @param	mnyDb
 	 * @throws IOException
 	 */
-	public MsmDhdTable(Database mnyDb) throws IOException {
+	public DhdTable(Database mnyDb) throws IOException {
 		dhdTable = mnyDb.getTable("DHD");
 		return;
 	}    

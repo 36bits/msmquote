@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,17 +18,17 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class MsmCrncTable {
+public class CrncTable {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmCrncTable.class);
+	private static final Logger LOGGER = LogManager.getLogger(CrncTable.class);
 
 	// Instance variables
 	private Table crncTable;
 	private IndexCursor crncCursor;
 
 	// Constructor
-	public MsmCrncTable(Database mnyDb) throws IOException {
+	public CrncTable(Database mnyDb) throws IOException {
 		crncTable = mnyDb.getTable("CRNC");
 		crncCursor = CursorBuilder.createCursor(crncTable.getPrimaryKeyIndex());
 		return;

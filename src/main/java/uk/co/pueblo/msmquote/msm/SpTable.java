@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -21,10 +21,10 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class MsmSpTable {
+public class SpTable {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmSpTable.class);
+	private static final Logger LOGGER = LogManager.getLogger(SpTable.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 
 	// Class variables
@@ -56,7 +56,7 @@ public class MsmSpTable {
 	 * @param mnyDb
 	 * @throws IOException
 	 */
-	public MsmSpTable(Database mnyDb) throws IOException {
+	public SpTable(Database mnyDb) throws IOException {
 		spTable = mnyDb.getTable("SP");
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 

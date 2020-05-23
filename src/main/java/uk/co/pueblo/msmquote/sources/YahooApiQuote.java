@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.sources;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +16,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class YahooApiQuote implements YahooUpdate {
+import uk.co.pueblo.msmquote.Quote;
+import uk.co.pueblo.msmquote.util.YahooApi;
+
+public class YahooApiQuote implements Quote {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);

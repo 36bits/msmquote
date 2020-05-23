@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,10 +17,10 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class MsmSecTable {
+public class SecTable {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmSecTable.class);
+	private static final Logger LOGGER = LogManager.getLogger(SecTable.class);
 
 	// Instance variables
 	private Table secTable;
@@ -32,7 +32,7 @@ public class MsmSecTable {
 	 * @param	mnyDb
 	 * @throws IOException
 	 */
-	public MsmSecTable(Database mnyDb) throws IOException {
+	public SecTable(Database mnyDb) throws IOException {
 		secTable = mnyDb.getTable("SEC");
 		secCursor = CursorBuilder.createCursor(secTable.getPrimaryKeyIndex());
 	}
@@ -78,7 +78,7 @@ public class MsmSecTable {
 	 * @param
 	 * @return
 	 */    
-	public List<String[]> getSymbols(MsmCntryTable cntryTable) throws IOException {
+	public List<String[]> getSymbols(CntryTable cntryTable) throws IOException {
 		Map<String, Object> row = null;
 		Map<String, Object> rowPattern = new HashMap<>();
 		Iterator<Row> secIt;

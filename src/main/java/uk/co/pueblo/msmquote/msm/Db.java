@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,16 +13,16 @@ import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.DateTimeType;
 
-public class MsmDb extends DatabaseBuilder {
+public class Db extends DatabaseBuilder {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
+	private static final Logger LOGGER = LogManager.getLogger(Db.class);
 
 	// Instance variables
 	private Database db;
 
 	// Constructor
-	public MsmDb(String fileName, String password) throws IOException {
+	public Db(String fileName, String password) throws IOException {
 
 		// Create lock file
 		String lockFileName = null;

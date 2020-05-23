@@ -11,8 +11,19 @@ import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
-import uk.co.pueblo.msmquote.MsmCliDatTable.IdData;
-import uk.co.pueblo.msmquote.MsmDhdTable.DhdColumn;
+import uk.co.pueblo.msmquote.msm.CliDatTable;
+import uk.co.pueblo.msmquote.msm.CntryTable;
+import uk.co.pueblo.msmquote.msm.CrncTable;
+import uk.co.pueblo.msmquote.msm.Db;
+import uk.co.pueblo.msmquote.msm.DhdTable;
+import uk.co.pueblo.msmquote.msm.FxTable;
+import uk.co.pueblo.msmquote.msm.SecTable;
+import uk.co.pueblo.msmquote.msm.SpTable;
+import uk.co.pueblo.msmquote.msm.CliDatTable.IdData;
+import uk.co.pueblo.msmquote.msm.DhdTable.DhdColumn;
+import uk.co.pueblo.msmquote.sources.YahooApiHist;
+import uk.co.pueblo.msmquote.sources.YahooApiQuote;
+import uk.co.pueblo.msmquote.sources.YahooCsvHist;
 
 public class Update {
 
@@ -40,7 +51,7 @@ public class Update {
 
 		Instant startTime = Instant.now();
 		int exitCode = ExitCode.OK.getCode();
-		MsmDb db = null;
+		Db db = null;
 
 		try {	    	
 			// Process command-line arguments
@@ -58,38 +69,38 @@ public class Update {
 
 			// Open Money database
 			Database openedDb = null;			
-			db = new MsmDb(args[0], password);
+			db = new Db(args[0], password);
 			openedDb = db.getDb();
 
 			try {
 				// Instantiate table objects needed to process source quote type
-				MsmSecTable secTable = new MsmSecTable(openedDb);
-				MsmCrncTable crncTable = new MsmCrncTable(openedDb);
-				MsmDhdTable dhdTable = new MsmDhdTable(openedDb);
-				MsmCntryTable cntryTable = new MsmCntryTable(openedDb);
+				SecTable secTable = new SecTable(openedDb);
+				CrncTable crncTable = new CrncTable(openedDb);
+				DhdTable dhdTable = new DhdTable(openedDb);
+				CntryTable cntryTable = new CntryTable(openedDb);
 
 				// Process quote source types
-				YahooUpdate yahooUpdate = null;
+				Quote yahooQuote = null;
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooUpdate = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+						yahooQuote = new uk.co.pueblo.msmquote.sources.YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
-						yahooUpdate = new YahooApiQuote(sourceArg);
+						yahooQuote = new YahooApiQuote(sourceArg);
 					}
 				} else if (sourceArg.contains("finance.yahoo.com/v7/finance/chart")) {
-					yahooUpdate = new YahooApiHist(sourceArg);						
+					yahooQuote = new YahooApiHist(sourceArg);						
 				} else if (sourceArg.endsWith(".csv")) {
-					yahooUpdate = new YahooCsvHist(sourceArg);
+					yahooQuote = new YahooCsvHist(sourceArg);
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
-				if (!yahooUpdate.isQuery()) {
+				if (!yahooQuote.isQuery()) {
 					// Instantiate table objects needed to process quote data
-					MsmSpTable spTable = new MsmSpTable(openedDb);
-					MsmFxTable fxTable = new MsmFxTable(openedDb);
-					MsmCliDatTable cliDatTable = new MsmCliDatTable(openedDb);
+					SpTable spTable = new SpTable(openedDb);
+					FxTable fxTable = new FxTable(openedDb);
+					CliDatTable cliDatTable = new CliDatTable(openedDb);
 
 					// Now update quote data in Money database
 					int hsec;
@@ -98,7 +109,7 @@ public class Update {
 					int[] hcrncs = {0, 0};
 					Map<String, Object> quoteRow = new HashMap<>();				
 					while (true) {
-						if ((quoteRow = yahooUpdate.getNext()) == null) {
+						if ((quoteRow = yahooQuote.getNext()) == null) {
 							break;
 						}
 						if (quoteRow.containsKey("xError")) {

@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.sources;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,7 +13,9 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class YahooCsvHist implements YahooUpdate {
+import uk.co.pueblo.msmquote.Quote;
+
+public class YahooCsvHist implements Quote {
 	
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);

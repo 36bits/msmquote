@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.msm;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,17 +13,17 @@ import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Table;
 
-public class MsmFxTable {
+public class FxTable {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmFxTable.class);
+	private static final Logger LOGGER = LogManager.getLogger(FxTable.class);
 
 	// Instance variables
 	private Table fxTable;
 	private IndexCursor fxCursor;
 
 	// Constructor
-	public MsmFxTable(Database mnyDb) throws IOException {
+	public FxTable(Database mnyDb) throws IOException {
 		fxTable = mnyDb.getTable("CRNC_EXCHG");
 		fxCursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
 	}
