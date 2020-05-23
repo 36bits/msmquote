@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.yf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import uk.co.pueblo.msmquote.util.YahooApi;
+import uk.co.pueblo.msmquote.Quote;
 
 public class YahooApiHist implements Quote {
 
