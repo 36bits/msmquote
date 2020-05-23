@@ -15,7 +15,7 @@ public class YahooApi {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApi.class);
 
 	/**
-	 * Get quote data from the Yahoo API. 
+	 * Get quote data from the Yahoo API.
 	 * 
 	 * @param apiUrl
 	 * @return

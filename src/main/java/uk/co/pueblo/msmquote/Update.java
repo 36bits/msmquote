@@ -21,9 +21,6 @@ import uk.co.pueblo.msmquote.msm.SecTable;
 import uk.co.pueblo.msmquote.msm.SpTable;
 import uk.co.pueblo.msmquote.msm.CliDatTable.IdData;
 import uk.co.pueblo.msmquote.msm.DhdTable.DhdColumn;
-import uk.co.pueblo.msmquote.sources.YahooApiHist;
-import uk.co.pueblo.msmquote.sources.YahooApiQuote;
-import uk.co.pueblo.msmquote.sources.YahooCsvHist;
 
 public class Update {
 
@@ -84,7 +81,7 @@ public class Update {
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooQuote = new uk.co.pueblo.msmquote.sources.YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+						yahooQuote = new uk.co.pueblo.msmquote.YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
 						yahooQuote = new YahooApiQuote(sourceArg);
 					}
