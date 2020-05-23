@@ -27,11 +27,13 @@ public class MsmSpTable {
 	private static final Logger LOGGER = LogManager.getLogger(MsmSpTable.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 
+	// Class variables
+	private static int hsp = 0;
+	
 	// Instance variables
 	private Table spTable;
 	private IndexCursor spCursor;
 	private ArrayList<Map<String, Object>> spRowList;
-	private int hsp;
 
 	// Define SP table src values
 	private enum Src {
@@ -59,7 +61,7 @@ public class MsmSpTable {
 		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 
 		// Get current hsp (SP table index)
-		int hsp = 0;
+		//int hsp = 0;
 		spCursor.afterLast();
 		if (spCursor.getPreviousRow() != null) {
 			hsp = (int) spCursor.getCurrentRowValue(spTable.getColumn("hsp"));
@@ -100,7 +102,7 @@ public class MsmSpTable {
 
 		// Update SP row
 		if (addRow) {
-			hsp = hsp + 1;
+			hsp++;
 			row.put("hsp", hsp);
 			row.put("src", Src.ONLINE.getCode());
 			spRowList.add(row);
