@@ -13,27 +13,26 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class YahooCsvQuote implements YahooQuote {
+public class YahooCsvHist implements YahooUpdate {
 	
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(YahooCsvQuote.class);
-	private static final String PROPS = "YahooQuote.properties";
-	
+	private static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
+	private static final String PROPS = "YahooQuote.properties";	
 
 	// Class variables
 	private static Properties props;
 
 	// Instance variables
 	private BufferedReader csvBr;
-	private String csvSymbol;
+	private String symbol;
 	private int quoteDivisor;
-	private int quoteCount;
+	private int quoteIndex;
 	private boolean isQuery;
 	
 	static {
 		try {
 			// Set up properties
-			InputStream propsIs = YahooCsvQuote.class.getClassLoader().getResourceAsStream(PROPS);
+			InputStream propsIs = YahooCsvHist.class.getClassLoader().getResourceAsStream(PROPS);
 			Properties props = new Properties();
 			props.load(propsIs);
 		} catch (IOException e) {
@@ -47,7 +46,7 @@ public class YahooCsvQuote implements YahooQuote {
 	 * @param	csvFile
 	 * @throws IOException 
 	 */
-	public YahooCsvQuote(String fileName) throws IOException {
+	public YahooCsvHist(String fileName) throws IOException {
 		File csvFile = new File(fileName);
 		csvBr = new BufferedReader(new FileReader(csvFile));
 		if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
@@ -55,18 +54,18 @@ public class YahooCsvQuote implements YahooQuote {
 			csvBr.close();
 		}				
 
-		// Get investment symbol from CSV file name & truncate if required
+		// Get investment symbol from CSV file name
 		String tmp = csvFile.getName();
 		int tmpLen = tmp.length();
-		csvSymbol = MsmUtils.truncateSymbol(tmp.substring(0, tmpLen - 8));
+		symbol = tmp.substring(0, tmpLen - 8);
 
-		// Set quote factor according to currency
-		String quoteDivisorProp;
-		if ((quoteDivisorProp = props.getProperty("quoteDivisor." + tmp.substring(tmpLen - 7, tmpLen - 4))) != null) {
+		// Set quote divisor according to currency
+		String quoteDivisorProp = props.getProperty("quoteDivisor." + tmp.substring(tmpLen - 7, tmpLen - 4));
+		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 		
-		quoteCount = 0;
+		quoteIndex = 0;
 		isQuery = false;
 	}
 
@@ -77,6 +76,7 @@ public class YahooCsvQuote implements YahooQuote {
 	 * @throws IOException
 	 * @throws NumberFormatException
 	 */
+	@Override
 	public Map<String, Object> getNext() throws IOException, NumberFormatException {
 
 		Map<String, Object> quoteRow = new HashMap<>();
@@ -87,7 +87,7 @@ public class YahooCsvQuote implements YahooQuote {
 			if (csvRow == null) {
 				// End of file
 				csvBr.close();
-				LOGGER.info("Quotes processed = {}", quoteCount);
+				LOGGER.info("Quotes processed = {}", quoteIndex);
 				return null;
 			}
 			String[] csvColumn = csvRow.split(",");
@@ -96,7 +96,7 @@ public class YahooCsvQuote implements YahooQuote {
 			LocalDate quoteDate = LocalDate.parse(csvColumn[0]);
 
 			// SEC table columns
-			quoteRow.put("szSymbol", csvSymbol);
+			quoteRow.put("szSymbol", symbol);
 			// Assume dtLastUpdate is date of quote data in SEC row
 			quoteRow.put("dtLastUpdate", quoteDate);
 
@@ -115,7 +115,7 @@ public class YahooCsvQuote implements YahooQuote {
 				continue;
 			}
 			
-			quoteCount++;			
+			quoteIndex++;			
 			return quoteRow;
 		}
 	}
@@ -123,6 +123,7 @@ public class YahooCsvQuote implements YahooQuote {
 	/**
 	 * @return
 	 */
+	@Override
 	public boolean isQuery() {
 		return isQuery;		
 	}

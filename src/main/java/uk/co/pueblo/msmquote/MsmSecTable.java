@@ -26,7 +26,6 @@ public class MsmSecTable {
 	private Table secTable;
 	private IndexCursor secCursor;
 
-
 	/**
 	 * Constructor
 	 * 
@@ -49,8 +48,15 @@ public class MsmSecTable {
 		int hsec = -1;
 		Map<String, Object> row = null;
 
+		// Truncate incoming symbol if required
+		String origSymbol = (String) quoteRow.get("szSymbol");
+		String symbol = origSymbol;
+		if (origSymbol.length() > 12) {
+			symbol = origSymbol.substring(0, 12);
+			LOGGER.info("Truncated symbol {} to {}", origSymbol, symbol);
+		}
+		
 		// Find matching symbol in SEC table
-		String symbol = (String) quoteRow.get("szSymbol");
 		boolean found = secCursor.findFirstRow(Collections.singletonMap("szSymbol", symbol));
 		if (found) {
 			row = secCursor.getCurrentRow();

@@ -19,6 +19,7 @@ public class Update {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 
+	// Define exit codes
 	private enum ExitCode {
 		OK(0), WARNING(1), ERROR(2);
 
@@ -68,16 +69,18 @@ public class Update {
 				MsmCntryTable cntryTable = new MsmCntryTable(openedDb);
 
 				// Process quote source types
-				YahooQuote yahooQuote = null;
+				YahooUpdate yahooQuote = null;
 
-				if (sourceArg.startsWith("https://") || sourceArg.startsWith("http://")) {
+				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
 						yahooQuote = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
 						yahooQuote = new YahooApiQuote(sourceArg);
 					}
+				} else if (sourceArg.contains("finance.yahoo.com/v7/finance/chart")) {
+					yahooQuote = new YahooApiHist(sourceArg);						
 				} else if (sourceArg.endsWith(".csv")) {
-					yahooQuote = new YahooCsvQuote(sourceArg);
+					yahooQuote = new YahooCsvHist(sourceArg);
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
@@ -130,21 +133,21 @@ public class Update {
 					cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
 				}
 
-				} catch (Exception e) {
-					LOGGER.fatal(e);
-					LOGGER.debug("Exception occured!", e);
-					exitCode = ExitCode.ERROR.getCode();
-				}
-
-				// Close Money database
-				db.closeDb();
-
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occured!", e);
 				exitCode = ExitCode.ERROR.getCode();
-			}									
-			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-			System.exit(exitCode);
-		}
+			}
+
+			// Close Money database
+			db.closeDb();
+
+		} catch (Exception e) {
+			LOGGER.fatal(e);
+			LOGGER.debug("Exception occured!", e);
+			exitCode = ExitCode.ERROR.getCode();
+		}									
+		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
+		System.exit(exitCode);
 	}
+}
