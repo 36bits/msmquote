@@ -1,13 +1,14 @@
-# Version 3.0.1
+# Version 3.1.0
 
 ## New Features
-* None.
+* Historical quote data for a single investment can now be updated from the Yahoo API as well a from a CSV file.
 
 ## Improvements
-* Add summary log messages to Yahoo API quote data processing.
+* The quote currency can now be specified for quotes updated from a CSV file.
+* Add summary log messages to Yahoo quote data processing.
 
 ## Bug Fixes
-* None.
+* For 12-character symbols +++
 
 ## Known Issues
 * None.
