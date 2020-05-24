@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote.yf;
+package uk.co.pueblo.msmquote.source;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class YahooApi {
+class YahooApi {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApi.class);
@@ -21,7 +21,7 @@ public class YahooApi {
 	 * @return
 	 * @throws IOException
 	 */
-	protected static JsonNode getJson(String apiUrl) throws IOException {
+	static JsonNode getJson(String apiUrl) throws IOException {
 		LOGGER.info("Requesting quote data from Yahoo API");
 		// Using try-with-resources to get AutoClose of InputStream
 		try (InputStream quoteIs = new URL(apiUrl).openStream();) {

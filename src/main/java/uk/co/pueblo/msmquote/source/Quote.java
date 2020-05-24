@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msmquote.source;
 
 import java.io.IOException;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Map;
  * 
  *
  */
-public interface Quote {
+interface Quote {
 	public Map<String, Object> getNext() throws IOException;
 	public boolean isQuery();
 }
