@@ -7,7 +7,7 @@ import java.util.Map;
  * 
  *
  */
-interface Quote {
+public interface Quote {
 	public Map<String, Object> getNext() throws IOException;
 	public boolean isQuery();
 }
