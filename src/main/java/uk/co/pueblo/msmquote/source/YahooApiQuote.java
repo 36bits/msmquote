@@ -27,8 +27,7 @@ public class YahooApiQuote implements Quote {
 
 	// Class variables
 	private static Properties baseProps;
-	private static Map<String, Properties> subProps;
-
+	
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, Integer> logSummary;
@@ -40,16 +39,6 @@ public class YahooApiQuote implements Quote {
 			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(BASE_PROPS);
 			baseProps = new Properties();
 			baseProps.load(propsIs);
-
-			// Set up sub properties
-			int n = 1;
-			String quoteType;
-			while ((quoteType = baseProps.getProperty("quoteType." + n++)) != null) {
-				propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(baseProps.getProperty("quoteType.map." + quoteType));
-				Properties tmpProps = new Properties();
-				tmpProps.load(propsIs);				
-				subProps.put(quoteType, tmpProps);				
-			}			
 		} catch (IOException e) {
 			LOGGER.fatal(e);
 		}
