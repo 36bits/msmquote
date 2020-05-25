@@ -17,7 +17,7 @@ public class YahooCsvHist implements Quote {
 	
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
-	private static final String PROPS = "YahooQuote.properties";	
+	private static final String BASE_PROPS = "YahooQuote.properties";	
 
 	// Class variables
 	private static Properties props;
@@ -32,7 +32,7 @@ public class YahooCsvHist implements Quote {
 	static {
 		try {
 			// Set up properties
-			InputStream propsIs = YahooCsvHist.class.getClassLoader().getResourceAsStream(PROPS);
+			InputStream propsIs = YahooCsvHist.class.getClassLoader().getResourceAsStream(BASE_PROPS);
 			Properties props = new Properties();
 			props.load(propsIs);
 		} catch (IOException e) {
