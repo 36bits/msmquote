@@ -79,7 +79,7 @@ public class YahooApiHist implements Quote {
 		LocalDateTime quoteDate = Instant.ofEpochSecond(resultJn.at("/timestamp").get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
 
 		// SEC table columns
-		quoteRow.put("szSymbol", symbol);
+		quoteRow.put("xSymbol", symbol);					// xSymbol is used internally, not by MS Money
 		// Assume dtLastUpdate is date of quote data in SEC row
 		quoteRow.put("dtLastUpdate", quoteDate);
 

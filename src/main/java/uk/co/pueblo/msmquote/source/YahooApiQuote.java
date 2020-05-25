@@ -22,11 +22,12 @@ public class YahooApiQuote implements Quote {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	private static final String DELIM = ",";
-	private static final String PROPS = "YahooQuote.properties";
+	private static final String BASE_PROPS = "YahooQuote.properties";
 	private static final String JSON_ROOT = "/quoteResponse/result";
 
 	// Class variables
-	private static Properties props;
+	private static Properties baseProps;
+	private static Map<String, Properties> subProps;
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
@@ -35,18 +36,23 @@ public class YahooApiQuote implements Quote {
 
 	static {
 		try {
-			// Set up properties
-			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(PROPS);
-			props = new Properties();
-			props.load(propsIs);
+			// Set up base properties			
+			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(BASE_PROPS);
+			baseProps = new Properties();
+			baseProps.load(propsIs);
+
+			// Set up sub properties
+			int n = 1;
+			String quoteType;
+			while ((quoteType = baseProps.getProperty("quoteType." + n++)) != null) {
+				propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(baseProps.getProperty("quoteType.map." + quoteType));
+				Properties tmpProps = new Properties();
+				tmpProps.load(propsIs);				
+				subProps.put(quoteType, tmpProps);				
+			}			
 		} catch (IOException e) {
 			LOGGER.fatal(e);
 		}
-	}
-
-	// Define Yahoo quoteType fields that we recognise
-	private enum QuoteType {
-		EQUITY, BOND, MUTUALFUND, INDEX, CURRENCY
 	}
 
 	/**
@@ -67,7 +73,7 @@ public class YahooApiQuote implements Quote {
 		for (n = 0; n < symbols.size(); n++) {
 			symbol = symbols.get(n);
 			if (symbol[0].length() == 12 && !symbol[0].contains(".")) {
-				symbol[0] = symbol[0] + props.getProperty("exchange." + symbol[1]);
+				symbol[0] = symbol[0] + baseProps.getProperty("exchange." + symbol[1]);
 			}
 			delim = DELIM;
 			if (n == 0) {
@@ -139,81 +145,85 @@ public class YahooApiQuote implements Quote {
 		Map<String, Object> quoteRow = new HashMap<>();
 		String symbol = null;
 		String quoteType = null;
+
+
+		// Get quote type
+		symbol = result.get("symbol").asText();
+		quoteType = result.get("quoteType").asText();
+		LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
+
+		// Set quote date to 00:00 in local system time-zone
+		LocalDateTime quoteDate = Instant.ofEpochSecond(result.get("regularMarketTime").asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+
+		// Get divisor and multiplier for quote currency
+		String quoteCurrency = result.get("currency").asText();
+		String prop;
 		int quoteDivisor = 1;
+		int quoteMultiplier = 100;
+		if ((prop = baseProps.getProperty("divisor." + quoteCurrency)) != null) {
+			quoteDivisor = Integer.parseInt(prop);
+		}
+		if ((prop = baseProps.getProperty("multiplier." + quoteCurrency)) != null) {
+			quoteMultiplier = Integer.parseInt(prop);				
+		}
 
-		try {
-			// Get quote type
-			symbol = result.get("symbol").asText();
-			quoteType = result.get("quoteType").asText();
-			LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
+		// Build columns common to SEC and SP tables
+		quoteRow.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of quote
 
-			if (quoteType.equals(QuoteType.CURRENCY.toString())) {
-				quoteRow.put("symbol", result.get("symbol").asText());
-				quoteRow.put("rate", result.get("regularMarketPrice").asDouble());
+		// Build SEC table columns
+		quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
+		quoteRow.put("dtLastUpdate", quoteDate);		// TODO Confirm assumption that dtLastUpdate is date of quote
+		quoteRow.put("dDividendYield", 0);				// Will be overwritten if exists in the quote data 
+
+		// Build SP table columns				
+		quoteRow.put("dPE", 0);							// Will be overwritten if exists in the quote data
+		quoteRow.put("dt", quoteDate);
+
+		// Build remaining columns
+		int n = 1;
+		while ((prop = baseProps.getProperty("map." + quoteType + "." + n++)) != null) {
+			String[] map = prop.split(",");
+
+			if (!result.has(map[0])) {
+				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, map[0]);
+				quoteRow.put("xError", null);
+				continue;
+			}
+
+			// Get value, either double or long
+			long lVal = -1;
+			double dVal = -1;
+			if (map[1].substring(0, 1).equals("d")) {
+				dVal = result.get(map[0]).asDouble();
 			} else {
-				// Get quote date set to 00:00 in local system time-zone
-				LocalDateTime quoteDate = Instant.ofEpochSecond(result.get("regularMarketTime").asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+				lVal = result.get(map[0]).asLong();
+			}
 
-				// Set conversion factor for quote currency
-				if (quoteType.equals(QuoteType.EQUITY.toString()) || quoteType.equals(QuoteType.BOND.toString())
-						|| quoteType.equals(QuoteType.MUTUALFUND.toString())) {
-					String quoteDivisorProp = props.getProperty("quoteDivisor." + result.get("currency").asText());
-					if (quoteDivisorProp != null) {
-						quoteDivisor = Integer.parseInt(quoteDivisorProp);
-					}
-				}
-
-				// Build quote row
-				// Columns common to EQUITY, BOND, MUTUALFUND and INDEX quote types
-				// SEC and SP table
-				quoteRow.put("dtSerial", LocalDateTime.now()); // TODO Confirm assumption that dtSerial is time-stamp of
-				// record creation/update
-				// SEC table
-				quoteRow.put("szSymbol", symbol);
-				quoteRow.put("dtLastUpdate", quoteDate); // TODO Confirm assumption that dtLastUpdate is date of quote
-				// data in SEC row
-				quoteRow.put("d52WeekLow", result.get("fiftyTwoWeekLow").asDouble() / quoteDivisor);
-				quoteRow.put("d52WeekHigh", result.get("fiftyTwoWeekHigh").asDouble() / quoteDivisor);
-				// SP table
-				quoteRow.put("dt", quoteDate);
-				quoteRow.put("dPrice", result.get("regularMarketPrice").asDouble() / quoteDivisor);
-				quoteRow.put("dChange", result.get("regularMarketChange").asDouble() / quoteDivisor);
-
-				// Columns common to EQUITY, BOND and INDEX quote types
-				if (quoteType.equals(QuoteType.EQUITY.toString()) || quoteType.equals(QuoteType.BOND.toString())
-						|| quoteType.equals(QuoteType.INDEX.toString())) {
-					// SEC table
-					quoteRow.put("dBid", result.get("bid").asDouble() / quoteDivisor); // Not visible in Money 2004
-					quoteRow.put("dAsk", result.get("ask").asDouble() / quoteDivisor); // Not visible in Money 2004
-					// SP table
-					quoteRow.put("dOpen", result.get("regularMarketOpen").asDouble() / quoteDivisor);
-					quoteRow.put("dHigh", result.get("regularMarketDayHigh").asDouble() / quoteDivisor);
-					quoteRow.put("dLow", result.get("regularMarketDayLow").asDouble() / quoteDivisor);
-					quoteRow.put("vol", result.get("regularMarketVolume").asLong());
-				}
-
-				// Columns for EQUITY quote types
-				if (quoteType.equals(QuoteType.EQUITY.toString())) {
-					// SEC table
-					// TODO Add EPS and beta
-					quoteRow.put("dCapitalization", result.get("marketCap").asDouble());
-					quoteRow.put("dSharesOutstanding", result.get("sharesOutstanding").asDouble());
-					if (result.has("trailingAnnualDividendYield")) {
-						quoteRow.put("dDividendYield",
-								result.get("trailingAnnualDividendYield").asDouble() * 100 * quoteDivisor);
+			// Process adjustments to value
+			if ((prop = baseProps.getProperty("adjust." + map[0])) != null) {
+				switch(prop) {
+				case "divide":
+					if (dVal != -1) {
+						dVal = dVal / quoteDivisor;
 					} else {
-						quoteRow.put("dDividendYield", 0);
+						lVal = lVal / quoteDivisor;
 					}
-					// SP table
-					if (result.has("trailingPE")) {
-						quoteRow.put("dPE", result.get("trailingPE").asDouble());
+					break;
+				case "multiply":
+					if (dVal != -1) {
+						dVal = dVal * quoteMultiplier;
+					} else {
+						lVal = lVal * quoteMultiplier;
 					}
 				}
 			}
-		} catch (NullPointerException e) {
-			LOGGER.warn("Incomplete quote data for symbol {}", symbol);
-			LOGGER.debug("Exception occured!", e);
-			quoteRow.put("xError", null);
+
+			// Now put key and value to quote row
+			if (dVal != -1) {
+				quoteRow.put(map[1], dVal);
+			} else {
+				quoteRow.put(map[1], lVal);
+			}
 		}
 
 		logSummary.putIfAbsent(quoteType, 0);
@@ -231,5 +241,4 @@ public class YahooApiQuote implements Quote {
 	public boolean isQuery() {
 		return isQuery;
 	}
-
 }

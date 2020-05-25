@@ -96,7 +96,7 @@ public class YahooCsvHist implements Quote {
 			LocalDate quoteDate = LocalDate.parse(csvColumn[0]);
 
 			// SEC table columns
-			quoteRow.put("szSymbol", symbol);
+			quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
 			// Assume dtLastUpdate is date of quote data in SEC row
 			quoteRow.put("dtLastUpdate", quoteDate);
 

@@ -116,21 +116,21 @@ public class Update {
 						if (quoteRow.containsKey("xError")) {
 							exitCode = ExitCode.WARNING.getCode();
 						}
-						if (quoteRow.get("dPrice") != null) {
+						if (quoteRow.containsKey("dPrice")) {
 							// Update stock quote data
 							if((hsec = secTable.update(quoteRow)) != -1) {
 								spTable.update(quoteRow, hsec);
 							} else {
 								exitCode = ExitCode.WARNING.getCode();
 							}
-						} else if (quoteRow.get("rate") != null) {
+						} else if (quoteRow.containsKey("dRate")) {
 							// Get hcrncs of currency pair
-							currencyPair = (String) quoteRow.get("symbol");
+							currencyPair = (String) quoteRow.get("xSymbol");
 							isoCodes[0] = currencyPair.substring(0, 3);
 							isoCodes[1] = currencyPair.substring(3, 6);
 							hcrncs = crncTable.getHcrncs(isoCodes);
 							// Update exchange rate table
-							if (!fxTable.update(hcrncs, (double) quoteRow.get("rate"))) {
+							if (!fxTable.update(hcrncs, (double) quoteRow.get("dRate"))) {
 								exitCode = ExitCode.WARNING.getCode();
 							}
 						} else {
