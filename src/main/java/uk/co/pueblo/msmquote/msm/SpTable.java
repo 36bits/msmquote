@@ -29,7 +29,7 @@ public class SpTable {
 
 	// Class variables
 	private static int hsp = 0;
-	
+
 	// Instance variables
 	private Table spTable;
 	private IndexCursor spCursor;
@@ -77,7 +77,13 @@ public class SpTable {
 	 * @param	hsec		the hsec to be updated
 	 */
 	public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
+
+		// Truncate incoming symbol if required, for cosmetic reasons only
 		String symbol = quoteRow.get("xSymbol").toString();
+		if (symbol.length() > 12) {
+			symbol = symbol.substring(0, 12);
+		}
+
 		Map<String, Object> row = null;
 
 		// Build SP row
