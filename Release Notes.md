@@ -4,11 +4,12 @@
 * Historical quote data for a single investment can now be updated from the Yahoo API as well a from a CSV file.
 
 ## Improvements
-* The quote currency can now be specified for quotes updated from a CSV file.
-* Add summary log messages to Yahoo quote data processing.
+* The quote currency must now be specified as a part of the filename for quotes updated from a CSV file.
+* Output summary log messages after Yahoo quote data processing.
+* For the auto-complete source type, add an exchange suffix to 12-character symbols that don't have one.
 
 ## Bug Fixes
-* For 12-character symbols +++
+* None.
 
 ## Known Issues
 * None.
