@@ -27,7 +27,7 @@ public class YahooApiQuote implements Quote {
 
 	// Class variables
 	private static Properties baseProps;
-	
+
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, Integer> logSummary;
@@ -162,56 +162,42 @@ public class YahooApiQuote implements Quote {
 		// Build SEC table columns
 		quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
 		quoteRow.put("dtLastUpdate", quoteDate);		// TODO Confirm assumption that dtLastUpdate is date of quote
-		quoteRow.put("dDividendYield", 0);				// Will be overwritten if exists in the quote data 
-
+		
 		// Build SP table columns				
-		quoteRow.put("dPE", 0);							// Will be overwritten if exists in the quote data
 		quoteRow.put("dt", quoteDate);
 
 		// Build remaining columns
 		int n = 1;
 		while ((prop = baseProps.getProperty("map." + quoteType + "." + n++)) != null) {
 			String[] map = prop.split(",");
-
-			if (!result.has(map[0])) {
-				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, map[0]);
-				quoteRow.put("xError", null);
-				continue;
-			}
-
-			// Get value, either double or long
-			long lVal = -1;
-			double dVal = -1;
-			if (map[1].substring(0, 1).equals("d")) {
-				dVal = result.get(map[0]).asDouble();
-			} else {
-				lVal = result.get(map[0]).asLong();
-			}
-
-			// Process adjustments to value
-			if ((prop = baseProps.getProperty("adjust." + map[0])) != null) {
-				switch(prop) {
-				case "divide":
-					if (dVal != -1) {
-						dVal = dVal / quoteDivisor;
-					} else {
-						lVal = lVal / quoteDivisor;
-					}
-					break;
-				case "multiply":
-					if (dVal != -1) {
-						dVal = dVal * quoteMultiplier;
-					} else {
-						lVal = lVal * quoteMultiplier;
+			double value;
+			if (result.has(map[0])) {
+				value = result.get(map[0]).asDouble();
+				// Process adjustments
+				if ((prop = baseProps.getProperty("adjust." + map[0])) != null) {
+					switch(prop) {
+					case "divide":
+						value = value / quoteDivisor;
+						break;
+					case "multiply":
+						value = value * quoteMultiplier;
 					}
 				}
+			} else {
+				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, map[0]);
+				quoteRow.put("xError", null);
+				if ((prop = baseProps.getProperty("default." + map[0])) == null) {
+					continue;
+				}
+				value = Double.parseDouble(prop);	// Get default value
 			}
 
 			// Now put key and value to quote row
-			if (dVal != -1) {
-				quoteRow.put(map[1], dVal);
+			LOGGER.debug("Key = {}, value = {}", map[1], value);
+			if (map[1].substring(0, 1).equals("d")) {
+				quoteRow.put(map[1], value);
 			} else {
-				quoteRow.put(map[1], lVal);
+				quoteRow.put(map[1], (long) value);
 			}
 		}
 
