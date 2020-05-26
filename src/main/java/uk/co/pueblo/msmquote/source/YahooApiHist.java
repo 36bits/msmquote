@@ -19,7 +19,7 @@ public class YahooApiHist implements Quote {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
-	private static final String PROPS = "YahooQuote.properties";
+	private static final String BASE_PROPS = "YahooQuote.properties";
 
 	// Class variables
 	private static Properties props;
@@ -34,7 +34,7 @@ public class YahooApiHist implements Quote {
 	static {
 		try {
 			// Set up properties
-			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(PROPS);
+			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(BASE_PROPS);
 			props = new Properties();
 			props.load(propsIs);
 		} catch (IOException e) {
@@ -79,7 +79,7 @@ public class YahooApiHist implements Quote {
 		LocalDateTime quoteDate = Instant.ofEpochSecond(resultJn.at("/timestamp").get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
 
 		// SEC table columns
-		quoteRow.put("szSymbol", symbol);
+		quoteRow.put("xSymbol", symbol);					// xSymbol is used internally, not by MS Money
 		// Assume dtLastUpdate is date of quote data in SEC row
 		quoteRow.put("dtLastUpdate", quoteDate);
 

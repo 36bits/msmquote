@@ -77,7 +77,7 @@ public class SpTable {
 	 * @param	hsec		the hsec to be updated
 	 */
 	public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
-		String symbol = (String) quoteRow.get("szSymbol");
+		String symbol = quoteRow.get("xSymbol").toString();
 		Map<String, Object> row = null;
 
 		// Build SP row

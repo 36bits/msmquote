@@ -49,7 +49,7 @@ public class SecTable {
 		Map<String, Object> row = null;
 
 		// Truncate incoming symbol if required
-		String origSymbol = (String) quoteRow.get("szSymbol");
+		String origSymbol = quoteRow.get("xSymbol").toString();
 		String symbol = origSymbol;
 		if (origSymbol.length() > 12) {
 			symbol = origSymbol.substring(0, 12);
