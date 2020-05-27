@@ -149,10 +149,10 @@ public class YahooApiQuote implements Quote {
 		String prop;
 		int quoteDivisor = 1;
 		int quoteMultiplier = 100;
-		if ((prop = baseProps.getProperty("divisor." + quoteCurrency)) != null) {
+		if ((prop = baseProps.getProperty("divisor." + quoteCurrency + "." + quoteType)) != null) {
 			quoteDivisor = Integer.parseInt(prop);
 		}
-		if ((prop = baseProps.getProperty("multiplier." + quoteCurrency)) != null) {
+		if ((prop = baseProps.getProperty("multiplier." + quoteCurrency + "." + quoteType)) != null) {
 			quoteMultiplier = Integer.parseInt(prop);				
 		}
 

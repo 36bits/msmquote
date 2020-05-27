@@ -20,21 +20,21 @@ public class YahooCsvHist implements Quote {
 	private static final String BASE_PROPS = "YahooQuote.properties";	
 
 	// Class variables
-	private static Properties props;
+	private static Properties baseProps;
 
 	// Instance variables
 	private BufferedReader csvBr;
 	private String symbol;
 	private int quoteDivisor;
-	private int quoteIndex;
+	private int quoteCount;
 	private boolean isQuery;
 	
 	static {
 		try {
 			// Set up properties
 			InputStream propsIs = YahooCsvHist.class.getClassLoader().getResourceAsStream(BASE_PROPS);
-			Properties props = new Properties();
-			props.load(propsIs);
+			baseProps = new Properties();
+			baseProps.load(propsIs);
 		} catch (IOException e) {
 			LOGGER.fatal(e);
 		}
@@ -54,18 +54,18 @@ public class YahooCsvHist implements Quote {
 			csvBr.close();
 		}				
 
-		// Get investment symbol from CSV file name
+		// Get quote meta-data from CSV file name
 		String tmp = csvFile.getName();
-		int tmpLen = tmp.length();
-		symbol = tmp.substring(0, tmpLen - 8);
-
+		String[] quoteMeta = tmp.substring(tmp.length() - 4).split("_");	// index 0 = symbol, index 1 = currency, index 2 = quote type
+		symbol = quoteMeta[0];
+		
 		// Set quote divisor according to currency
-		String quoteDivisorProp = props.getProperty("quoteDivisor." + tmp.substring(tmpLen - 7, tmpLen - 4));
+		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 		
-		quoteIndex = 0;
+		quoteCount = 0;
 		isQuery = false;
 	}
 
@@ -87,7 +87,7 @@ public class YahooCsvHist implements Quote {
 			if (csvRow == null) {
 				// End of file
 				csvBr.close();
-				LOGGER.info("Quotes processed = {}", quoteIndex);
+				LOGGER.info("Quotes processed = {}", quoteCount);
 				return null;
 			}
 			String[] csvColumn = csvRow.split(",");
@@ -115,7 +115,7 @@ public class YahooCsvHist implements Quote {
 				continue;
 			}
 			
-			quoteIndex++;			
+			quoteCount++;			
 			return quoteRow;
 		}
 	}

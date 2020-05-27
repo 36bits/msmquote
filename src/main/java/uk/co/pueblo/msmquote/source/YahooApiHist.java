@@ -22,7 +22,7 @@ public class YahooApiHist implements Quote {
 	private static final String BASE_PROPS = "YahooQuote.properties";
 
 	// Class variables
-	private static Properties props;
+	private static Properties baseProps;
 
 	// Instance variables
 	private JsonNode resultJn;
@@ -35,8 +35,8 @@ public class YahooApiHist implements Quote {
 		try {
 			// Set up properties
 			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(BASE_PROPS);
-			props = new Properties();
-			props.load(propsIs);
+			baseProps = new Properties();
+			baseProps.load(propsIs);
 		} catch (IOException e) {
 			LOGGER.fatal(e);
 		}
@@ -56,7 +56,7 @@ public class YahooApiHist implements Quote {
 		// Get symbol and quote divisor
 		quoteDivisor = 1;
 		symbol = resultJn.at("/meta").get("symbol").asText();
-		String quoteDivisorProp = props.getProperty("quoteDivisor." + resultJn.at("/meta").get("currency").asText());
+		String quoteDivisorProp = baseProps.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + resultJn.at("/meta").get("instrumentType").asText());
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
