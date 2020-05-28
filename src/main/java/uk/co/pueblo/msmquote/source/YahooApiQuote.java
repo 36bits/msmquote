@@ -16,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
+
 public class YahooApiQuote implements Quote {
 
 	// Constants
@@ -30,8 +32,8 @@ public class YahooApiQuote implements Quote {
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private Map<String, Integer> logSummary;
 	private boolean isQuery;
+	private QuoteSummary quoteSummary;
 
 	static {
 		try {
@@ -101,7 +103,7 @@ public class YahooApiQuote implements Quote {
 		}
 
 		isQuery = false;
-		logSummary = new HashMap<>();
+		quoteSummary = new QuoteSummary();
 		resultIt = YahooApi.getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 	}
 
@@ -113,7 +115,7 @@ public class YahooApiQuote implements Quote {
 	 */
 	public YahooApiQuote(String apiUrl) throws IOException {
 		isQuery = false;
-		logSummary = new HashMap<>();
+		quoteSummary = new QuoteSummary();
 		resultIt = YahooApi.getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
@@ -126,7 +128,7 @@ public class YahooApiQuote implements Quote {
 	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
-			logSummary.forEach((key, value) -> LOGGER.info("Summary for quote type {}: processed = {}", key, value));
+			quoteSummary.log(LOGGER);
 			return null;
 		}
 		JsonNode result = resultIt.next();
@@ -134,7 +136,6 @@ public class YahooApiQuote implements Quote {
 		Map<String, Object> quoteRow = new HashMap<>();
 		String symbol = null;
 		String quoteType = null;
-
 
 		// Get quote type
 		symbol = result.get("symbol").asText();
@@ -162,7 +163,7 @@ public class YahooApiQuote implements Quote {
 		// Build SEC table columns
 		quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
 		quoteRow.put("dtLastUpdate", quoteDate);		// TODO Confirm assumption that dtLastUpdate is date of quote
-		
+
 		// Build SP table columns				
 		quoteRow.put("dt", quoteDate);
 
@@ -186,6 +187,7 @@ public class YahooApiQuote implements Quote {
 			} else {
 				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, map[0]);
 				quoteRow.put("xError", null);
+				quoteSummary.inc(quoteType, SummaryType.WARNING);
 				if ((prop = baseProps.getProperty("default." + map[0])) == null) {
 					continue;
 				}
@@ -201,9 +203,7 @@ public class YahooApiQuote implements Quote {
 			}
 		}
 
-		logSummary.putIfAbsent(quoteType, 0);
-		logSummary.put(quoteType, logSummary.get(quoteType) + 1);
-
+		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
 

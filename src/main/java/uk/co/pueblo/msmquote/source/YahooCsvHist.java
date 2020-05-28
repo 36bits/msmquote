@@ -5,17 +5,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
 
 public class YahooCsvHist implements Quote {
 	
@@ -31,8 +30,9 @@ public class YahooCsvHist implements Quote {
 	private BufferedReader csvBr;
 	private String symbol;
 	private int quoteDivisor;
-	private int quoteCount;
 	private boolean isQuery;
+	private QuoteSummary quoteSummary;
+	private String quoteType;
 	
 	static {
 		try {
@@ -63,15 +63,16 @@ public class YahooCsvHist implements Quote {
 		String tmp = csvFile.getName();
 		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_");	// index 0 = symbol, index 1 = currency, index 2 = quote type
 		symbol = quoteMeta[0];
+		quoteType = quoteMeta[2];
 
 		// Set quote divisor according to currency
-		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
+		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteType);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 		
-		quoteCount = 0;
 		isQuery = false;
+		quoteSummary = new QuoteSummary();
 	}
 
 	/**
@@ -92,7 +93,7 @@ public class YahooCsvHist implements Quote {
 			if (csvRow == null) {
 				// End of file
 				csvBr.close();
-				LOGGER.info("Quotes processed = {}", quoteCount);
+				quoteSummary.log(LOGGER);
 				return null;
 			}
 			String[] csvColumn = csvRow.split(",");
@@ -121,7 +122,7 @@ public class YahooCsvHist implements Quote {
 				continue;
 			}
 			
-			quoteCount++;			
+			quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 			return quoteRow;
 		}
 	}

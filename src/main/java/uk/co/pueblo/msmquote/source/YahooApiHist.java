@@ -14,6 +14,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
+
 public class YahooApiHist implements Quote {
 
 	// Constants
@@ -30,6 +32,8 @@ public class YahooApiHist implements Quote {
 	private int quoteDivisor;
 	private int quoteIndex;
 	private boolean isQuery;
+	private String quoteType;
+	private QuoteSummary quoteSummary;
 
 	static {
 		try {
@@ -56,14 +60,15 @@ public class YahooApiHist implements Quote {
 		// Get symbol and quote divisor
 		quoteDivisor = 1;
 		symbol = resultJn.at("/meta").get("symbol").asText();
-		String quoteDivisorProp = baseProps.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + resultJn.at("/meta").get("instrumentType").asText());
+		quoteType = resultJn.at("/meta").get("instrumentType").asText();
+		String quoteDivisorProp = baseProps.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + quoteType);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 
 		isQuery = false;
 		quoteIndex = 0;
-
+		quoteSummary = new QuoteSummary();
 	}
 
 	@Override
@@ -71,7 +76,7 @@ public class YahooApiHist implements Quote {
 		Map<String, Object> quoteRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
-			LOGGER.info("Quotes processed = {}", quoteIndex);
+			quoteSummary.log(LOGGER);
 			return null;
 		}
 
@@ -92,6 +97,7 @@ public class YahooApiHist implements Quote {
 		quoteRow.put("vol", resultJn.at("/indicators/quote/0/volume").get(quoteIndex).asLong());
 
 		quoteIndex++;
+		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
 
