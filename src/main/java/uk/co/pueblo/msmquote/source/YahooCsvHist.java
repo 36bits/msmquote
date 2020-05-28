@@ -5,7 +5,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -17,6 +21,7 @@ public class YahooCsvHist implements Quote {
 	
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
+	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	private static final String BASE_PROPS = "YahooQuote.properties";	
 
 	// Class variables
@@ -56,9 +61,9 @@ public class YahooCsvHist implements Quote {
 
 		// Get quote meta-data from CSV file name
 		String tmp = csvFile.getName();
-		String[] quoteMeta = tmp.substring(tmp.length() - 4).split("_");	// index 0 = symbol, index 1 = currency, index 2 = quote type
+		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_");	// index 0 = symbol, index 1 = currency, index 2 = quote type
 		symbol = quoteMeta[0];
-		
+
 		// Set quote divisor according to currency
 		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
 		if (quoteDivisorProp != null) {
@@ -93,8 +98,9 @@ public class YahooCsvHist implements Quote {
 			String[] csvColumn = csvRow.split(",");
 
 			// Get quote date
-			LocalDate quoteDate = LocalDate.parse(csvColumn[0]);
-
+			LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+			//LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").toLocalDate().atStartOfDay();
+			
 			// SEC table columns
 			quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
 			// Assume dtLastUpdate is date of quote data in SEC row
