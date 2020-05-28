@@ -3,7 +3,7 @@
 
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>3.1.1</version>
+	<version>3.1.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msmquote</name>
 
@@ -123,6 +123,6 @@
 	</build>
 	<scm>
 		<developerConnection>scm:git:file:///home/git/msmquote.git</developerConnection>
-	  <tag>v3.1.1</tag>
+	  <tag>HEAD</tag>
   </scm>
 </project>
