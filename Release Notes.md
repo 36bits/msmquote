@@ -1,5 +1,8 @@
 # Version 3.1.2
 
+## Changes
+* Summary log messages now include a count of *warnings*.
+
 # Version 3.1.1
 
 ## Changes
