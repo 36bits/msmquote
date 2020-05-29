@@ -4,46 +4,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
 
-public class YahooCsvHist implements Quote {
-	
-	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
-	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
-	private static final String BASE_PROPS = "YahooQuote.properties";	
-
-	// Class variables
-	private static Properties baseProps;
+public class YahooCsvHist extends YahooQuote {
 
 	// Instance variables
 	private BufferedReader csvBr;
 	private String symbol;
 	private int quoteDivisor;
-	private boolean isQuery;
-	private QuoteSummary quoteSummary;
 	private String quoteType;
-	
-	static {
-		try {
-			// Set up properties
-			InputStream propsIs = YahooCsvHist.class.getClassLoader().getResourceAsStream(BASE_PROPS);
-			baseProps = new Properties();
-			baseProps.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.fatal(e);
-		}
-	}
 	
 	/**
 	 * Constructor for CSV file quote data source.

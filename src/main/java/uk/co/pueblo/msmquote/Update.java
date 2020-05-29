@@ -25,6 +25,7 @@ import uk.co.pueblo.msmquote.source.Quote;
 import uk.co.pueblo.msmquote.source.YahooApiHist;
 import uk.co.pueblo.msmquote.source.YahooApiQuote;
 import uk.co.pueblo.msmquote.source.YahooCsvHist;
+import uk.co.pueblo.msmquote.source.YahooQuote;
 
 public class Update {
 
@@ -81,11 +82,11 @@ public class Update {
 				CntryTable cntryTable = new CntryTable(openedDb);
 
 				// Process quote source types
-				Quote yahooQuote = null;
+				YahooQuote yahooQuote = null;
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooQuote = new uk.co.pueblo.msmquote.source.YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+						yahooQuote = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
 						yahooQuote = new YahooApiQuote(sourceArg);
 					}

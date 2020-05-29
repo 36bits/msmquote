@@ -1,51 +1,25 @@
 package uk.co.pueblo.msmquote.source;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
 
-public class YahooApiQuote implements Quote {
+public class YahooApiQuote extends YahooQuote {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
-	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	private static final String DELIM = ",";
-	private static final String BASE_PROPS = "YahooQuote.properties";
 	private static final String JSON_ROOT = "/quoteResponse/result";
-
-	// Class variables
-	private static Properties baseProps;
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private boolean isQuery;
-	private QuoteSummary quoteSummary;
-
-	static {
-		try {
-			// Set up base properties			
-			InputStream propsIs = YahooApiQuote.class.getClassLoader().getResourceAsStream(BASE_PROPS);
-			baseProps = new Properties();
-			baseProps.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.fatal(e);
-		}
-	}
-
+	
 	/**
 	 * Constructor for auto-completed URL.
 	 * 
@@ -205,15 +179,5 @@ public class YahooApiQuote implements Quote {
 
 		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
-	}
-
-	/**
-	 * 
-	 * 
-	 * @return
-	 */
-	@Override
-	public boolean isQuery() {
-		return isQuery;
 	}
 }
