@@ -21,7 +21,6 @@ import uk.co.pueblo.msmquote.msm.SecTable;
 import uk.co.pueblo.msmquote.msm.SpTable;
 import uk.co.pueblo.msmquote.msm.CliDatTable.IdData;
 import uk.co.pueblo.msmquote.msm.DhdTable.DhdColumn;
-import uk.co.pueblo.msmquote.source.Quote;
 import uk.co.pueblo.msmquote.source.YahooApiHist;
 import uk.co.pueblo.msmquote.source.YahooApiQuote;
 import uk.co.pueblo.msmquote.source.YahooCsvHist;
@@ -31,28 +30,16 @@ public class Update {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
-
-	// Define exit codes
-	private enum ExitCode {
-		OK(0), WARNING(1), ERROR(2);
-
-		private final int code;
-
-		ExitCode(int code) {
-			this.code = code;
-		}
-
-		public int getCode() {
-			return code;
-		}
-	}
+	private static final int EXIT_OK = 0;
+	private static final int EXIT_WARN = 1;
+	private static final int EXIT_ERROR = 2;
 
 	public static void main(String[] args) {
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
 		Instant startTime = Instant.now();
-		int exitCode = ExitCode.OK.getCode();
+		int exitCode = EXIT_OK;
 		Db db = null;
 
 		try {	    	
@@ -115,14 +102,14 @@ public class Update {
 							break;
 						}
 						if (quoteRow.containsKey("xError")) {
-							exitCode = ExitCode.WARNING.getCode();
+							exitCode = EXIT_WARN;
 						}
 						if (quoteRow.containsKey("dPrice")) {
 							// Update stock quote data
 							if((hsec = secTable.update(quoteRow)) != -1) {
 								spTable.update(quoteRow, hsec);
 							} else {
-								exitCode = ExitCode.WARNING.getCode();
+								exitCode = EXIT_WARN;
 							}
 						} else if (quoteRow.containsKey("dRate")) {
 							// Get hcrncs of currency pair
@@ -132,10 +119,10 @@ public class Update {
 							hcrncs = crncTable.getHcrncs(isoCodes);
 							// Update exchange rate table
 							if (!fxTable.update(hcrncs, (double) quoteRow.get("dRate"))) {
-								exitCode = ExitCode.WARNING.getCode();
+								exitCode = EXIT_WARN;
 							}
 						} else {
-							exitCode = ExitCode.WARNING.getCode();
+							exitCode = EXIT_WARN;
 						}
 					} 
 
@@ -149,7 +136,7 @@ public class Update {
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occured!", e);
-				exitCode = ExitCode.ERROR.getCode();
+				exitCode = EXIT_ERROR;
 			}
 
 			// Close Money database
@@ -158,7 +145,7 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occured!", e);
-			exitCode = ExitCode.ERROR.getCode();
+			exitCode = EXIT_ERROR;
 		}									
 		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
 		System.exit(exitCode);
