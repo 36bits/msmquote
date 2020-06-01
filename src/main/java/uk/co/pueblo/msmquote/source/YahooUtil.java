@@ -17,8 +17,8 @@ class YahooUtil {
 	/**
 	 * Get quote data from the Yahoo API.
 	 * 
-	 * @param apiUrl
-	 * @return
+	 * @param	apiUrl	the URL for the Yahoo Finance API
+	 * @return			the quote data in JSON
 	 * @throws IOException
 	 */
 	static JsonNode getJson(String apiUrl) throws IOException {
@@ -33,12 +33,13 @@ class YahooUtil {
 	/**
 	 * Generate Yahoo symbol from Money symbol.
 	 * 
-	 * @param symbol
-	 * @return
+	 * @param	symbol			the Money symbol for the security
+	 * @param	exchangeCode	the Yahoo exchange code for the security
+	 * @return					the equivalent Yahoo symbol
 	 */
 	static String getYahooSymbol(String symbol[], String exchangeCode) {
 		String yahooSymbol = null;
-		if (symbol[0].matches("(.*\\..$|.*\\...$)")) {
+		if (symbol[0].matches("(.*\\..$|.*\\...$|^\\^.*)")) {
 			// Symbol is in Yahoo format
 			yahooSymbol = symbol[0];
 		} else if (symbol[0].matches("^\\$..:.*")) {
