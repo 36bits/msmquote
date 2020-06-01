@@ -37,26 +37,26 @@ class YahooUtil {
 	 * @param	exchangeCode	the Yahoo exchange code for the security
 	 * @return					the equivalent Yahoo symbol
 	 */
-	static String getYahooSymbol(String symbol[], String exchangeCode) {
+	static String getYahooSymbol(String symbol, String exchangeCode) {
 		String yahooSymbol = null;
-		if (symbol[0].matches("(.*\\..$|.*\\...$|^\\^.*)")) {
+		if (symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")) {
 			// Symbol is in Yahoo format
-			yahooSymbol = symbol[0];
-		} else if (symbol[0].matches("^\\$..:.*")) {
+			yahooSymbol = symbol;
+		} else if (symbol.matches("^\\$..:.*")) {
 			// Symbol is in Money index format '$xx:symbol'
-			yahooSymbol = "^" + symbol[0].substring(4);							
-		} else if (symbol[0].matches("^\\$.*")) {
+			yahooSymbol = "^" + symbol.substring(4);							
+		} else if (symbol.matches("^\\$.*")) {
 			// Symbol is in Money index format '$symbol'
-			yahooSymbol = "^" + symbol[0].substring(1);
-		} else if (symbol[0].matches("^..:.*")) {
+			yahooSymbol = "^" + symbol.substring(1);
+		} else if (symbol.matches("^..:.*")) {
 			// Symbol is in Money security format 'xx:symbol'
 			if (exchangeCode != null) {
-				yahooSymbol = symbol[0].substring(3) + exchangeCode;
+				yahooSymbol = symbol.substring(3) + exchangeCode;
 			}
 		} else {
 			// Symbol is in Money security format for default currency 'symbol'
 			if (exchangeCode != null) {
-				yahooSymbol = symbol[0] + exchangeCode; 
+				yahooSymbol = symbol + exchangeCode; 
 			}
 		}		
 		return yahooSymbol;

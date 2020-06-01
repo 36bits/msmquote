@@ -42,7 +42,7 @@ public class YahooApiQuote extends YahooQuote {
 		for (n = 0; n < symbols.size(); n++) {
 			// Append the symbols pair to the symbol translation table and the Yahoo symbol to the investment symbols string
 			symbol = symbols.get(n);
-			if ((yahooSymbol = YahooUtil.getYahooSymbol(symbol, baseProps.getProperty("exchange." + symbol[1]))) != null) {
+			if ((yahooSymbol = YahooUtil.getYahooSymbol(symbol[0], baseProps.getProperty("exchange." + symbol[1]))) != null) {
 				symbolXlate.put(yahooSymbol, symbol[0]);
 				delim = DELIM;
 				if (n == 0) {
