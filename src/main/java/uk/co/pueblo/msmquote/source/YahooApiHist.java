@@ -27,7 +27,7 @@ public class YahooApiHist extends YahooQuote {
 	public YahooApiHist(String apiUrl) throws IOException {
 
 		// Get quote data
-		resultJn = YahooApi.getJson(apiUrl).at("/chart/result/0");
+		resultJn = YahooUtil.getJson(apiUrl).at("/chart/result/0");
 
 		// Get symbol and quote divisor
 		quoteDivisor = 1;
@@ -54,13 +54,14 @@ public class YahooApiHist extends YahooQuote {
 
 		// Get quote date
 		LocalDateTime quoteDate = Instant.ofEpochSecond(resultJn.at("/timestamp").get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+		
+		// Build columns for msmquote internal use
+		quoteRow.put("xSymbol", symbol);
 
-		// SEC table columns
-		quoteRow.put("xSymbol", symbol);					// xSymbol is used internally, not by MS Money
-		// Assume dtLastUpdate is date of quote data in SEC row
-		quoteRow.put("dtLastUpdate", quoteDate);
+		// Build SEC table columns
+		quoteRow.put("dtLastUpdate", quoteDate);			// TODO Confirm assumption that dtLastUpdate is date of quote data in SEC row
 
-		// SP table columns
+		// Build SP table columns
 		quoteRow.put("dt", quoteDate);
 		quoteRow.put("dOpen", resultJn.at("/indicators/quote/0/open").get(quoteIndex).asDouble() / quoteDivisor);
 		quoteRow.put("dHigh", resultJn.at("/indicators/quote/0/high").get(quoteIndex).asDouble() / quoteDivisor);

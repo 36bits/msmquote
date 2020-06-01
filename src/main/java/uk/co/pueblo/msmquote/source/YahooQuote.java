@@ -12,16 +12,16 @@ import org.apache.logging.log4j.Logger;
 public abstract class YahooQuote {
 
 	// Constants
-	protected static final Logger LOGGER = LogManager.getLogger(YahooQuote.class);
-	protected static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
+	static final Logger LOGGER = LogManager.getLogger(YahooQuote.class);
+	static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	private static final String BASE_PROPS = "YahooQuote.properties";
 
 	// Class variables
-	protected static Properties baseProps;
+	static Properties baseProps;
 
 	//Instance variables
-	protected boolean isQuery;
-	protected QuoteSummary quoteSummary;
+	boolean isQuery;
+	QuoteSummary quoteSummary;
 
 	static {
 		try {
