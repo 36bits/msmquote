@@ -1,6 +1,8 @@
 # Version 3.1.2
 
-## Changes
+## New Features
+* >>> Translation of symbols from Money to Yahoo format.
+* >>> Support for Portfolio status bar symbols. 
 * Summary log messages now include a count of *warnings*.
 
 # Version 3.1.1
