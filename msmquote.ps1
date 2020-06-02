@@ -4,8 +4,7 @@ param (
     [Parameter(Mandatory=$true)][string]$url
 )
 
-
-$log = $env:USERPROFILE + "\scripts\log\msmquote.log"
+$log = $env:USERPROFILE + "\log\msmquote.log"
 #$javaopts = "-showversion"
 $javaopts = ""
 $jar = $env:ProgramFiles + "\msmquote\msmquote.jar"
@@ -22,4 +21,3 @@ if ($saved_exitcode -eq 1) {
 } else {
     Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1001 -Category 0 -Message "Update completed successfully."
 }
-
