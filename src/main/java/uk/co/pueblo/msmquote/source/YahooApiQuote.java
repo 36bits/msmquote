@@ -195,13 +195,14 @@ public class YahooApiQuote extends YahooQuote {
 					quoteRow.put(map[1], (long) value);
 				}
 			}
-			quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 
 		} catch (NullPointerException e) {
 			LOGGER.warn("Incomplete quote data for symbol {}", yahooSymbol);
 			LOGGER.debug("Exception occured!", e);
 			quoteRow.put("xError", null);
 			quoteSummary.inc(quoteType, SummaryType.WARNING);
+		} finally {
+			quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		}
 
 		return quoteRow;
