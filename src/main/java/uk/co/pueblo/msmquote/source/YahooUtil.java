@@ -59,8 +59,8 @@ class YahooUtil {
 			if ((prop = props.getProperty("exchange." + country)) != null) {
 				yahooSymbol = symbol.substring(3) + prop;
 			}
-		} else {
-			// Symbol is in Money un-prefixed security format 'symbol'
+		} else if (!symbol.matches("(.*\\..$|.*\\...$)")){
+			// Symbol is not already in Yahoo format 'symbol.x' or 'symbol.xx'
 			if ((prop = props.getProperty("exchange." + country)) != null) {
 				yahooSymbol = symbol + prop; 
 			}
