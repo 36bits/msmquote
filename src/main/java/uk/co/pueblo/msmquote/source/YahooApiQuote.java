@@ -20,6 +20,7 @@ public class YahooApiQuote extends YahooQuote {
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, String> symbolXlate;
+	boolean useXlate;
 
 	/**
 	 * Constructor for auto-completed URL.
@@ -32,6 +33,7 @@ public class YahooApiQuote extends YahooQuote {
 	public YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
 
 		symbolXlate = new HashMap<>();
+		useXlate = true;
 		String yahooSymbol = null;
 		String delim;
 		int n;
@@ -97,7 +99,9 @@ public class YahooApiQuote extends YahooQuote {
 	 */
 	public YahooApiQuote(String apiUrl) throws IOException {
 		isQuery = false;
+		useXlate = false;
 		quoteSummary = new QuoteSummary();
+		symbolXlate = new HashMap<>();
 		resultIt = YahooUtil.getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
@@ -141,7 +145,11 @@ public class YahooApiQuote extends YahooQuote {
 			}
 
 			// Build columns for msmquote internal use
-			quoteRow.put("xSymbol", symbolXlate.get(yahooSymbol));		
+			if (useXlate) {
+				quoteRow.put("xSymbol", symbolXlate.get(yahooSymbol));
+			} else {
+				quoteRow.put("xSymbol", yahooSymbol);
+			}
 
 			// Build columns common to SEC and SP tables
 			quoteRow.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of quote
