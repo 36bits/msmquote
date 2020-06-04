@@ -1,12 +1,17 @@
-#Version 3.1.2
+# Version 3.1.3
 
-##New Features
+## New Features
 * >>> Translation of symbols from Money to Yahoo format.
 * >>> Support for Portfolio status bar symbols. 
 * Summary log messages now include a count of *warnings*.
 
-##Known Issues
+## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005.
+
+# Version 3.1.2
+
+## Bug Fixes
+* Fix divide-by-zero in CSV update.
 
 # Version 3.1.1
 

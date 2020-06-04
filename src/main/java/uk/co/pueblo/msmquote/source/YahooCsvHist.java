@@ -39,7 +39,8 @@ public class YahooCsvHist extends YahooQuote {
 		quoteType = quoteMeta[2];
 
 		// Set quote divisor according to currency
-		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteType);
+		quoteDivisor = 1;
+		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
