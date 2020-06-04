@@ -1,3 +1,8 @@
+# Version 3.1.2
+
+## Bug Fixes
+* Fix divide-by-zero in CSV update.
+
 # Version 3.1.1
 
 ## Changes

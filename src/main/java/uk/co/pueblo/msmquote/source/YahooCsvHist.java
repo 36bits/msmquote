@@ -5,11 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -65,6 +62,7 @@ public class YahooCsvHist implements Quote {
 		symbol = quoteMeta[0];
 
 		// Set quote divisor according to currency
+		quoteDivisor = 1;
 		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
