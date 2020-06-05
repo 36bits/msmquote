@@ -3,22 +3,11 @@ package uk.co.pueblo.msmquote.msm;
 import java.io.IOException;
 import java.util.Collections;
 
-
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
-
-import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Column;
-import com.healthmarketscience.jackcess.IndexCursor;
-import com.healthmarketscience.jackcess.Table;
 
-public class CliDatTable {
+public class CliDatTable extends MsmTable {
 
-	// Instance variables
-	private Table cliDatTable;
-	private IndexCursor cliDatCursor;
-	
 	// Define CLI_DAT values
 	public enum IdData {
 		FILENAME(65541, 8, "rgbVal"),
@@ -46,9 +35,8 @@ public class CliDatTable {
 	}	
 
 	// Constructor
-	public CliDatTable(Database mnyDb) throws IOException {
-		cliDatTable = mnyDb.getTable("CLI_DAT");
-		cliDatCursor = CursorBuilder.createCursor(cliDatTable.getPrimaryKeyIndex());
+	public CliDatTable(Database msmDb) throws IOException {
+		super(msmDb, "CLI_DAT");		
 		return;
 	}	
 
@@ -58,12 +46,12 @@ public class CliDatTable {
 	 * @return				
 	 */
 	public boolean update(int idData, int oft, String column, Object val) throws IOException {
-		boolean found = cliDatCursor.findFirstRow(Collections.singletonMap("idData", idData));
+		boolean found = msmCursor.findFirstRow(Collections.singletonMap("idData", idData));
 		if (found) {
-			Column cliDatCol = cliDatTable.getColumn("oft");
-			cliDatCursor.setCurrentRowValue(cliDatCol, oft);
-			cliDatCol = cliDatTable.getColumn(column);
-			cliDatCursor.setCurrentRowValue(cliDatCol, val);			
+			Column cliDatCol = msmTable.getColumn("oft");
+			msmCursor.setCurrentRowValue(cliDatCol, oft);
+			cliDatCol = msmTable.getColumn(column);
+			msmCursor.setCurrentRowValue(cliDatCol, val);			
 			return true;
 		}
 		return false;

@@ -3,12 +3,8 @@ package uk.co.pueblo.msmquote.msm;
 import java.io.IOException;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Row;
-import com.healthmarketscience.jackcess.Table;
 
-public class DhdTable {
-
-	// Instance variables
-	private Table dhdTable;
+public class DhdTable extends MsmTable {
 
 	// Define DHD table columns
 	public enum DhdColumn {
@@ -31,8 +27,8 @@ public class DhdTable {
 	 * @param	mnyDb
 	 * @throws IOException
 	 */
-	public DhdTable(Database mnyDb) throws IOException {
-		dhdTable = mnyDb.getTable("DHD");
+	public DhdTable(Database msmDb) throws IOException {
+		super(msmDb, "DHD");
 		return;
 	}    
 
@@ -42,7 +38,7 @@ public class DhdTable {
 	 * @return				the hcrnc
 	 */
 	public int getValue(String dhdCol) throws IOException {
-		Row row = dhdTable.getNextRow();
+		Row row = msmTable.getNextRow();
 		return (int) row.get(dhdCol);        
 	}
 }

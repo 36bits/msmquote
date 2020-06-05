@@ -14,14 +14,11 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
-import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Row;
-import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class SpTable {
+public class SpTable extends MsmTable {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(SpTable.class);
@@ -31,8 +28,6 @@ public class SpTable {
 	private static int hsp = 0;
 
 	// Instance variables
-	private Table spTable;
-	private IndexCursor spCursor;
 	private ArrayList<Map<String, Object>> spRowList;
 
 	// Define SP table src values
@@ -56,14 +51,13 @@ public class SpTable {
 	 * @param mnyDb
 	 * @throws IOException
 	 */
-	public SpTable(Database mnyDb) throws IOException {
-		spTable = mnyDb.getTable("SP");
-		spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
+	public SpTable(Database msmDb) throws IOException {
+		super(msmDb, "SP");
 
 		// Get current hsp (SP table index)
-		spCursor.afterLast();
-		if (spCursor.getPreviousRow() != null) {
-			hsp = (int) spCursor.getCurrentRowValue(spTable.getColumn("hsp"));
+		msmCursor.afterLast();
+		if (msmCursor.getPreviousRow() != null) {
+			hsp = (int) msmCursor.getCurrentRowValue(msmTable.getColumn("hsp"));
 		}
 		LOGGER.debug("Current highest hsp = {}", hsp);
 
@@ -113,7 +107,7 @@ public class SpTable {
 			spRowList.add(row);
 			LOGGER.info("Added new quote for symbol {} to table update list: {}, new price = {}, new hsp = {}", symbol, row.get("dt"), row.get("dPrice"), row.get("hsp"));
 		} else {
-			spCursor.updateCurrentRowFromMap(row);
+			msmCursor.updateCurrentRowFromMap(row);
 			LOGGER.info("Updated previous quote for symbol {}: {}, new price = {}", symbol, row.get("dt"), row.get("dPrice"));
 		}		
 
@@ -122,7 +116,7 @@ public class SpTable {
 
 	public void addNewRows() throws IOException{
 		if (!spRowList.isEmpty()) {
-			spTable.addRowsFromMaps(spRowList);
+			msmTable.addRowsFromMaps(spRowList);
 			LOGGER.info("Added new quotes from table update list");
 		}
 		return;
@@ -145,13 +139,13 @@ public class SpTable {
 
 		// Get instants for date from first and last rows for hsec
 		rowPattern.put("hsec", hsec);
-		spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+		spIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).forward().iterator();
 		if (!spIt.hasNext()) {
 			return null;	// No rows in SP table for this hsec
 		} else {
 			row = spIt.next();
 			firstInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
-			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+			spIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).reverse().iterator();
 			row = spIt.next();
 			lastInstant = ZonedDateTime.of((LocalDateTime) row.get("dt"), SYS_ZONE_ID).toInstant();
 		}		
@@ -164,9 +158,9 @@ public class SpTable {
 		LOGGER.debug("Days: first->quote = {}, last->quote = {}", firstDays, lastDays);
 
 		if (lastDays < firstDays) {
-			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).reverse().iterator();
+			spIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).reverse().iterator();
 		} else {
-			spIt = new IterableBuilder(spCursor).setMatchPattern(rowPattern).forward().iterator();
+			spIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).forward().iterator();
 		}
 
 		Map<String, Object> returnRow = null;

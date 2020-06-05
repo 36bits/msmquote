@@ -3,21 +3,13 @@ package uk.co.pueblo.msmquote.msm;
 import java.io.IOException;
 import java.util.Collections;
 
-import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
-import com.healthmarketscience.jackcess.IndexCursor;
-import com.healthmarketscience.jackcess.Table;
 
-public class CntryTable {
-	
-	// Instance variables
-	private Table cntryTable;
-	private IndexCursor cntryCursor;		
+public class CntryTable extends MsmTable {
 
 	// Constructor
-	public CntryTable(Database mnyDb) throws IOException {
-		cntryTable = mnyDb.getTable("CNTRY");
-		cntryCursor = CursorBuilder.createCursor(cntryTable.getPrimaryKeyIndex());		
+	public CntryTable(Database msmDb) throws IOException {
+		super(msmDb, "CNTRY");
 		return;
 	}    
 
@@ -28,9 +20,9 @@ public class CntryTable {
 	 * @return				the country code or null if not found
 	 */
 	public String getCode(int hcntry) throws IOException {
-		boolean found = cntryCursor.findFirstRow(Collections.singletonMap("hcntry", hcntry));
+		boolean found = msmCursor.findFirstRow(Collections.singletonMap("hcntry", hcntry));
 		if (found) {
-			return (String) cntryCursor.getCurrentRowValue(cntryTable.getColumn("szCode"));
+			return (String) msmCursor.getCurrentRowValue(msmTable.getColumn("szCode"));
 		}
 		return null;
 	}

@@ -10,31 +10,20 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
-import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Row;
-import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class SecTable {
+public class SecTable extends MsmTable {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(SecTable.class);
-
-	// Instance variables
-	private Table secTable;
-	private IndexCursor secCursor;
-
+	
 	/**
-	 * Constructor
-	 * 
-	 * @param	mnyDb
-	 * @throws IOException
+	 * Constructor. 
 	 */
-	public SecTable(Database mnyDb) throws IOException {
-		secTable = mnyDb.getTable("SEC");
-		secCursor = CursorBuilder.createCursor(secTable.getPrimaryKeyIndex());
+	public SecTable(Database msmDb) throws IOException {
+		super(msmDb, "SEC");		
 	}
 
 	/**
@@ -55,16 +44,16 @@ public class SecTable {
 			symbol = origSymbol.substring(0, 12);
 			LOGGER.info("Truncated symbol {} to {}", origSymbol, symbol);
 		}
-		
+
 		// Find matching symbol in SEC table
-		boolean found = secCursor.findFirstRow(Collections.singletonMap("szSymbol", symbol));
+		boolean found = msmCursor.findFirstRow(Collections.singletonMap("szSymbol", symbol));
 		if (found) {
-			row = secCursor.getCurrentRow();
+			row = msmCursor.getCurrentRow();
 			hsec = (int) row.get("hsec");
 			LOGGER.info("Found symbol {}: sct = {}, hsec = {}", symbol, row.get("sct"), hsec);
 			// Merge quote row into SEC row and write to SEC table
 			row.putAll(quoteRow);
-			secCursor.updateCurrentRowFromMap(row);
+			msmCursor.updateCurrentRowFromMap(row);
 			LOGGER.info("Updated quote for symbol {}", symbol);
 		} else {
 			LOGGER.warn("Cannot find symbol {}", symbol);
@@ -84,10 +73,10 @@ public class SecTable {
 		Iterator<Row> secIt;
 		List<String[]> symbols = new ArrayList<String[]>();
 		String[] symbol;
-
+		
 		// Build list of symbols + countries
 		rowPattern.put("fOLQuotes", true);
-		secIt = new IterableBuilder(secCursor).setMatchPattern(rowPattern).forward().iterator();
+		secIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).forward().iterator();
 		while (secIt.hasNext()) {
 			symbol = new String[2];
 			row = secIt.next();

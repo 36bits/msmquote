@@ -11,26 +11,19 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
-import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Row;
-import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class CrncTable {
+public class CrncTable extends MsmTable{
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(CrncTable.class);
 
-	// Instance variables
-	private Table crncTable;
-	private IndexCursor crncCursor;
-
 	// Constructor
-	public CrncTable(Database mnyDb) throws IOException {
-		crncTable = mnyDb.getTable("CRNC");
-		crncCursor = CursorBuilder.createCursor(crncTable.getPrimaryKeyIndex());
+	public CrncTable(Database msmDb) throws IOException {
+		super(msmDb, "CRNC");
+		
 		return;
 	}    
 
@@ -43,9 +36,9 @@ public class CrncTable {
 	public int[] getHcrncs(String[] isoCodes) throws IOException {
 		int[] hcrncs = new int[isoCodes.length];
 		for (int n = 0; n < isoCodes.length; n++) {
-			boolean found = crncCursor.findFirstRow(Collections.singletonMap("szIsoCode", isoCodes[n]));
+			boolean found = msmCursor.findFirstRow(Collections.singletonMap("szIsoCode", isoCodes[n]));
 			if (found) {
-				hcrncs[n] = (int) crncCursor.getCurrentRowValue(crncTable.getColumn("hcrnc"));
+				hcrncs[n] = (int) msmCursor.getCurrentRowValue(msmTable.getColumn("hcrnc"));
 				LOGGER.info("Found currency {}, hcrnc = {}", isoCodes[n], hcrncs[n]);
 			} else {
 				hcrncs[n] = 0;
@@ -70,7 +63,7 @@ public class CrncTable {
 		List<String> isoCodes = new ArrayList<>();
 		rowPattern.put("fOnline", true);
 		rowPattern.put("fHidden", false);
-		crncIt = new IterableBuilder(crncCursor).setMatchPattern(rowPattern).forward().iterator();
+		crncIt = new IterableBuilder(msmCursor).setMatchPattern(rowPattern).forward().iterator();
 		while (crncIt.hasNext()) {
 			row = crncIt.next();
 			if ((int) row.get("hcrnc") == defHcrnc) {
