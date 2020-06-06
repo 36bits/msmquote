@@ -162,37 +162,33 @@ public class YahooApiQuote extends YahooQuote {
 
 			// Build remaining columns
 			int n = 1;
-			while ((prop = baseProps.getProperty("map." + quoteType + "." + n++)) != null) {
-				String[] map = prop.split(",");
+			while ((prop = baseProps.getProperty("api." + quoteType + "." + n++)) != null) {
+				String[] apiMap = prop.split(",");
 				double value;
-				if (result.has(map[0])) {
-					value = result.get(map[0]).asDouble();
+				if (result.has(apiMap[0])) {
+					value = result.get(apiMap[0]).asDouble();
 					// Process adjustments
-					if ((prop = baseProps.getProperty("adjust." + map[0])) != null) {
-						switch(prop) {
-						case "divide":
-							value = value / quoteDivisor;
-							break;
-						case "multiply":
-							value = value * quoteMultiplier;
-						}
+					if (Boolean.parseBoolean(baseProps.getProperty("divide." + apiMap[1]))) {
+						value = value / quoteDivisor;
+					} else if ((Boolean.parseBoolean(baseProps.getProperty("mutiply." + apiMap[1])))) {
+						value = value * quoteMultiplier;
 					}
 				} else {
-					LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", yahooSymbol, map[0]);
+					LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", yahooSymbol, apiMap[0]);
 					quoteRow.put("xError", null);
 					quoteSummary.inc(quoteType, SummaryType.WARNING);
-					if ((prop = baseProps.getProperty("default." + map[0])) == null) {
+					if ((prop = baseProps.getProperty("default." + apiMap[0])) == null) {
 						continue;
 					}
 					value = Double.parseDouble(prop);	// Get default value
 				}
 
 				// Now put key and value to quote row
-				LOGGER.debug("Key = {}, value = {}", map[1], value);
-				if (map[1].substring(0, 1).equals("d")) {
-					quoteRow.put(map[1], value);
+				LOGGER.debug("Key = {}, value = {}", apiMap[1], value);
+				if (apiMap[1].substring(0, 1).equals("d")) {
+					quoteRow.put(apiMap[1], value);
 				} else {
-					quoteRow.put(map[1], (long) value);
+					quoteRow.put(apiMap[1], (long) value);
 				}
 			}
 

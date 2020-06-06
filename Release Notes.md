@@ -8,6 +8,9 @@
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005.
 
+## Bug Fixes
+* Volumes for GBp quotes were getting the divisor applied - that should never have happened. Fixed.
+
 # Version 3.1.2
 
 ## Bug Fixes
