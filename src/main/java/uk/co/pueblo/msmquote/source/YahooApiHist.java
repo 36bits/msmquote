@@ -54,7 +54,7 @@ public class YahooApiHist extends YahooQuote {
 
 		// Get quote date
 		LocalDateTime quoteDate = Instant.ofEpochSecond(resultJn.at("/timestamp").get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-		
+
 		// Build columns for msmquote internal use
 		quoteRow.put("xSymbol", symbol);
 
@@ -63,13 +63,36 @@ public class YahooApiHist extends YahooQuote {
 
 		// Build SP table columns
 		quoteRow.put("dt", quoteDate);
-		quoteRow.put("dOpen", resultJn.at("/indicators/quote/0/open").get(quoteIndex).asDouble() / quoteDivisor);
-		quoteRow.put("dHigh", resultJn.at("/indicators/quote/0/high").get(quoteIndex).asDouble() / quoteDivisor);
-		quoteRow.put("dLow", resultJn.at("/indicators/quote/0/low").get(quoteIndex).asDouble() / quoteDivisor);
-		quoteRow.put("dPrice", resultJn.at("/indicators/quote/0/close").get(quoteIndex).asDouble() / quoteDivisor);
-		quoteRow.put("vol", resultJn.at("/indicators/quote/0/volume").get(quoteIndex).asLong());
 
-		quoteIndex++;
+		// SP table columns
+		quoteRow.put("dt", quoteDate);
+		try {
+			String prop;
+			String[] apiHistMap;
+			double value;
+			int n = 1;
+			while ((prop = baseProps.getProperty("hist.api." + n++)) != null) {
+				apiHistMap = prop.split(",");
+				value = resultJn.at(apiHistMap[0]).get(quoteIndex).asDouble();
+				// Process adjustments
+				if (Boolean.parseBoolean(baseProps.getProperty("divide." + apiHistMap[1]))) {
+					value = value / quoteDivisor;
+				}
+				// Now put key and value to quote row
+				LOGGER.debug("Key = {}, value = {}", apiHistMap[1], value);
+				if (apiHistMap[1].substring(0, 1).equals("d")) {
+					quoteRow.put(apiHistMap[1], value);
+				} else {
+					quoteRow.put(apiHistMap[1], (long) value);
+				}
+			}
+
+		} catch (NumberFormatException e) {
+			LOGGER.warn(e);
+			LOGGER.debug("Exception occured!", e);
+			quoteRow.put("xError", null);
+		}
+
 		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}

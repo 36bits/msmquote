@@ -17,7 +17,7 @@ public class YahooCsvHist extends YahooQuote {
 	private String symbol;
 	private int quoteDivisor;
 	private String quoteType;
-	
+
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
@@ -34,7 +34,7 @@ public class YahooCsvHist extends YahooQuote {
 
 		// Get quote meta-data from CSV file name
 		String tmp = csvFile.getName();
-		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_");	// index 0 = symbol, index 1 = currency, index 2 = quote type
+		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_");		// index 0 = symbol, index 1 = currency, index 2 = quote type
 		symbol = quoteMeta[0];
 		quoteType = quoteMeta[2];
 
@@ -44,7 +44,7 @@ public class YahooCsvHist extends YahooQuote {
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
-		
+
 		isQuery = false;
 		quoteSummary = new QuoteSummary();
 	}
@@ -61,44 +61,56 @@ public class YahooCsvHist extends YahooQuote {
 
 		Map<String, Object> quoteRow = new HashMap<>();
 
-		while (true) {
-			// Get next row from CSV file
-			String csvRow = csvBr.readLine();
-			if (csvRow == null) {
-				// End of file
-				csvBr.close();
-				quoteSummary.log(LOGGER);
-				return null;
-			}
-			String[] csvColumn = csvRow.split(",");
-
-			// Get quote date
-			LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-			//LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").toLocalDate().atStartOfDay();
-			
-			// SEC table columns
-			quoteRow.put("xSymbol", symbol);				// xSymbol is used internally, not by MS Money
-			// Assume dtLastUpdate is date of quote data in SEC row
-			quoteRow.put("dtLastUpdate", quoteDate);
-
-			// SP table columns
-			quoteRow.put("dt", quoteDate);
-			try {
-				quoteRow.put("dOpen", Double.parseDouble(csvColumn[1]) / quoteDivisor);
-				quoteRow.put("dHigh", Double.parseDouble(csvColumn[2]) / quoteDivisor);
-				quoteRow.put("dLow", Double.parseDouble(csvColumn[3]) / quoteDivisor);
-				quoteRow.put("dPrice", Double.parseDouble(csvColumn[4]) / quoteDivisor);
-				quoteRow.put("vol", Long.parseLong(csvColumn[6]));
-			} catch (NumberFormatException e) {
-				LOGGER.warn(e);
-				LOGGER.debug("Exception occured!", e);
-				quoteRow.put("xError", null);
-				continue;
-			}
-			
-			quoteSummary.inc(quoteType, SummaryType.PROCESSED);
-			return quoteRow;
+		// Get next row from CSV file
+		String csvRow = csvBr.readLine();
+		if (csvRow == null) {
+			// End of file
+			csvBr.close();
+			quoteSummary.log(LOGGER);
+			return null;
 		}
+		String[] csvColumn = csvRow.split(",");
+
+		// Get quote date
+		LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+		//LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").toLocalDate().atStartOfDay();
+
+
+		// Build columns for msmquote internal use
+		quoteRow.put("xSymbol", symbol);			
+
+		// Build SEC table columns
+		quoteRow.put("dtLastUpdate", quoteDate);			// TODO Confirm assumption that dtLastUpdate is date of quote data in SEC row
+
+		// SP table columns
+		quoteRow.put("dt", quoteDate);
+		try {
+			String prop;
+			double value;
+			for (int n = 1; n < csvColumn.length; n++) {
+				if ((prop = baseProps.getProperty("hist.csv." + n)) != null) {
+					value = Double.parseDouble(csvColumn[n]);
+					// Process adjustments
+					if (Boolean.parseBoolean(baseProps.getProperty("divide." + prop))) {
+						value = value / quoteDivisor;
+					}
+					// Now put key and value to quote row
+					LOGGER.debug("Key = {}, value = {}", prop, value);
+					if (prop.substring(0, 1).equals("d")) {
+						quoteRow.put(prop, value);
+					} else {
+						quoteRow.put(prop, (long) value);
+					}
+				}
+			}
+		} catch (NumberFormatException e) {
+			LOGGER.warn(e);
+			LOGGER.debug("Exception occured!", e);
+			quoteRow.put("xError", null);
+		}
+
+		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
+		return quoteRow;
 	}
 
 	/**
@@ -108,5 +120,4 @@ public class YahooCsvHist extends YahooQuote {
 	public boolean isQuery() {
 		return isQuery;		
 	}
-	
 }
