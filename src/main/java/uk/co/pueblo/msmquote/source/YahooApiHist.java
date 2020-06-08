@@ -93,6 +93,7 @@ public class YahooApiHist extends YahooQuote {
 			quoteRow.put("xError", null);
 		}
 
+		quoteIndex++;
 		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
