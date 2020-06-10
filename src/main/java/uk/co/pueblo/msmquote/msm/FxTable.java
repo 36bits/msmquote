@@ -21,16 +21,19 @@ public class FxTable extends MsmTable {
 	}
 
 	/**
-	 * @param hcrncs
-	 * @param newRate
-	 * @return
-	 * @throws IOException
+	 * Update the exchange rate for a currency pair. 
+	 * 
+	 * @param	hcrncs		the hcrncs of the two currencies
+	 * @param	newRate		the new exchange rate
+	 * @return				true if successful, otherwise false
+	 * @throws	IOException
 	 */
 	public boolean update(int[] hcrncs, double newRate) throws IOException {
 		Map<String, Object> rateRowPattern = new HashMap<>();
 		Column rateCol = msmTable.getColumn("rate");
 		double oldRate = 0;
-		for (int n = 0; n < 3; n++) {
+		int n = 0;
+		while (true) {
 			if (n == 2) {
 				LOGGER.warn("Cannot find previous exchange rate");
 				return false;
@@ -50,8 +53,9 @@ public class FxTable extends MsmTable {
 				} else {
 					LOGGER.info("Skipped exchange rate update, rate has not changed: previous rate = {}, new rate = {}", oldRate, newRate);
 				}
-				return true;
-			}	
+				break;
+			}
+			n++;
 		}
 		return true;
 	}
