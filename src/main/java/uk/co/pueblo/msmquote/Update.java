@@ -19,7 +19,7 @@ import uk.co.pueblo.msmquote.msm.DhdTable;
 import uk.co.pueblo.msmquote.msm.FxTable;
 import uk.co.pueblo.msmquote.msm.SecTable;
 import uk.co.pueblo.msmquote.msm.SpTable;
-import uk.co.pueblo.msmquote.msm.CliDatTable.IdData;
+import uk.co.pueblo.msmquote.msm.CliDatTable.CliDatRow;
 import uk.co.pueblo.msmquote.msm.DhdTable.DhdColumn;
 import uk.co.pueblo.msmquote.source.YahooApiHist;
 import uk.co.pueblo.msmquote.source.YahooApiQuote;
@@ -130,7 +130,7 @@ public class Update {
 					spTable.addNewRows();
 
 					// Update online update time-stamp
-					cliDatTable.update(IdData.OLUPDATE.getCode(), IdData.OLUPDATE.getOft(), IdData.OLUPDATE.getColumn(), LocalDateTime.now());
+					cliDatTable.update(CliDatRow.OLUPDATE, LocalDateTime.now());
 				}
 
 			} catch (Exception e) {

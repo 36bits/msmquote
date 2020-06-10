@@ -8,28 +8,28 @@ import com.healthmarketscience.jackcess.Column;
 
 public class CliDatTable extends MsmTable {
 
-	// Define CLI_DAT values
-	public enum IdData {
+	// Define CLI_DAT rows
+	public enum CliDatRow {
 		FILENAME(65541, 8, "rgbVal"),
 		OLUPDATE(917505, 7, "dtVal");
 
-		private final int code;
+		private final int idData;
 		private final int oft;
 		private final String valCol;
-		
-		IdData(int code, int oft, String valCol) {
-			this.code = code;
+
+		CliDatRow(int idData, int oft, String valCol) {
+			this.idData = idData;
 			this.oft = oft;
 			this.valCol = valCol;
 		}
 
-		public int getCode() {
-			return code;
+		public int getIdData() {
+			return idData;
 		}
 		public int getOft() {
 			return oft;
 		}
-		public String getColumn() {
+		public String getValCol() {
 			return valCol;
 		}
 	}	
@@ -43,14 +43,16 @@ public class CliDatTable extends MsmTable {
 	/** 
 	 * Update a value in the CLI_DAT table.
 	 * 
-	 * @return				
+	 * @param	the name of the row to be updated
+	 * @param	the new value
+	 * @return	true if successful, otherwise false
 	 */
-	public boolean update(int idData, int oft, String column, Object val) throws IOException {
-		boolean found = msmCursor.findFirstRow(Collections.singletonMap("idData", idData));
+	public boolean update(CliDatRow name, Object val) throws IOException {
+		boolean found = msmCursor.findFirstRow(Collections.singletonMap("idData", name.getIdData()));
 		if (found) {
 			Column cliDatCol = msmTable.getColumn("oft");
-			msmCursor.setCurrentRowValue(cliDatCol, oft);
-			cliDatCol = msmTable.getColumn(column);
+			msmCursor.setCurrentRowValue(cliDatCol, name.getOft());
+			cliDatCol = msmTable.getColumn(name.getValCol());
 			msmCursor.setCurrentRowValue(cliDatCol, val);			
 			return true;
 		}
