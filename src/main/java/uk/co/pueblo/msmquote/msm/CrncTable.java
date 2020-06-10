@@ -22,8 +22,7 @@ public class CrncTable extends MsmTable{
 
 	// Constructor
 	public CrncTable(Database msmDb) throws IOException {
-		super(msmDb, "CRNC");
-		
+		super(msmDb, "CRNC");		
 		return;
 	}    
 
@@ -50,6 +49,7 @@ public class CrncTable extends MsmTable{
 
 	/** 
 	 * Get the ISO codes of all currencies that have the online update flag set.
+	 * 
 	 * The base currency is returned as the last code in the list. 
 	 * 
 	 * @param	defHcrnc	the hcrnc of the default currency
