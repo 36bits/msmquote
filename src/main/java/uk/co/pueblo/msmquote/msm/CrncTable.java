@@ -27,10 +27,11 @@ public class CrncTable extends MsmTable{
 	}    
 
 	/** 
-	 * Get the hcrncs of currencies by ISO code.
+	 * Gets the hcrncs of currencies by ISO code.
 	 * 
 	 * @param	isoCodes	the ISO codes to be found
 	 * @return				the corresponding hcrncs
+	 * @throws	IOException
 	 */
 	public int[] getHcrncs(String[] isoCodes) throws IOException {
 		int[] hcrncs = new int[isoCodes.length];
@@ -48,12 +49,13 @@ public class CrncTable extends MsmTable{
 	}
 
 	/** 
-	 * Get the ISO codes of all currencies that have the online update flag set.
-	 * 
+	 * Gets the ISO codes of all currencies that have the online update flag set.
+	 * <p>
 	 * The base currency is returned as the last code in the list. 
 	 * 
 	 * @param	defHcrnc	the hcrnc of the default currency
 	 * @return				the ISO codes
+	 * @throws	IOException
 	 */
 	public List<String> getIsoCodes(int defHcrnc) throws IOException {
 		Map<String, Object> row = null;

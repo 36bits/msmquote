@@ -41,11 +41,12 @@ public class CliDatTable extends MsmTable {
 	}	
 
 	/** 
-	 * Update a value in the CLI_DAT table.
+	 * Updates a value in the CLI_DAT table.
 	 * 
 	 * @param	the name of the row to be updated
 	 * @param	the new value
 	 * @return	true if successful, otherwise false
+	 * @throws	IOException
 	 */
 	public boolean update(CliDatRow name, Object val) throws IOException {
 		boolean found = msmCursor.findFirstRow(Collections.singletonMap("idData", name.getIdData()));

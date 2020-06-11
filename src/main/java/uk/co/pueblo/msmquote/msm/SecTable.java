@@ -19,18 +19,16 @@ public class SecTable extends MsmTable {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(SecTable.class);
 	
-	/**
-	 * Constructor. 
-	 */
+	// Constructor
 	public SecTable(Database msmDb) throws IOException {
 		super(msmDb, "SEC");		
 	}
 
 	/**
-	 * Update a row in the SEC table.
+	 * Updates a row in the SEC table.
 	 * 
-	 * @param	quoteRow		
-	 * @return					the hsec of the symbol or -1 if not found
+	 * @param	quoteRow	a row containing the quote data to update	
+	 * @return				the hsec of the updated symbol or -1 if not found
 	 * @throws IOException
 	 */
 	public int update(Map<String, Object> quoteRow) throws IOException {
@@ -62,10 +60,11 @@ public class SecTable extends MsmTable {
 	}
 
 	/** 
-	 * Get the list of investment symbols and corresponding countries.
+	 * Gets the list of investment symbols and corresponding countries.
 	 * 
-	 * @param
-	 * @return
+	 * @param	cntryTable	the country table
+	 * @return				the list of symbols and corresponding countries
+	 * @throws	IOException
 	 */    
 	public List<String[]> getSymbols(CntryTable cntryTable) throws IOException {
 		Map<String, Object> row = null;

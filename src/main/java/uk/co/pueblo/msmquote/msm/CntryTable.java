@@ -14,10 +14,11 @@ public class CntryTable extends MsmTable {
 	}    
 
 	/** 
-	 * Get the country code for the given hcntry.
+	 * Gets the country code for the given hcntry.
 	 * 
-	 * @param	hcntry
+	 * @param	hcntry		the hcntry to find the country code for
 	 * @return				the country code or null if not found
+	 * @throws	IOException
 	 */
 	public String getCode(int hcntry) throws IOException {
 		boolean found = msmCursor.findFirstRow(Collections.singletonMap("hcntry", hcntry));

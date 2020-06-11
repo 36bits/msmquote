@@ -13,13 +13,7 @@ public abstract class MsmTable {
 	Table msmTable;
 	IndexCursor msmCursor;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param	db
-	 * @param	table
-	 * @throws IOException
-	 */
+	// Constructor
 	public MsmTable(Database db, String table) throws IOException {
 		msmTable = db.getTable(table);
 		msmCursor = CursorBuilder.createCursor(msmTable.getPrimaryKeyIndex());

@@ -21,7 +21,7 @@ public class FxTable extends MsmTable {
 	}
 
 	/**
-	 * Update the exchange rate for a currency pair. 
+	 * Updates the exchange rate for a currency pair. 
 	 * 
 	 * @param	hcrncs		the hcrncs of the two currencies
 	 * @param	newRate		the new exchange rate

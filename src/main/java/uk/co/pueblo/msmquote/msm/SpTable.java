@@ -45,12 +45,7 @@ public class SpTable extends MsmTable {
 		}
 	}
 
-	/**
-	 * Constructor
-	 * 
-	 * @param mnyDb
-	 * @throws IOException
-	 */
+	// Constructor
 	public SpTable(Database msmDb) throws IOException {
 		super(msmDb, "SP");
 
@@ -65,10 +60,11 @@ public class SpTable extends MsmTable {
 	}
 
 	/** 
-	 * Updates the SP table with the supplied quote row
+	 * Updates the SP table with the supplied quote row.
 	 *
 	 * @param	quoteRow	SP table row containing the quote data to be updated
 	 * @param	hsec		the hsec to be updated
+	 * @throws	IOException
 	 */
 	public void update(Map<String, Object> quoteRow, int hsec) throws IOException {
 
@@ -125,10 +121,11 @@ public class SpTable extends MsmTable {
 	/** 
 	 * Searches the SP table for a row matching the supplied hsec and date.
 	 *
-	 * @param	hsec	hsec for search
-	 * @param	date	date for search
+	 * @param	hsec	the hsec to find
+	 * @param	date	the date to find
 	 * @return	 		the SP row if match found, null if no row for hsec found or
-	 * 					row containing 'xRefOnly' key if hsec found but not date 
+	 * 					row containing 'xRefOnly' key if hsec found but not date
+	 * @throws	IOException
 	 */
 	private Map<String, Object> getSpRow(int hsec, LocalDateTime quoteDate) throws IOException {
 		Map<String, Object> row;

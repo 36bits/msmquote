@@ -21,21 +21,18 @@ public class DhdTable extends MsmTable {
 		}
 	}	
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param	mnyDb
-	 * @throws IOException
-	 */
+	// Constructor
 	public DhdTable(Database msmDb) throws IOException {
 		super(msmDb, "DHD");
 		return;
 	}    
 
 	/** 
-	 * Get the hcrnc of the base currency.
+	 * Gets the value of the given column.
 	 * 
-	 * @return				the hcrnc
+	 * @param	dhdCol	the name of the column
+	 * @return			the hcrnc
+	 * @throws	IOException
 	 */
 	public int getValue(String dhdCol) throws IOException {
 		Row row = msmTable.getNextRow();
