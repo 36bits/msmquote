@@ -19,9 +19,9 @@ public class YahooApiHist extends YahooQuote {
 	private String quoteType;
 
 	/**
-	 * Constructor. 
+	 * Constructor.
 	 * 
-	 * @param apiUrl
+	 * @param apiUrl		the Yahoo Finance quote history API URL
 	 * @throws IOException
 	 */
 	public YahooApiHist(String apiUrl) throws IOException {
@@ -43,8 +43,13 @@ public class YahooApiHist extends YahooQuote {
 		quoteSummary = new QuoteSummary();
 	}
 
+	/**
+	 * Gets the next row of quote data from the JSON node.
+	 * 
+	 * @return	the quote row or null if no more data
+	 */
 	@Override
-	public Map<String, Object> getNext() throws IOException {
+	public Map<String, Object> getNext() {
 		Map<String, Object> quoteRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
@@ -96,10 +101,5 @@ public class YahooApiHist extends YahooQuote {
 		quoteIndex++;
 		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
-	}
-
-	@Override
-	public boolean isQuery() {
-		return isQuery;
 	}
 }

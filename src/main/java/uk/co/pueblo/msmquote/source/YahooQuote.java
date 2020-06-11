@@ -36,6 +36,11 @@ public abstract class YahooQuote {
 
 	public abstract Map<String, Object> getNext() throws IOException;
 
+	/**
+	 * Gets the query status of the quote.
+	 *
+	 * @return		true if this is just a query with no update needed
+	 */
 	public boolean isQuery() {
 		return isQuery;
 	}

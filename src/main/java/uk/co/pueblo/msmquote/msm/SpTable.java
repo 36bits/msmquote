@@ -33,7 +33,12 @@ public class SpTable extends MsmTable {
 	// Instance variables
 	private ArrayList<Map<String, Object>> spRowList;
 
-	// Constructor
+	/**
+	 * Constructor for the securities price table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public SpTable(Database msmDb) throws IOException {
 		super(msmDb, "SP");
 

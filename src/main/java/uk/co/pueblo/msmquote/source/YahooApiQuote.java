@@ -25,9 +25,9 @@ public class YahooApiQuote extends YahooQuote {
 	/**
 	 * Constructor for auto-completed URL.
 	 * 
-	 * @param base URL
-	 * @param list of investment symbols + country codes
-	 * @param list of currency ISO codes, last element is base currency
+	 * @param apiUrl	the base URL
+	 * @param symbols	the list of investment symbols + country codes
+	 * @param isoCodes	the list of currency ISO codes, last element is base currency
 	 * @throws IOException
 	 */
 	public YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
@@ -94,7 +94,7 @@ public class YahooApiQuote extends YahooQuote {
 	/**
 	 * Constructor for user-completed URL.
 	 * 
-	 * @param apiUrl
+	 * @param apiUrl		the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 */
 	public YahooApiQuote(String apiUrl) throws IOException {
@@ -106,9 +106,9 @@ public class YahooApiQuote extends YahooQuote {
 	}
 
 	/**
-	 * Get the next row of quote data from the JSON iterator.
+	 * Gets the next row of quote data from the JSON iterator.
 	 * 
-	 * @return
+	 * @return	the quote row or null if no more data	
 	 */
 	@Override
 	public Map<String, Object> getNext() {

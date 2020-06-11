@@ -21,7 +21,12 @@ public class DhdTable extends MsmTable {
 		}
 	}	
 
-	// Constructor
+	/**
+	 * Constructor for the defaults(?) table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public DhdTable(Database msmDb) throws IOException {
 		super(msmDb, "DHD");
 		return;

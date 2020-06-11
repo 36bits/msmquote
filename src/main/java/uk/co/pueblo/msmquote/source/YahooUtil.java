@@ -17,10 +17,10 @@ class YahooUtil {
 	private static final Logger LOGGER = LogManager.getLogger(YahooUtil.class);
 
 	/**
-	 * Get quote data from the Yahoo API.
+	 * Gets the quote data from the Yahoo API.
 	 * 
 	 * @param	apiUrl	the URL for the Yahoo Finance API
-	 * @return			the quote data in JSON
+	 * @return			the quote data
 	 * @throws IOException
 	 */
 	static JsonNode getJson(String apiUrl) throws IOException {
@@ -33,7 +33,7 @@ class YahooUtil {
 	}
 
 	/**
-	 * Generate Yahoo symbol from Money symbol.
+	 * Generates a Yahoo symbol from the Money symbol.
 	 * 
 	 * @param	symbol			the Money symbol for the security
 	 * @param	country			the Money country for the security

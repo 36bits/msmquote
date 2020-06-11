@@ -34,7 +34,12 @@ public class CliDatTable extends MsmTable {
 		}
 	}	
 
-	// Constructor
+	/**
+	 * Constructor for the CLI_DAT table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public CliDatTable(Database msmDb) throws IOException {
 		super(msmDb, "CLI_DAT");		
 		return;

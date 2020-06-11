@@ -20,7 +20,12 @@ public class CrncTable extends MsmTable{
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(CrncTable.class);
 
-	// Constructor
+	/**
+	 * Constructor for the currency table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public CrncTable(Database msmDb) throws IOException {
 		super(msmDb, "CRNC");		
 		return;

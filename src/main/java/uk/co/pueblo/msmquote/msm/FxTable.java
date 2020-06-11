@@ -15,7 +15,12 @@ public class FxTable extends MsmTable {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(FxTable.class);
 
-	// Constructor
+	/**
+	 * Constructor for the currency exchange rate table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public FxTable(Database msmDb) throws IOException {
 		super(msmDb, "CRNC_EXCHG");
 	}

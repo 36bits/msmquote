@@ -19,7 +19,12 @@ public class SecTable extends MsmTable {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(SecTable.class);
 	
-	// Constructor
+	/**
+	 * Constructor for the securities table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public SecTable(Database msmDb) throws IOException {
 		super(msmDb, "SEC");		
 	}

@@ -7,7 +7,12 @@ import com.healthmarketscience.jackcess.Database;
 
 public class CntryTable extends MsmTable {
 
-	// Constructor
+	/**
+	 * Constructor for the country table.
+	 * 
+	 * @param msmDb the opened MS Money file
+	 * @throws IOException
+	 */
 	public CntryTable(Database msmDb) throws IOException {
 		super(msmDb, "CNTRY");
 		return;

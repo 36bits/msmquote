@@ -21,7 +21,7 @@ public class YahooCsvHist extends YahooQuote {
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
-	 * @param	csvFile
+	 * @param	csvFile	the name of the CSV file
 	 * @throws IOException 
 	 */
 	public YahooCsvHist(String fileName) throws IOException {
@@ -50,14 +50,13 @@ public class YahooCsvHist extends YahooQuote {
 	}
 
 	/**
-	 * Get the next row of quote data in the CSV file.
+	 * Gets the next row of quote data from the CSV file.
 	 * 
-	 * @return
+	 * @return	the quote row or null if no more data 
 	 * @throws IOException
-	 * @throws NumberFormatException
 	 */
 	@Override
-	public Map<String, Object> getNext() throws IOException, NumberFormatException {
+	public Map<String, Object> getNext() throws IOException {
 
 		Map<String, Object> quoteRow = new HashMap<>();
 
@@ -111,13 +110,5 @@ public class YahooCsvHist extends YahooQuote {
 
 		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
-	}
-
-	/**
-	 * @return
-	 */
-	@Override
-	public boolean isQuery() {
-		return isQuery;		
 	}
 }
