@@ -114,6 +114,7 @@
 						<manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<mainClass>uk.co.pueblo.msmquote.Update</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
