@@ -1,4 +1,8 @@
 # msmquote
+
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/36bits/msmquote.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/36bits/msmquote/context:java)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/36bits/msmquote.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/36bits/msmquote/alerts/)
+
 **msmquote** is a Java application for updating investment quote data and currency exchange rates in Microsoft Money files. The quote data and exchange rates are obtained from APIs provided by [Yahoo Finance](https://finance.yahoo.com/).
 
 **msmquote** updates quote data for stocks, bonds, mutual funds, market indices and currency exchange rates. Exchange rate updates are applied to Microsoft Money's exchange rate table.
