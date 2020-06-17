@@ -8,7 +8,7 @@
 ## Getting Started
 Download the latest [msmquote JAR](https://github.com/36bits/msmquote/releases) to your machine and run it from the command line as follows:
 
-`java -cp msmquote-3.1.3.jar uk.co.pueblo.msmquote.Update moneyfile.mny password source`
+`java -jar msmquote-3.1.3.jar moneyfile.mny password source`
 
 Parameters:
 * **moneyfile.mny** is the Microsoft Money file that you wish to update

@@ -8,10 +8,9 @@ $log = $env:USERPROFILE + "\log\msmquote.log"
 #$javaopts = "-showversion"
 $javaopts = ""
 $jar = $env:ProgramFiles + "\msmquote\msmquote.jar"
-$class = "uk.co.pueblo.msmquote.Update"
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started. File: $mnyfile."
-java $javaopts -cp $jar $class $mnyfile $mnypswd $url *>> $log
+java $javaopts -jar $jar $mnyfile $mnypswd $url *>> $log
 $saved_exitcode = $lastexitcode
 
 if ($saved_exitcode -eq 1) {
