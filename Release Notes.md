@@ -1,12 +1,12 @@
 # Version 3.1.3
 
 ## New Features
-* >>> Translation of symbols from Money to Yahoo format.
-* >>> Support for Portfolio status bar symbols. 
+* The auto-complete URL function will now attempt to translate the symbols used in your Money file into the Yahoo Finance equivalents.
+* The market indices on the Money portfolio status bar can now be made to show the correct values.
 * Summary log messages now include a count of *warnings*.
 
 ## Known Issues
-* Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005.
+* Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
 
 ## Bug Fixes
 * Volumes for GBp quotes were getting the divisor applied - that should never have happened. Fixed.

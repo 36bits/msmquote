@@ -8,10 +8,10 @@
 ## Getting Started
 Download the latest [msmquote JAR](https://github.com/36bits/msmquote/releases) to your machine and run it from the command line as follows:
 
-`java -cp msmquote-3.1.2.jar uk.co.pueblo.msmquote.Update moneyfile.mny password source`
+`java -cp msmquote-3.1.3.jar uk.co.pueblo.msmquote.Update moneyfile.mny password source`
 
 Parameters:
-* **moneyfile.mny** is the Microsoft Money file you wish to update
+* **moneyfile.mny** is the Microsoft Money file that you wish to update
 * **password** is the file password if applicable (omit if the file is not password protected)
 * **source** is the source of the quote data
 
@@ -37,7 +37,7 @@ The **source** parameter can be set to retrieve and update quote data from one o
    
 3. **Historical data from the Yahoo Finance API**
 
-   Update historical quote data for a single investment with data retrieved from the Yahoo Finance API. For example, the following source parameter will update one month's worth of quote data for Tesco PLC (symbol TSCO.L): 
+   Update historical quote data for a single investment with data retrieved from the Yahoo Finance API. For example, the following source parameter will update one month's worth of quote data for Tesco PLC (symbol `TSCO.L`): 
    
    `"https://query2.finance.yahoo.com/v7/finance/chart/TSCO.L?range=1mo&interval=1d&indicators=quote&includeTimestamps=true"`
    
@@ -50,7 +50,7 @@ The **source** parameter can be set to retrieve and update quote data from one o
    - `currency` is the three-character Yahoo Finance currency code of the quote data, for example 'GBp'
    - `quotetype` is the quote type, currently one of `EQUITY`, `BOND`, `INDEX` or `MUTUALFUND`.       
 
-   For example, the following source parameter will update quote data for Tesco PLC (symbol TSCO.L) from a CSV file containing quote values in British pence:   
+   For example, the following source parameter will update quote data for Tesco PLC (symbol `TSCO.L`) from a CSV file containing quote values in British pence:   
    
    `"TSCO.L_GBp_EQUITY.csv"`
 
@@ -62,6 +62,24 @@ The **source** parameter can be set to retrieve and update quote data from one o
 
   `"https://query2.finance.yahoo.com/v7/finance/quote?symbols=?"`
 
+* **Symbol translation**
+
+  Where symbols are found in your Money file that are not in the Yahoo Finance format, **msmquote** will attempt to translate them into their Yahoo Finance equivalents based on the symbol and its associated country.
+  
+  For example:
+  
+  - `TSCO` with *Country/Region* set to *Great Britain* will be converted to `TSCO.L`
+  - `FR:CA` with *Country/Region* set to *France* will be converted to `CA.PA` 
+  - `CA` with *Country/Region* set to *France* will be converted to `CA.PA`
+  - `US:WMT` with *Country/Region* set to *United States* will be converted to `WMT`
+  - `WMT` with *Country/Region* set to *United States* will be unchanged and remain `WMT`
+  
+  The translation is done as a part of the auto-complete URL processing - the symbols in your Money file will not themselves be changed.
+    
+* **Portfolio status bar index values**
+
+  The Money portfolio status bar index values require the correct symbols to be defined in your Money file, otherwise the index value will simply be shown as *N/A*. Using the following index symbols within your Money file will enable the portfolio status bar index values to be displayed correctly: `$US:INDU` (DJIA), `$US:INX` (S&P 500), `$US:FTSE` (FTSE 100), `$US:COMPX` (NASDAQ Composite). The translation is done as a part of the auto-complete URL processing - the symbols in your Money file will not themselves be changed. 
+  
 * **Selecting which investments to update in Microsoft Money**
 
   From the *Investing* drop-down menu in Microsoft Money go to *Portfolio->Update prices->Pick prices to download*. From there check those investments for which you wish to update quote data when **msmquote** is next run.
@@ -72,7 +90,7 @@ The **source** parameter can be set to retrieve and update quote data from one o
   
 * **Default indices in Microsoft Money**
 
-  A newly created Microsoft Money file includes a default set of market indices for which **msmquote** will attempt to update quote data, even if those indices are not included in any investment account. It is advisable to update the symbols for these indices to match the Yahoo Finance equivalents as follows: from the *Investing* drop-down menu in Microsoft Money go to *Portfolio->Work with investments->Choose a specific investment* and from there choose the index for which you wish to update the symbol.
+  A newly created Microsoft Money file includes a default set of market indices for which **msmquote** will attempt to update quote data, even if those indices are not included in any investment account. It is advisable to update the symbols for these indices to match the Yahoo Finance equivalents as follows: from the *Investing* drop-down menu in Microsoft Money go to *Portfolio->Work with investments->Choose a specific investment* and from there choose the index for which you wish to update the symbol.  
      
 ### User-Completed URL
 * **Yahoo Finance currency exchange rate symbols**
