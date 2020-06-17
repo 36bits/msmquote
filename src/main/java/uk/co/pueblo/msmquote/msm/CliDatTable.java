@@ -48,18 +48,18 @@ public class CliDatTable extends MsmTable {
 	/** 
 	 * Updates a value in the CLI_DAT table.
 	 * 
-	 * @param	the name of the row to be updated
-	 * @param	the new value
-	 * @return	true if successful, otherwise false
+	 * @param	name	the name of the row to be updated
+	 * @param	newVal		the new value
+	 * @return			true if successful, otherwise false
 	 * @throws	IOException
 	 */
-	public boolean update(CliDatRow name, Object val) throws IOException {
+	public boolean update(CliDatRow name, Object newVal) throws IOException {
 		boolean found = msmCursor.findFirstRow(Collections.singletonMap("idData", name.getIdData()));
 		if (found) {
 			Column cliDatCol = msmTable.getColumn("oft");
 			msmCursor.setCurrentRowValue(cliDatCol, name.getOft());
 			cliDatCol = msmTable.getColumn(name.getValCol());
-			msmCursor.setCurrentRowValue(cliDatCol, val);			
+			msmCursor.setCurrentRowValue(cliDatCol, newVal);			
 			return true;
 		}
 		return false;

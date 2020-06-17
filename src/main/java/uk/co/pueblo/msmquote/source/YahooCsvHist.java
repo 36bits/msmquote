@@ -21,7 +21,7 @@ public class YahooCsvHist extends YahooQuote {
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
-	 * @param	csvFile	the name of the CSV file
+	 * @param	fileName	the name of the CSV file
 	 * @throws IOException 
 	 */
 	public YahooCsvHist(String fileName) throws IOException {

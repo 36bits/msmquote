@@ -114,10 +114,10 @@ public class SpTable extends MsmTable {
 	/** 
 	 * Searches the SP table for a row matching the supplied hsec and date.
 	 *
-	 * @param	hsec	the hsec to find
-	 * @param	date	the date to find
-	 * @return	 		the SP row if match found, null if no row for hsec found or
-	 * 					row containing 'xRefOnly' key if hsec found but not date
+	 * @param	hsec		the hsec to find
+	 * @param	quoteDate	the date to find
+	 * @return	 			the SP row if match found, null if no row for hsec found or
+	 * 						row containing 'xRefOnly' key if hsec found but not date
 	 * @throws	IOException
 	 */
 	private Map<String, Object> getSpRow(int hsec, LocalDateTime quoteDate) throws IOException {
