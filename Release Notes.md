@@ -1,3 +1,8 @@
+# Version 3.1.4
+
+## Changes
+* Jackson-databind updated to version 2.11.1.
+
 # Version 3.1.3
 
 ## New Features
