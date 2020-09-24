@@ -2,7 +2,8 @@
 
 ## Changes
 * Jackson-databind updated to version 2.11.2.
-* Jackcess updated to 3.5.0.
+* Jackcess updated to 3.5.1.
+* Remove unused test code.
 
 # Version 3.1.3
 
