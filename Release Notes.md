@@ -1,3 +1,8 @@
+# Version 3.1.5
+
+## Changes
+* Log4j-core updated to version 2.14.0.
+
 # Version 3.1.4
 
 ## Changes
