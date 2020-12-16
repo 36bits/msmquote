@@ -3,6 +3,7 @@
 ## Changes
 * Log4j-core updated to version 2.14.0.
 * Jackson-databind updated to version 2.12.0.
+* Add exchange code for São Paulo stock exchange.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
