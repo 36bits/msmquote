@@ -1,3 +1,11 @@
+# Version 3.1.5-beta-2
+
+## Changes
+* 
+
+## Known Issues
+* Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
+
 # Version 3.1.5-beta-1
 
 ## Changes
