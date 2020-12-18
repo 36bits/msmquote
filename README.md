@@ -125,9 +125,12 @@ The **source** parameter can be set to retrieve and update quote data from one o
 * **Currencies:** exchange rate.
 
 ## Tested Environments
-**msmquote** has been tested with the following MS Money versions and operating systems:
-* MS Money 2005 (14.0), UK version, on MS Windows 10
-* MS Money 2004 (12.0), UK version, on MS Windows 10
+**msmquote** has been tested with the following MS Money versions running on Windows 10:
+* MS Money Plus Sunset (17.0.120.3817)
+* MS Money 2005 (14.0), UK edition
+* MS Money 2004 (12.0), UK edition
+
+**msmquote** is unlikely to work reliably or at all with MS Money versions prior to 2004 (12.0).
 
 The following quote types have been tested:
 * UK equities and bonds
