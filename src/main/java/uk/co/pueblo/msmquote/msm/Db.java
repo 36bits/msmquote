@@ -8,10 +8,10 @@ import java.nio.file.FileAlreadyExistsException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.CryptCodecProvider;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.DateTimeType;
+import com.healthmarketscience.jackcess.crypt.CryptCodecProvider;
 
 public class Db extends DatabaseBuilder {
 

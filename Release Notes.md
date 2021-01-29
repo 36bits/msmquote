@@ -2,6 +2,7 @@
 
 ## Changes
 * Jackson-databind updated to version 2.12.1.
+* Jackcess and jackcess-encrypt updated to 4.0.0.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
