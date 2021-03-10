@@ -1,8 +1,13 @@
 # Version 3.1.6
 
+## New Features
+* **msmquote** is now distributed as a ZIP archive that includes a custom Java runtime environment (JRE). A separately installed JRE is now no longer required to run **msmquote**.
+
 ## Changes
-* Jackson-databind updated to version 2.12.1.
-* Jackcess and jackcess-encrypt updated to 4.0.0.
+* Update jackson-databind to 2.12.2.
+* Update jackcess to 4.0.0.
+* Update jackcess-encrypt to 4.0.1
+* Update java to 11.0.10.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.

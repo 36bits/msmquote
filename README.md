@@ -3,16 +3,16 @@
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/36bits/msmquote.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/36bits/msmquote/context:java)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/36bits/msmquote.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/36bits/msmquote/alerts/)
 
-**msmquote** is a Java application for updating investment quote data and currency exchange rates in Microsoft Money files. The quote data and exchange rates are obtained from APIs provided by [Yahoo Finance](https://finance.yahoo.com/).
+**msmquote** is a Java application for updating investment quote data and currency exchange rates in Microsoft Money files. The quote data and exchange rates are obtained online from APIs provided by [Yahoo Finance](https://finance.yahoo.com/).
 
 **msmquote** updates quote data for stocks, bonds, mutual funds, market indices and currency exchange rates. Exchange rate updates are applied to Microsoft Money's exchange rate table.
 
 **msmquote** can also be used to update historical quote data for a single investment with data retrieved from either the Yahoo Finance API or a CSV file generated using the Yahoo Finance historical prices download facility.
 
 ## Getting Started
-Download the latest [msmquote JAR](https://github.com/36bits/msmquote/releases) to your machine and run it from the command line as follows:
+Download the latest **msmquote** [ZIP archive](https://github.com/36bits/msmquote/releases) and extract it to a suitable folder on your machine. Run **msmsquote** from the root of the extracted folder using the following command line:
 
-`java -jar msmquote-3.1.3.jar moneyfile.mny password source`
+`bin\java -jar msmquote-3.1.6.jar moneyfile.mny password source`
 
 Parameters:
 * **moneyfile.mny** is the Microsoft Money file that you wish to update
@@ -143,9 +143,6 @@ Example tables sizes in the Money files used for testing:
 * Security price (SP): 106,000 rows
 * Currency (CRNC): 69 rows
 * Exchange rate (CRNC_EXCHG): 79 rows
-
-## Prerequisites
-This project requires a Java runtime environment (JRE) of version 8 or later.
 
 ## Author
 Jonathan Casiot  
