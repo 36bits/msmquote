@@ -59,8 +59,8 @@ class YahooUtil {
 			if ((prop = props.getProperty("exchange." + country)) != null) {
 				yahooSymbol = symbol.substring(3) + prop;
 			}
-		} else if (!symbol.matches("(.*\\..$|.*\\...$)")){
-			// Symbol is not already in Yahoo format 'symbol.x' or 'symbol.xx'
+		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")){
+			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
 			if ((prop = props.getProperty("exchange." + country)) != null) {
 				yahooSymbol = symbol + prop; 
 			}
