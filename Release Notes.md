@@ -4,6 +4,7 @@
 
 ## Changes
 * Update log4j-core to 2.14.1.
+* Update jackson-databind to 2.12.3.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
