@@ -11,20 +11,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
-import uk.co.pueblo.msmquote.msm.CliDatTable;
-import uk.co.pueblo.msmquote.msm.CntryTable;
-import uk.co.pueblo.msmquote.msm.CrncTable;
-import uk.co.pueblo.msmquote.msm.Db;
-import uk.co.pueblo.msmquote.msm.DhdTable;
-import uk.co.pueblo.msmquote.msm.FxTable;
-import uk.co.pueblo.msmquote.msm.SecTable;
-import uk.co.pueblo.msmquote.msm.SpTable;
-import uk.co.pueblo.msmquote.msm.CliDatTable.CliDatRow;
-import uk.co.pueblo.msmquote.msm.DhdTable.DhdColumn;
-import uk.co.pueblo.msmquote.source.YahooApiHist;
-import uk.co.pueblo.msmquote.source.YahooApiQuote;
-import uk.co.pueblo.msmquote.source.YahooCsvHist;
-import uk.co.pueblo.msmquote.source.YahooQuote;
+import uk.co.pueblo.msmquote.MsmCore.CliDatRow;
+import uk.co.pueblo.msmquote.MsmCore.DhdColumn;
 
 public class Update {
 
@@ -40,7 +28,7 @@ public class Update {
 
 		Instant startTime = Instant.now();
 		int exitCode = EXIT_OK;
-		Db db = null;
+		MsmDb db = null;
 
 		try {	    	
 			// Process command-line arguments
@@ -58,22 +46,21 @@ public class Update {
 
 			// Open Money database
 			Database openedDb = null;			
-			db = new Db(args[0], password);
+			db = new MsmDb(args[0], password);
 			openedDb = db.getDb();
 
 			try {
 				// Instantiate table objects needed to process source quote type
-				SecTable secTable = new SecTable(openedDb);
-				CrncTable crncTable = new CrncTable(openedDb);
-				DhdTable dhdTable = new DhdTable(openedDb);
-				CntryTable cntryTable = new CntryTable(openedDb);
-
+				MsmCore msmCore = new MsmCore(openedDb);
+				MsmSecurity msmSecurity = new MsmSecurity(openedDb);
+				MsmCurrency msmCurrency = new MsmCurrency(openedDb);
+				
 				// Process quote source types
 				YahooQuote yahooQuote = null;
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooQuote = new YahooApiQuote(sourceArg, secTable.getSymbols(cntryTable), crncTable.getIsoCodes(dhdTable.getValue(DhdColumn.BASE_CURRENCY.getName())));
+						yahooQuote = new YahooApiQuote(sourceArg, msmSecurity.getSymbols(msmCore), msmCurrency.getIsoCodes(msmCore.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
 						yahooQuote = new YahooApiQuote(sourceArg);
 					}
@@ -86,13 +73,7 @@ public class Update {
 				}
 
 				if (!yahooQuote.isQuery()) {
-					// Instantiate table objects needed to process quote data
-					SpTable spTable = new SpTable(openedDb);
-					FxTable fxTable = new FxTable(openedDb);
-					CliDatTable cliDatTable = new CliDatTable(openedDb);
-
-					// Now update quote data in Money database
-					int hsec;
+					// Update quote data in Money database
 					String currencyPair;
 					String[] isoCodes = {"", ""};
 					int[] hcrncs = {0, 0};
@@ -106,9 +87,7 @@ public class Update {
 						}
 						if (quoteRow.containsKey("dPrice")) {
 							// Update stock quote data
-							if((hsec = secTable.update(quoteRow)) != -1) {
-								spTable.update(quoteRow, hsec);
-							} else {
+							if(!msmSecurity.update(quoteRow)) {
 								exitCode = EXIT_WARN;
 							}
 						} else if (quoteRow.containsKey("dRate")) {
@@ -116,9 +95,9 @@ public class Update {
 							currencyPair = (String) quoteRow.get("xSymbol");
 							isoCodes[0] = currencyPair.substring(0, 3);
 							isoCodes[1] = currencyPair.substring(3, 6);
-							hcrncs = crncTable.getHcrncs(isoCodes);
+							hcrncs = msmCurrency.getHcrncs(isoCodes);
 							// Update exchange rate table
-							if (!fxTable.update(hcrncs, (double) quoteRow.get("dRate"))) {
+							if (!msmCurrency.update(hcrncs, (double) quoteRow.get("dRate"))) {
 								exitCode = EXIT_WARN;
 							}
 						} else {
@@ -127,10 +106,10 @@ public class Update {
 					} 
 
 					// Add any new rows to the SP table
-					spTable.addNewRows();
+					msmSecurity.addNewSpRows();
 
 					// Update online update time-stamp
-					cliDatTable.update(CliDatRow.OLUPDATE, LocalDateTime.now());
+					msmCore.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now());
 				}
 
 			} catch (Exception e) {

@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote.source;
+package uk.co.pueblo.msmquote;
 
 import java.util.HashMap;
 import java.util.Map;

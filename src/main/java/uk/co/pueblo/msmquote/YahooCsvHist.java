@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote.source;
+package uk.co.pueblo.msmquote;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
+import uk.co.pueblo.msmquote.QuoteSummary.SummaryType;
 
 public class YahooCsvHist extends YahooQuote {
 

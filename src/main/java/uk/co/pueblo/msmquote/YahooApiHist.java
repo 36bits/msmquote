@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote.source;
+package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import uk.co.pueblo.msmquote.source.QuoteSummary.SummaryType;
+import uk.co.pueblo.msmquote.QuoteSummary.SummaryType;
 
 public class YahooApiHist extends YahooQuote {
 
