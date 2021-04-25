@@ -22,7 +22,7 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class MsmSecurity {
+class MsmSecurity {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmSecurity.class);

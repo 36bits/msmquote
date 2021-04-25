@@ -22,7 +22,7 @@ public class MsmDb extends DatabaseBuilder {
 	private Database db;
 
 	// Constructor
-	public MsmDb(String fileName, String password) throws IOException {
+	MsmDb(String fileName, String password) throws IOException {
 
 		// Create lock file
 		String lockFileName = null;
@@ -56,11 +56,11 @@ public class MsmDb extends DatabaseBuilder {
 		return;
 	}
 
-	public Database getDb() {
+	Database getDb() {
 		return db;
 	}
 
-	public void closeDb() throws IOException {
+	void closeDb() throws IOException {
 		LOGGER.info("Closing Money file: {}", db.getFile());
 		db.close();
 		return;

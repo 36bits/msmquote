@@ -19,7 +19,7 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-public class MsmCurrency {
+class MsmCurrency {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmCurrency.class);
@@ -45,7 +45,7 @@ public class MsmCurrency {
 	 * @return				the corresponding hcrncs
 	 * @throws	IOException
 	 */
-	public int[] getHcrncs(String[] isoCodes) throws IOException {
+	int[] getHcrncs(String[] isoCodes) throws IOException {
 		int[] hcrncs = new int[isoCodes.length];
 		IndexCursor cursor = CursorBuilder.createCursor(crncTable.getPrimaryKeyIndex());
 		for (int n = 0; n < isoCodes.length; n++) {
@@ -111,7 +111,7 @@ public class MsmCurrency {
 	 * @return				the ISO codes
 	 * @throws	IOException
 	 */
-	public List<String> getIsoCodes(int defHcrnc) throws IOException {
+	List<String> getIsoCodes(int defHcrnc) throws IOException {
 		Map<String, Object> row = null;
 		Map<String, Object> rowPattern = new HashMap<>();
 		Iterator<Row> crncIt;
