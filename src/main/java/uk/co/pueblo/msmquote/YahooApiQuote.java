@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import uk.co.pueblo.msmquote.QuoteSummary.SummaryType;
 
-public class YahooApiQuote extends YahooQuote {
+public class YahooApiQuote extends Quote {
 
 	// Constants
 	private static final String DELIM = ",";
 	private static final String JSON_ROOT = "/quoteResponse/result";
+	private static final String PROPS_RES = "YahooQuote.properties";
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
@@ -31,6 +31,7 @@ public class YahooApiQuote extends YahooQuote {
 	 * @throws IOException
 	 */
 	public YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
+		super(PROPS_RES);
 
 		symbolXlate = new HashMap<>();
 		useXlate = true;
@@ -85,9 +86,7 @@ public class YahooApiQuote extends YahooQuote {
 		if (invSymbols.isEmpty()) {
 			delim = "";
 		}
-
-		isQuery = false;
-		quoteSummary = new QuoteSummary();
+		
 		resultIt = YahooUtil.getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 	}
 
@@ -98,9 +97,8 @@ public class YahooApiQuote extends YahooQuote {
 	 * @throws IOException
 	 */
 	public YahooApiQuote(String apiUrl) throws IOException {
-		isQuery = false;
+		super(PROPS_RES);
 		useXlate = false;
-		quoteSummary = new QuoteSummary();
 		symbolXlate = new HashMap<>();
 		resultIt = YahooUtil.getJson(apiUrl).at(JSON_ROOT).elements();
 	}
@@ -114,7 +112,7 @@ public class YahooApiQuote extends YahooQuote {
 	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
-			quoteSummary.log(LOGGER);
+			logSummary(LOGGER);
 			return null;
 		}
 		JsonNode result = resultIt.next();
@@ -176,7 +174,7 @@ public class YahooApiQuote extends YahooQuote {
 				} else {
 					LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", yahooSymbol, apiMap[0]);
 					quoteRow.put("xError", null);
-					quoteSummary.inc(quoteType, SummaryType.WARNING);
+					incSummary(quoteType, SummaryType.WARNING);
 					if ((prop = baseProps.getProperty("default." + apiMap[0])) == null) {
 						continue;
 					}
@@ -196,9 +194,9 @@ public class YahooApiQuote extends YahooQuote {
 			LOGGER.warn("Incomplete quote data for symbol {}", yahooSymbol);
 			LOGGER.debug("Exception occured!", e);
 			quoteRow.put("xError", null);
-			quoteSummary.inc(quoteType, SummaryType.WARNING);
+			incSummary(quoteType, SummaryType.WARNING);
 		} finally {
-			quoteSummary.inc(quoteType, SummaryType.PROCESSED);
+			incSummary(quoteType, SummaryType.PROCESSED);
 		}
 
 		return quoteRow;

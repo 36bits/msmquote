@@ -7,10 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import uk.co.pueblo.msmquote.QuoteSummary.SummaryType;
+class YahooApiHist extends Quote {
 
-public class YahooApiHist extends YahooQuote {
-
+	// Constants
+	private static final String PROPS_RES = "YahooQuote.properties";
+	
 	// Instance variables
 	private JsonNode resultJn;
 	private String symbol;
@@ -24,7 +25,8 @@ public class YahooApiHist extends YahooQuote {
 	 * @param apiUrl		the Yahoo Finance quote history API URL
 	 * @throws IOException
 	 */
-	public YahooApiHist(String apiUrl) throws IOException {
+	YahooApiHist(String apiUrl) throws IOException {
+		super(PROPS_RES);
 
 		// Get quote data
 		resultJn = YahooUtil.getJson(apiUrl).at("/chart/result/0");
@@ -38,9 +40,7 @@ public class YahooApiHist extends YahooQuote {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
 
-		isQuery = false;
 		quoteIndex = 0;
-		quoteSummary = new QuoteSummary();
 	}
 
 	/**
@@ -49,11 +49,11 @@ public class YahooApiHist extends YahooQuote {
 	 * @return	the quote row or null if no more data
 	 */
 	@Override
-	public Map<String, Object> getNext() {
+	Map<String, Object> getNext() {
 		Map<String, Object> quoteRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
-			quoteSummary.log(LOGGER);
+			logSummary(LOGGER);
 			return null;
 		}
 
@@ -99,7 +99,7 @@ public class YahooApiHist extends YahooQuote {
 		}
 
 		quoteIndex++;
-		quoteSummary.inc(quoteType, SummaryType.PROCESSED);
+		incSummary(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
 }

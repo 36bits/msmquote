@@ -56,7 +56,7 @@ public class Update {
 				MsmCurrency msmCurrency = new MsmCurrency(openedDb);
 				
 				// Process quote source types
-				YahooQuote yahooQuote = null;
+				Quote yahooQuote = null;
 
 				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
 					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
