@@ -34,8 +34,8 @@ class MsmSecurity {
 	private static final int SRC_ONLINE = 6;
 
 	// Instance variables
-	private Table secTable;
-	private Table spTable;
+	private final Table secTable;
+	private final Table spTable;
 	private ArrayList<Map<String, Object>> spRowAddList;
 	private int hsp = 0;
 	
@@ -163,6 +163,7 @@ class MsmSecurity {
 		spRow.put("hsp", hsp);
 		spRow.put("hsec", hsec);
 		spRow.put("src", SRC_ONLINE);
+		spRow.putAll(quoteRow);		// TODO Should spRow be sanitised first?
 		spRowAddList.add(spRow);
 		LOGGER.info("Added new quote for symbol {} to table update list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
 		return true;
