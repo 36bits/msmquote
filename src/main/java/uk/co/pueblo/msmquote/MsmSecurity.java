@@ -83,7 +83,7 @@ class MsmSecurity {
 			hsec = (int) secRow.get("hsec");
 			LOGGER.info("Found symbol {}: sct = {}, hsec = {}", symbol, secRow.get("sct"), hsec);
 			// Merge quote row into SEC row and write to SEC table
-			secRow.putAll(quoteRow);
+			secRow.putAll(quoteRow);	// TODO Should secRow be sanitised first?
 			secCursor.updateCurrentRowFromMap(secRow);
 			LOGGER.info("Updated quote for symbol {}", symbol);
 		} else {
@@ -91,7 +91,7 @@ class MsmSecurity {
 			return false;
 		}
 
-		// Search SP table for most recent row with this hsec
+		// Update SP table with quote row
 		LocalDateTime quoteDate = (LocalDateTime) quoteRow.get("dt");
 		Map<String, Object> spRowPattern = new HashMap<>();
 		Map<String, Object> spRow = null;
@@ -120,7 +120,7 @@ class MsmSecurity {
 				spIt = new IterableBuilder(spCursor).setMatchPattern(spRowPattern).forward().iterator();
 			}
 
-			// Foo
+			// Search SP table for existing quote or most recent previous quote
 			Instant rowInstant = Instant.ofEpochMilli(0);
 			Instant maxInstant = Instant.ofEpochMilli(0);
 			while (spIt.hasNext()) {
@@ -130,7 +130,7 @@ class MsmSecurity {
 				rowInstant = ZonedDateTime.of((LocalDateTime) spRow.get("dt"), SYS_ZONE_ID).toInstant();
 				if ((src == SRC_ONLINE || src == SRC_MANUAL) && rowInstant.equals(quoteInstant)) {
 					// Found existing quote for this hsec and quote date so update SP table
-					spRow.putAll(quoteRow);
+					spRow.putAll(quoteRow);		// TODO Should spRow be sanitised first?
 					spCursor.updateCurrentRowFromMap(spRow);
 					LOGGER.info("Updated previous quote for symbol {}: {}, new price = {}", symbol, spRow.get("dt"), spRow.get("dPrice"));
 					return true;
@@ -158,6 +158,7 @@ class MsmSecurity {
 			LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, prevSpRow.get("dt"), prevSpRow.get("dPrice"), prevSpRow.get("hsp"));
 		}
 
+		// Add to SP row add list
 		hsp++;
 		spRow.put("hsp", hsp);
 		spRow.put("hsec", hsec);
