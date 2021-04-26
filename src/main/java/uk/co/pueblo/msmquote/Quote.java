@@ -18,8 +18,8 @@ abstract class Quote {
 
 	// Instance variables
 	private Map<String, int[]> summary = new HashMap<>();
-	protected Properties baseProps = new Properties();
-	protected boolean isQuery = false;
+	Properties baseProps = new Properties();
+	boolean isQuery = false;
 	
 	// Define summary types
 		public enum SummaryType {

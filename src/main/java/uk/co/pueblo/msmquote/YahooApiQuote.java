@@ -20,7 +20,7 @@ public class YahooApiQuote extends Quote {
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, String> symbolXlate;
-	boolean useXlate;
+	private boolean useXlate;
 
 	/**
 	 * Constructor for auto-completed URL.
@@ -30,7 +30,7 @@ public class YahooApiQuote extends Quote {
 	 * @param isoCodes	the list of currency ISO codes, last element is base currency
 	 * @throws IOException
 	 */
-	public YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
 		super(PROPS_RES);
 
 		symbolXlate = new HashMap<>();
@@ -96,7 +96,7 @@ public class YahooApiQuote extends Quote {
 	 * @param apiUrl		the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 */
-	public YahooApiQuote(String apiUrl) throws IOException {
+	YahooApiQuote(String apiUrl) throws IOException {
 		super(PROPS_RES);
 		useXlate = false;
 		symbolXlate = new HashMap<>();
@@ -109,7 +109,7 @@ public class YahooApiQuote extends Quote {
 	 * @return	the quote row or null if no more data	
 	 */
 	@Override
-	public Map<String, Object> getNext() {
+	Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
 			logSummary(LOGGER);

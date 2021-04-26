@@ -25,7 +25,7 @@ public class YahooCsvHist extends Quote {
 	 * @param fileName the name of the CSV file
 	 * @throws IOException
 	 */
-	public YahooCsvHist(String fileName) throws IOException {
+	YahooCsvHist(String fileName) throws IOException {
 		super(PROPS_RES);
 		File csvFile = new File(fileName);
 		csvBr = new BufferedReader(new FileReader(csvFile));
@@ -55,7 +55,7 @@ public class YahooCsvHist extends Quote {
 	 * @throws IOException
 	 */
 	@Override
-	public Map<String, Object> getNext() throws IOException {
+	Map<String, Object> getNext() throws IOException {
 
 		Map<String, Object> quoteRow = new HashMap<>();
 
