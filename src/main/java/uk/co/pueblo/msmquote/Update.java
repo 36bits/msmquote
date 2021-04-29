@@ -26,60 +26,53 @@ public class Update {
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
-		Instant startTime = Instant.now();
 		int exitCode = EXIT_OK;
-		MsmDb db = null;
+		final Instant startTime = Instant.now();
+		final MsmDb db;
 
-		try {	    	
+		try {
 			// Process command-line arguments
-			String password = null;
-			String sourceArg = null;
-
-			if (args.length == 3) {
-				password = args[1];
-				sourceArg = args[2];
-			} else if (args.length == 2) {
-				sourceArg = args[1];
-			} else {
-				throw new IllegalArgumentException("Usage: filename [password] source");
+			if (args.length < 3) {
+				throw new IllegalArgumentException("Usage: filename password source");
 			}
 
 			// Open Money database
-			Database openedDb = null;			
-			db = new MsmDb(args[0], password);
-			openedDb = db.getDb();
+			db = new MsmDb(args[0], args[1]);
+			final Database openedDb = db.getDb();
 
 			try {
-				// Instantiate table objects needed to process source quote type
-				MsmCore msmCore = new MsmCore(openedDb);
-				MsmSecurity msmSecurity = new MsmSecurity(openedDb);
-				MsmCurrency msmCurrency = new MsmCurrency(openedDb);
-				
-				// Process quote source types
-				Quote yahooQuote = null;
+				// Instantiate objects needed to process quote source types
+				final MsmCore msmCore = new MsmCore(openedDb);
+				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
+				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
 
-				if (sourceArg.contains("finance.yahoo.com/v7/finance/quote")) {
-					if (sourceArg.endsWith("symbols=")  || sourceArg.endsWith("symbols=?")) {
-						yahooQuote = new YahooApiQuote(sourceArg, msmSecurity.getSymbols(msmCore), msmCurrency.getIsoCodes(msmCore.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+				// Process quote source types
+				final Quote quote;
+
+				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
+					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
+						quote = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmCore), msmCurrency.getIsoCodes(msmCore.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
-						yahooQuote = new YahooApiQuote(sourceArg);
+						quote = new YahooApiQuote(args[2]);
 					}
-				} else if (sourceArg.contains("finance.yahoo.com/v7/finance/chart")) {
-					yahooQuote = new YahooApiHist(sourceArg);						
-				} else if (sourceArg.endsWith(".csv")) {
-					yahooQuote = new YahooCsvHist(sourceArg);
+				} else if (args[2].contains("finance.yahoo.com/v7/finance/chart")) {
+					quote = new YahooApiHist(args[2]);
+				} else if (args[2].endsWith(".csv")) {
+					quote = new YahooCsvHist(args[2]);
+				} else if (args.length == 4) {
+					quote = new GoogleSheetsQuote(args[2], args[3]);
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
-				if (!yahooQuote.isQuery()) {
+				if (!quote.isQuery()) {
 					// Update quote data in Money database
 					String currencyPair;
-					String[] isoCodes = {"", ""};
-					int[] hcrncs = {0, 0};
-					Map<String, Object> quoteRow = new HashMap<>();				
+					String[] isoCodes = { "", "" };
+					int[] hcrncs = { 0, 0 };
+					Map<String, Object> quoteRow = new HashMap<>();
 					while (true) {
-						if ((quoteRow = yahooQuote.getNext()) == null) {
+						if ((quoteRow = quote.getNext()) == null) {
 							break;
 						}
 						if (quoteRow.containsKey("xError")) {
@@ -87,7 +80,7 @@ public class Update {
 						}
 						if (quoteRow.containsKey("dPrice")) {
 							// Update stock quote data
-							if(!msmSecurity.update(quoteRow)) {
+							if (!msmSecurity.update(quoteRow)) {
 								exitCode = EXIT_WARN;
 							}
 						} else if (quoteRow.containsKey("dRate")) {
@@ -103,7 +96,7 @@ public class Update {
 						} else {
 							exitCode = EXIT_WARN;
 						}
-					} 
+					}
 
 					// Add any new rows to the SP table
 					msmSecurity.addNewSpRows();
@@ -125,7 +118,7 @@ public class Update {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occured!", e);
 			exitCode = EXIT_ERROR;
-		}									
+		}
 		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
 		System.exit(exitCode);
 	}
