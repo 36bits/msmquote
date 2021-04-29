@@ -85,7 +85,7 @@ class MsmSecurity {
 			// Merge quote row into SEC row and write to SEC table
 			secRow.putAll(quoteRow);	// TODO Should secRow be sanitised first?
 			secCursor.updateCurrentRowFromMap(secRow);
-			LOGGER.info("Updated quote for symbol {}", symbol);
+			LOGGER.info("Updated SEC table for symbol {}", symbol);
 		} else {
 			LOGGER.warn("Cannot find symbol {}", symbol);
 			return false;
@@ -94,8 +94,8 @@ class MsmSecurity {
 		// Update SP table with quote row
 		LocalDateTime quoteDate = (LocalDateTime) quoteRow.get("dt");
 		Map<String, Object> spRowPattern = new HashMap<>();
-		Map<String, Object> spRow = null;
-		Map<String, Object> prevSpRow = null;
+		Map<String, Object> spRow = new HashMap<>();
+		Map<String, Object> prevSpRow = new HashMap<>();
 		spRowPattern.put("hsec", hsec);
 		IndexCursor spCursor = CursorBuilder.createCursor(spTable.getPrimaryKeyIndex());
 		Iterator<Row> spIt = new IterableBuilder(spCursor).setMatchPattern(spRowPattern).forward().iterator();
@@ -152,7 +152,7 @@ class MsmSecurity {
 			}
 		}
 
-		if (prevSpRow == null) {
+		if (prevSpRow.isEmpty()) {
 			LOGGER.info("Cannot find previous quote for symbol {}", symbol);
 		} else {
 			LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, prevSpRow.get("dt"), prevSpRow.get("dPrice"), prevSpRow.get("hsp"));
