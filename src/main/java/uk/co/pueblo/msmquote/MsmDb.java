@@ -19,21 +19,20 @@ public class MsmDb extends DatabaseBuilder {
 	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
 
 	// Instance variables
-	private Database db;
+	private final Database db;
 
 	// Constructor
 	MsmDb(String fileName, String password) throws IOException {
 
 		// Create lock file
-		String lockFileName = null;
-		int i = fileName.lastIndexOf('.');
+		final String lockFileName;
+		final int i = fileName.lastIndexOf('.');
 		if (i <= 0) {
 			lockFileName = fileName;
-		}
-		else {
+		} else {
 			lockFileName = fileName.substring(0, i);
 		}
-		File lockFile = new File(lockFileName + ".lrd");
+		final File lockFile = new File(lockFileName + ".lrd");
 		LOGGER.info("Creating lock file: {}", lockFile.getAbsolutePath());
 		if (!lockFile.createNewFile()) {
 			throw new FileAlreadyExistsException("Lock file already exists");
@@ -41,14 +40,14 @@ public class MsmDb extends DatabaseBuilder {
 		lockFile.deleteOnExit();
 
 		// Open Money database
-		File dbFile = new File(fileName);
-		CryptCodecProvider cryptCp = null;
+		final File dbFile = new File(fileName);
+		final CryptCodecProvider cryptCp;
 
-		if (password == null) {
-			cryptCp = new CryptCodecProvider();
+		if (password.length() > 0) {
+			cryptCp = new CryptCodecProvider(password);
 		}
 		else {
-			cryptCp = new CryptCodecProvider(password);
+			cryptCp = new CryptCodecProvider();			
 		}
 		LOGGER.info("Opening Money file: {}", dbFile.getAbsolutePath());
 		db = new DatabaseBuilder(dbFile).setCodecProvider(cryptCp).open();
