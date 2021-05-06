@@ -26,10 +26,10 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
-class GoogleSheetsQuote extends Quote {
+class GoogleSheetsQuote extends QuoteSource {
 
 	// Constants
-	private static final String PROPS_FILE = "GoogleSheetsQuote.properties";
+	private static final String PROPS_FILE = "";
 	private static final int HEADER_COLUMN = 0;
 	private static final String HEADER_FLAG = "symbol";
 
@@ -58,35 +58,37 @@ class GoogleSheetsQuote extends Quote {
 	@Override
 	Map<String, Object> getNext() throws IOException {
 		Map<String, Object> returnRow = new HashMap<>();
-		String googleSymbol;
-		String quoteType;
-		String prop;
-		List<Object> quoteRow = null;
+		List<Object> quoteRow;
 
 		// Get quote row
+		String googleSymbol;
 		while (quoteIndex < quoteRows.size()) {
 			quoteRow = quoteRows.get(quoteIndex++);
-			googleSymbol = (String) quoteRow.get(0);
+			googleSymbol = (String) quoteRow.get(HEADER_COLUMN);
 			if (googleSymbol.equals(HEADER_FLAG)) {
 				headerRow = quoteRow;
 				continue;
 			}
 			// Build return row
 			String columnName;
-			double columnValue;
+			LocalDateTime dtValue;
+			
 			for (int n = 1; n < quoteRow.size(); n++) {
 				columnName = (String) headerRow.get(n);
-				if (columnName.equals("type")) {
-					quoteType = (String) quoteRow.get(n);
-				} else if (columnName.equals("xSymbol")) {
+				if (columnName.startsWith("dt")) {
+					// Process LocalDateTime values
+					// TODO Confirm assumption that dt and dtLastUpdate are date of quote
+					dtValue = Instant.parse((CharSequence) quoteRow.get(n)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
+					returnRow.put(columnName, dtValue);
+				} else if (columnName.startsWith("d")) {
+					// Process Double values
+					returnRow.put(columnName, Double.parseDouble((String) quoteRow.get(n)));
+				} else if (columnName.startsWith("x")) {
+					// Process String values
 					returnRow.put(columnName, quoteRow.get(n));
-				} else if (columnName.equals("tradetime")) {
-					LocalDateTime quoteDate = Instant.parse((CharSequence) quoteRow.get(n)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-					returnRow.put("dtLastUpdate", quoteDate);
-					returnRow.put("dt", quoteDate);
 				} else {
-					columnValue = Double.parseDouble((String) quoteRow.get(n));
-					returnRow.put(columnName, columnValue);
+					// And finally process Long values
+					returnRow.put(columnName, Long.parseLong((String) quoteRow.get(n)));
 				}
 			}
 			return returnRow;

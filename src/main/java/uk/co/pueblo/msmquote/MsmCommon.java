@@ -10,7 +10,7 @@ import com.healthmarketscience.jackcess.IndexCursor;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 
-class MsmCore {
+class MsmCommon {
 
 	// Constants
 	private static final String DHD_TABLE = "DHD";
@@ -70,7 +70,7 @@ class MsmCore {
 	 * @param msmDb the opened MS Money file
 	 * @throws IOException
 	 */
-	MsmCore(Database msmDb) throws IOException {
+	MsmCommon(Database msmDb) throws IOException {
 		// Open the core tables
 		dhdTable = msmDb.getTable(DHD_TABLE);
 		cliDatTable = msmDb.getTable(CLI_DAT_TABLE);

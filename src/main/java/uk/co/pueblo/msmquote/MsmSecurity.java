@@ -1,6 +1,7 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -12,6 +13,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,20 +30,34 @@ class MsmSecurity {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmSecurity.class);
 	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
+	private static final String PROPS_FILE = "MsmSecurity.properties";
+	private static final Properties PROPS = new Properties();
 	private static final String SEC_TABLE = "SEC";
 	private static final String SP_TABLE = "SP";
 	private static final int SRC_BUY = 1;
 	private static final int SRC_MANUAL = 5;
 	private static final int SRC_ONLINE = 6;
+	private static final int UPDATE_OK = 0;
+	private static final int UPDATE_WARN = 1;
 
 	// Instance variables
 	private final Table secTable;
 	private final Table spTable;
-	private ArrayList<Map<String, Object>> spRowAddList;
+	private ArrayList<Map<String, Object>> spRowAddList = new ArrayList<>();
 	private int hsp = 0;
-	
+	private Map<String, int[]> summary = new HashMap<>();
+
 	// Constructor
 	MsmSecurity(Database msmDb) throws IOException {
+
+		// Open properties
+		try {
+			InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(PROPS_FILE);
+			PROPS.load(propsIs);
+		} catch (IOException e) {
+			LOGGER.fatal(e);
+		}
+
 		// Open the securities tables
 		secTable = msmDb.getTable(SEC_TABLE);
 		spTable = msmDb.getTable(SP_TABLE);
@@ -52,26 +69,36 @@ class MsmSecurity {
 			hsp = (int) spCursor.getCurrentRowValue(spTable.getColumn("hsp"));
 		}
 		LOGGER.debug("Current highest hsp = {}", hsp);
-
-		spRowAddList = new ArrayList<>();
 	}
 
 	/**
 	 * Update the SEC and SP tables with the supplied quote row.
 	 * 
-	 * @param quoteRow a row containing the quote data to update
-	 * @return boolean true if update was successful, otherwise false
+	 * @param quoteRow the row containing the quote data to update
+	 * @return 0 if update processed without warnings, otherwise 1
 	 * @throws IOException
 	 */
-	boolean update(Map<String, Object> quoteRow) throws IOException {
+	int update(Map<String, Object> quoteRow) throws IOException {
 
-		// Truncate incoming symbol if required
-		String origSymbol = quoteRow.get("xSymbol").toString();
-		String symbol = origSymbol;
+		// Validate incoming row
+		quoteRow = validate(quoteRow);
+
+		String symbol = quoteRow.get("xSymbol").toString();
+		String quoteType = quoteRow.get("xType").toString();
+		LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
+		incSummary(quoteType, 0);
+
+		// Truncate symbol if required
+		String origSymbol = symbol;
 		if (origSymbol.length() > 12) {
 			symbol = origSymbol.substring(0, 12);
 			LOGGER.info("Truncated symbol {} to {}", origSymbol, symbol);
+			quoteRow.put("xSymbol", symbol);
 		}
+
+		// Add dtSerial to quote row
+		// TODO Confirm assumption that dtSerial is time-stamp of quote update
+		quoteRow.put("dtSerial", LocalDateTime.now());
 
 		// Update SEC table with quote row
 		int hsec = -1;
@@ -81,14 +108,22 @@ class MsmSecurity {
 		if (found) {
 			secRow = secCursor.getCurrentRow();
 			hsec = (int) secRow.get("hsec");
-			LOGGER.info("Found symbol {}: sct = {}, hsec = {}", symbol, secRow.get("sct"), hsec);
+			LOGGER.info("Found symbol {} in SEC table: sct = {}, hsec = {}", symbol, secRow.get("sct"), hsec);
 			// Merge quote row into SEC row and write to SEC table
-			secRow.putAll(quoteRow);	// TODO Should secRow be sanitised first?
+			secRow.putAll(quoteRow); // TODO Should secRow be sanitised first?
 			secCursor.updateCurrentRowFromMap(secRow);
 			LOGGER.info("Updated SEC table for symbol {}", symbol);
 		} else {
-			LOGGER.warn("Cannot find symbol {}", symbol);
-			return false;
+			LOGGER.warn("Cannot find symbol {} in SEC table", symbol);
+			incSummary(quoteType, 1);
+			return UPDATE_WARN;
+		}
+
+		// Set update status and update summary
+		int updateStatus = UPDATE_OK;
+		if (quoteRow.containsKey("xWarn")) {
+			incSummary(quoteType, 1);
+			updateStatus = UPDATE_WARN;
 		}
 
 		// Update SP table with quote row
@@ -130,10 +165,10 @@ class MsmSecurity {
 				rowInstant = ZonedDateTime.of((LocalDateTime) spRow.get("dt"), SYS_ZONE_ID).toInstant();
 				if ((src == SRC_ONLINE || src == SRC_MANUAL) && rowInstant.equals(quoteInstant)) {
 					// Found existing quote for this hsec and quote date so update SP table
-					spRow.putAll(quoteRow);		// TODO Should spRow be sanitised first?
+					spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
 					spCursor.updateCurrentRowFromMap(spRow);
-					LOGGER.info("Updated previous quote for symbol {}: {}, new price = {}", symbol, spRow.get("dt"), spRow.get("dPrice"));
-					return true;
+					LOGGER.info("Updated previous quote for symbol {} in SP table: {}, new price = {}", symbol, spRow.get("dt"), spRow.get("dPrice"));
+					return updateStatus;
 				}
 				if (rowInstant.isBefore(maxInstant)) {
 					continue;
@@ -153,9 +188,9 @@ class MsmSecurity {
 		}
 
 		if (prevSpRow.isEmpty()) {
-			LOGGER.info("Cannot find previous quote for symbol {}", symbol);
+			LOGGER.info("Cannot find previous quote for symbol {} in SP table", symbol);
 		} else {
-			LOGGER.info("Found previous quote for symbol {}: {}, price = {}, hsp = {}", symbol, prevSpRow.get("dt"), prevSpRow.get("dPrice"), prevSpRow.get("hsp"));
+			LOGGER.info("Found previous quote for symbol {} in SP table: {}, price = {}, hsp = {}", symbol, prevSpRow.get("dt"), prevSpRow.get("dPrice"), prevSpRow.get("hsp"));
 		}
 
 		// Add to SP row add list
@@ -163,16 +198,16 @@ class MsmSecurity {
 		spRow.put("hsp", hsp);
 		spRow.put("hsec", hsec);
 		spRow.put("src", SRC_ONLINE);
-		spRow.putAll(quoteRow);		// TODO Should spRow be sanitised first?
+		spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
 		spRowAddList.add(spRow);
-		LOGGER.info("Added new quote for symbol {} to table update list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
-		return true;
+		LOGGER.info("Added new quote for symbol {} to SP table update list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
+		return updateStatus;
 	}
 
 	void addNewSpRows() throws IOException {
 		if (!spRowAddList.isEmpty()) {
 			spTable.addRowsFromMaps(spRowAddList);
-			LOGGER.info("Added new quotes from table update list");
+			LOGGER.info("Added new quotes to SP table from table update list");
 		}
 		return;
 	}
@@ -184,7 +219,7 @@ class MsmSecurity {
 	 * @return the list of symbols and corresponding countries
 	 * @throws IOException
 	 */
-	List<String[]> getSymbols(MsmCore msmCore) throws IOException {
+	List<String[]> getSymbols(MsmCommon msmCore) throws IOException {
 		Map<String, Object> row = null;
 		Map<String, Object> rowPattern = new HashMap<>();
 		Iterator<Row> secIt;
@@ -204,5 +239,62 @@ class MsmSecurity {
 			}
 		}
 		return symbols;
+	}
+
+	private static Map<String, Object> validate(Map<String, Object> quoteRow) {
+
+		// TODO Add default value processing
+
+		String prop;
+		String key;
+		boolean quoteWarn = false;
+
+		// Process values common to all quote types
+		String symbol = "UNDEFINED";
+		int n = 1;
+		while ((key = PROPS.getProperty("column." + n++)) != null) {
+			if (quoteRow.containsKey(key)) {
+				if (key.equals("xSymbol")) {
+					symbol = quoteRow.get("xSymbol").toString();
+				}
+			} else {
+				// Put default value to quote row
+				if ((prop = PROPS.getProperty("default." + key)) != null) {
+					quoteRow.put(key, prop);
+				}
+				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, key);
+				quoteWarn = true;
+			}
+		}
+
+		// Process values for specific quote type
+		String quoteType = quoteRow.get("xType").toString();
+		n = 1;
+		while ((key = PROPS.getProperty("column." + quoteType + "." + n++)) != null) {
+			if (!quoteRow.containsKey(key)) {
+				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, key);
+				quoteWarn = true;
+				;
+			}
+		}
+
+		if (quoteWarn) {
+			quoteRow.put("xWarn", null);
+		}
+		return quoteRow;
+	}
+
+	private void incSummary(String key, int index) {
+		summary.putIfAbsent(key, new int[] { 0, 0 }); // processed, warnings
+		int[] count = summary.get(key);
+		count[index]++;
+		summary.put(key, count);
+		return;
+	}
+
+	protected void logSummary() {
+		summary.forEach((key, count) -> {
+			LOGGER.info("Summary for quote type {}: processed = {}, with warnings = {}", key, count[0], count[1]);
+		});
 	}
 }

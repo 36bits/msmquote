@@ -9,13 +9,12 @@ import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
-
-public class YahooApiQuote extends Quote {
+public class YahooApiQuote extends QuoteSource {
 
 	// Constants
 	private static final String DELIM = ",";
 	private static final String JSON_ROOT = "/quoteResponse/result";
-	private static final String PROPS_RES = "YahooQuote.properties";
+	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
@@ -25,27 +24,28 @@ public class YahooApiQuote extends Quote {
 	/**
 	 * Constructor for auto-completed URL.
 	 * 
-	 * @param apiUrl	the base URL
-	 * @param symbols	the list of investment symbols + country codes
-	 * @param isoCodes	the list of currency ISO codes, last element is base currency
+	 * @param apiUrl   the base URL
+	 * @param symbols  the list of investment symbols + country codes
+	 * @param isoCodes the list of currency ISO codes, last element is base currency
 	 * @throws IOException
 	 */
 	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
-		super(PROPS_RES);
+		super(PROPS_FILE);
 
 		symbolXlate = new HashMap<>();
 		useXlate = true;
-		String yahooSymbol = null;
+		String yahooSymbol = "";
 		String delim;
 		int n;
 
-		// Build Yahoo investment symbols string
+		// Build Yahoo security symbols string
 		String invSymbols = "";
 		String[] symbol = new String[2];
 		for (n = 0; n < symbols.size(); n++) {
-			// Append the symbols pair to the symbol translation table and the Yahoo symbol to the investment symbols string
+			// Append the symbols pair to the symbol translation table and the Yahoo symbol
+			// to the investment symbols string
 			symbol = symbols.get(n);
-			if ((yahooSymbol = YahooUtil.getYahooSymbol(symbol[0], symbol[1], baseProps)) != null) {
+			if ((yahooSymbol = YahooUtil.getYahooSymbol(symbol[0], symbol[1], PROPS)) != null) {
 				symbolXlate.put(yahooSymbol, symbol[0]);
 				delim = DELIM;
 				if (n == 0) {
@@ -54,7 +54,7 @@ public class YahooApiQuote extends Quote {
 				invSymbols = invSymbols + delim + yahooSymbol;
 			}
 		}
-		LOGGER.info("Building URL with these stock symbols: {}", invSymbols);
+		LOGGER.info("Building URL with these security symbols: {}", invSymbols);
 
 		// Build Yahoo currency symbols string
 		String baseIsoCode = null;
@@ -69,7 +69,8 @@ public class YahooApiQuote extends Quote {
 			if (n == isoCodesSz - 1) {
 				delim = "";
 			}
-			// Append the symbols pair to the symbol translation table and to the FX symbols string
+			// Append the symbols pair to the symbol translation table and to the FX symbols
+			// string
 			yahooSymbol = baseIsoCode + isoCodes.get(n - 1) + "=X";
 			symbolXlate.put(yahooSymbol, yahooSymbol);
 			fxSymbols = fxSymbols + delim + yahooSymbol;
@@ -86,18 +87,18 @@ public class YahooApiQuote extends Quote {
 		if (invSymbols.isEmpty()) {
 			delim = "";
 		}
-		
+
 		resultIt = YahooUtil.getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 	}
 
 	/**
 	 * Constructor for user-completed URL.
 	 * 
-	 * @param apiUrl		the complete Yahoo Finance quote API URL
+	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 */
 	YahooApiQuote(String apiUrl) throws IOException {
-		super(PROPS_RES);
+		super(PROPS_FILE);
 		useXlate = false;
 		symbolXlate = new HashMap<>();
 		resultIt = YahooUtil.getJson(apiUrl).at(JSON_ROOT).elements();
@@ -106,99 +107,79 @@ public class YahooApiQuote extends Quote {
 	/**
 	 * Gets the next row of quote data from the JSON iterator.
 	 * 
-	 * @return	the quote row or null if no more data	
+	 * @return the quote row or null if no more data
 	 */
 	@Override
 	Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (!resultIt.hasNext()) {
-			logSummary(LOGGER);
 			return null;
 		}
-		JsonNode result = resultIt.next();
 
-		Map<String, Object> quoteRow = new HashMap<>();
+		JsonNode result = resultIt.next();
+		Map<String, Object> returnRow = new HashMap<>();
 		String yahooSymbol = null;
-		String quoteType = null;
 
 		try {
 			// Get quote type
 			yahooSymbol = result.get("symbol").asText();
-			quoteType = result.get("quoteType").asText();
-			LOGGER.info("Processing quote data for symbol {}, quote type = {}", yahooSymbol, quoteType);
-
-			// Set quote date to 00:00 in local system time-zone
-			LocalDateTime quoteDate = Instant.ofEpochSecond(result.get("regularMarketTime").asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
+			String quoteType = result.get("quoteType").asText();
 
 			// Get divisor and multiplier for quote currency
 			String quoteCurrency = result.get("currency").asText();
 			String prop;
 			int quoteDivisor = 1;
 			int quoteMultiplier = 100;
-			if ((prop = baseProps.getProperty("divisor." + quoteCurrency + "." + quoteType)) != null) {
+			if ((prop = PROPS.getProperty("divisor." + quoteCurrency + "." + quoteType)) != null) {
 				quoteDivisor = Integer.parseInt(prop);
 			}
-			if ((prop = baseProps.getProperty("multiplier." + quoteCurrency + "." + quoteType)) != null) {
-				quoteMultiplier = Integer.parseInt(prop);				
+			if ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) != null) {
+				quoteMultiplier = Integer.parseInt(prop);
 			}
 
-			// Build columns for msmquote internal use
+			// Add quote symbol and type values to return row
 			if (useXlate) {
-				quoteRow.put("xSymbol", symbolXlate.get(yahooSymbol));
+				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
 			} else {
-				quoteRow.put("xSymbol", yahooSymbol);
+				returnRow.put("xSymbol", yahooSymbol);
 			}
+			returnRow.put("xType", quoteType);
 
-			// Build columns common to SEC and SP tables
-			quoteRow.put("dtSerial", LocalDateTime.now());	// TODO Confirm assumption that dtSerial is time-stamp of quote
-
-			// Build SEC table columns
-			quoteRow.put("dtLastUpdate", quoteDate);		// TODO Confirm assumption that dtLastUpdate is date of quote
-
-			// Build SP table columns				
-			quoteRow.put("dt", quoteDate);
-
-			// Build remaining columns
+			// Add quote values to return row
 			int n = 1;
-			while ((prop = baseProps.getProperty("api." + quoteType + "." + n++)) != null) {
+			Double dValue = 0d;
+			LocalDateTime dtValue;
+			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
 				String[] apiMap = prop.split(",");
-				double value;
-				if (result.has(apiMap[0])) {
-					value = result.get(apiMap[0]).asDouble();
-					// Process adjustments
-					if (Boolean.parseBoolean(baseProps.getProperty("divide." + apiMap[1]))) {
-						value = value / quoteDivisor;
-					} else if ((Boolean.parseBoolean(baseProps.getProperty("mutiply." + apiMap[1])))) {
-						value = value * quoteMultiplier;
+				if (result.has(apiMap[1])) {
+					if (apiMap[0].startsWith("dt")) {
+						// Process LocalDateTime values
+						// TODO Confirm assumption that dt and dtLastUpdate are date of quote
+						dtValue = Instant.ofEpochSecond(result.get(apiMap[1]).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
+						returnRow.put(apiMap[0], dtValue);
+					} else if (apiMap[0].startsWith("d")) {
+						// Process Double values
+						dValue = result.get(apiMap[1]).asDouble();
+						// Process adjustments
+						if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiMap[0]))) {
+							dValue = dValue / quoteDivisor;
+						} else if ((Boolean.parseBoolean(PROPS.getProperty("multiply." + apiMap[0])))) {
+							dValue = dValue * quoteMultiplier;
+						}
+						returnRow.put(apiMap[0], dValue);
+					} else {
+						// And finally process Long values
+						returnRow.put(apiMap[0], result.get(apiMap[1]).asLong());
 					}
-				} else {
-					LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", yahooSymbol, apiMap[0]);
-					quoteRow.put("xError", null);
-					incSummary(quoteType, SummaryType.WARNING);
-					if ((prop = baseProps.getProperty("default." + apiMap[0])) == null) {
-						continue;
-					}
-					value = Double.parseDouble(prop);	// Get default value
-				}
-
-				// Now put key and value to quote row
-				LOGGER.debug("Key = {}, value = {}", apiMap[1], value);
-				if (apiMap[1].substring(0, 1).equals("d")) {
-					quoteRow.put(apiMap[1], value);
-				} else {
-					quoteRow.put(apiMap[1], (long) value);
 				}
 			}
 
 		} catch (NullPointerException e) {
 			LOGGER.warn("Incomplete quote data for symbol {}", yahooSymbol);
-			LOGGER.debug("Exception occured!", e);
-			quoteRow.put("xError", null);
-			incSummary(quoteType, SummaryType.WARNING);
-		} finally {
-			incSummary(quoteType, SummaryType.PROCESSED);
+			LOGGER.debug("Exception occurred!", e);
+			returnRow.put("xWarn", null);
 		}
 
-		return quoteRow;
+		return returnRow;
 	}
 }

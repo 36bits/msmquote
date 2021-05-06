@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
-class YahooApiHist extends Quote {
+class YahooApiHist extends QuoteSource {
 
 	// Constants
-	private static final String PROPS_RES = "YahooQuote.properties";
+	private static final String PROPS_FILE = "YahooSource.properties";
 	
 	// Instance variables
 	private JsonNode resultJn;
@@ -26,7 +26,7 @@ class YahooApiHist extends Quote {
 	 * @throws IOException
 	 */
 	YahooApiHist(String apiUrl) throws IOException {
-		super(PROPS_RES);
+		super(PROPS_FILE);
 
 		// Get quote data
 		resultJn = YahooUtil.getJson(apiUrl).at("/chart/result/0");
@@ -35,7 +35,7 @@ class YahooApiHist extends Quote {
 		quoteDivisor = 1;
 		symbol = resultJn.at("/meta").get("symbol").asText();
 		quoteType = resultJn.at("/meta").get("instrumentType").asText();
-		String quoteDivisorProp = baseProps.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + quoteType);
+		String quoteDivisorProp = PROPS.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + quoteType);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
@@ -53,7 +53,6 @@ class YahooApiHist extends Quote {
 		Map<String, Object> quoteRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
-			logSummary(LOGGER);
 			return null;
 		}
 
@@ -76,11 +75,11 @@ class YahooApiHist extends Quote {
 			String[] apiHistMap;
 			double value;
 			int n = 1;
-			while ((prop = baseProps.getProperty("hist.api." + n++)) != null) {
+			while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
 				apiHistMap = prop.split(",");
 				value = resultJn.at(apiHistMap[0]).get(quoteIndex).asDouble();
 				// Process adjustments
-				if (Boolean.parseBoolean(baseProps.getProperty("divide." + apiHistMap[1]))) {
+				if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiHistMap[1]))) {
 					value = value / quoteDivisor;
 				}
 				// Now put key and value to quote row
@@ -99,7 +98,6 @@ class YahooApiHist extends Quote {
 		}
 
 		quoteIndex++;
-		incSummary(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
 }

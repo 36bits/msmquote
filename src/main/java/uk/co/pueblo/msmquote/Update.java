@@ -5,14 +5,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.healthmarketscience.jackcess.Database;
 
-import uk.co.pueblo.msmquote.MsmCore.CliDatRow;
-import uk.co.pueblo.msmquote.MsmCore.DhdColumn;
+import uk.co.pueblo.msmquote.MsmCommon.CliDatRow;
+import uk.co.pueblo.msmquote.MsmCommon.DhdColumn;
 
 public class Update {
 
@@ -42,12 +41,12 @@ public class Update {
 
 			try {
 				// Instantiate objects needed to process quote source types
-				final MsmCore msmCore = new MsmCore(openedDb);
+				final MsmCommon msmCore = new MsmCommon(openedDb);
 				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
 
-				// Process quote source types
-				final Quote quote;
+				// Instantiate quote object according to quote source
+				final QuoteSource quote;
 
 				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
@@ -65,35 +64,21 @@ public class Update {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
+				// Update
 				if (!quote.isQuery()) {
-					// Update quote data in Money database
-					String currencyPair;
-					String[] isoCodes = { "", "" };
-					int[] hcrncs = { 0, 0 };
 					Map<String, Object> quoteRow = new HashMap<>();
-					while (true) {
-						if ((quoteRow = quote.getNext()) == null) {
-							break;
-						}
-						if (quoteRow.containsKey("xError")) {
-							exitCode = EXIT_WARN;
-						}
-						if (quoteRow.containsKey("dPrice")) {
-							// Update stock quote data
-							if (!msmSecurity.update(quoteRow)) {
-								exitCode = EXIT_WARN;
+					while ((quoteRow = quote.getNext()) != null) {
+						if (quoteRow.containsKey("xType")) {
+							if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
+								// Update exchange rate
+								if (!msmCurrency.update(quoteRow)) {
+									exitCode = EXIT_WARN;
+								}
+								continue;
 							}
-						} else if (quoteRow.containsKey("dRate")) {
-							// Get hcrncs of currency pair
-							currencyPair = (String) quoteRow.get("xSymbol");
-							isoCodes[0] = currencyPair.substring(0, 3);
-							isoCodes[1] = currencyPair.substring(3, 6);
-							hcrncs = msmCurrency.getHcrncs(isoCodes);
-							// Update exchange rate table
-							if (!msmCurrency.update(hcrncs, (double) quoteRow.get("dRate"))) {
-								exitCode = EXIT_WARN;
-							}
-						} else {
+						}
+						// All other quote types
+						if (msmSecurity.update(quoteRow) > 0) {
 							exitCode = EXIT_WARN;
 						}
 					}
@@ -103,11 +88,15 @@ public class Update {
 
 					// Update online update time-stamp
 					msmCore.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now());
+
+					// Print summaries
+					msmSecurity.logSummary();
+					msmCurrency.logSummary();
 				}
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
-				LOGGER.debug("Exception occured!", e);
+				LOGGER.debug("Exception occurred!", e);
 				exitCode = EXIT_ERROR;
 			}
 
@@ -116,7 +105,7 @@ public class Update {
 
 		} catch (Exception e) {
 			LOGGER.fatal(e);
-			LOGGER.debug("Exception occured!", e);
+			LOGGER.debug("Exception occurred!", e);
 			exitCode = EXIT_ERROR;
 		}
 		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());

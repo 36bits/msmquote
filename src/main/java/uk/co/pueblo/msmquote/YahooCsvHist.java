@@ -8,17 +8,16 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class YahooCsvHist extends Quote {
+public class YahooCsvHist extends QuoteSource {
 
 	// Constants
-	private static final String PROPS_RES = "YahooQuote.properties";
+	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables
 	private BufferedReader csvBr;
 	private String symbol;
 	private int quoteDivisor;
-	private String quoteType;
-
+	
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
@@ -26,7 +25,7 @@ public class YahooCsvHist extends Quote {
 	 * @throws IOException
 	 */
 	YahooCsvHist(String fileName) throws IOException {
-		super(PROPS_RES);
+		super(PROPS_FILE);
 		File csvFile = new File(fileName);
 		csvBr = new BufferedReader(new FileReader(csvFile));
 		if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
@@ -38,11 +37,9 @@ public class YahooCsvHist extends Quote {
 		String tmp = csvFile.getName();
 		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // index 0 = symbol, index 1 = currency, index 2 = quote type
 		symbol = quoteMeta[0];
-		quoteType = quoteMeta[2];
-
 		// Set quote divisor according to currency
 		quoteDivisor = 1;
-		String quoteDivisorProp = baseProps.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
+		String quoteDivisorProp = PROPS.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
 		if (quoteDivisorProp != null) {
 			quoteDivisor = Integer.parseInt(quoteDivisorProp);
 		}
@@ -64,7 +61,6 @@ public class YahooCsvHist extends Quote {
 		if (csvRow == null) {
 			// End of file
 			csvBr.close();
-			logSummary(LOGGER);
 			return null;
 		}
 		String[] csvColumn = csvRow.split(",");
@@ -86,10 +82,10 @@ public class YahooCsvHist extends Quote {
 			String prop;
 			double value;
 			for (int n = 1; n < csvColumn.length; n++) {
-				if ((prop = baseProps.getProperty("hist.csv." + n)) != null) {
+				if ((prop = PROPS.getProperty("hist.csv." + n)) != null) {
 					value = Double.parseDouble(csvColumn[n]);
 					// Process adjustments
-					if (Boolean.parseBoolean(baseProps.getProperty("divide." + prop))) {
+					if (Boolean.parseBoolean(PROPS.getProperty("divide." + prop))) {
 						value = value / quoteDivisor;
 					}
 					// Now put key and value to quote row
@@ -107,7 +103,6 @@ public class YahooCsvHist extends Quote {
 			quoteRow.put("xError", null);
 		}
 
-		incSummary(quoteType, SummaryType.PROCESSED);
 		return quoteRow;
 	}
 }
