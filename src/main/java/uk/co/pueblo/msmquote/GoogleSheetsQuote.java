@@ -32,6 +32,7 @@ class GoogleSheetsQuote extends QuoteSource {
 	private static final String PROPS_FILE = "";
 	private static final int HEADER_COLUMN = 0;
 	private static final String HEADER_FLAG = "symbol";
+	private static final String VALUE_NA = "#N/A";
 
 	// Constants for Google API
 	private static final String APPLICATION_NAME = "msmquote Google Sheets source";
@@ -71,24 +72,27 @@ class GoogleSheetsQuote extends QuoteSource {
 			}
 			// Build return row
 			String columnName;
+			String value;
 			LocalDateTime dtValue;
-			
+
 			for (int n = 1; n < quoteRow.size(); n++) {
-				columnName = (String) headerRow.get(n);
-				if (columnName.startsWith("dt")) {
-					// Process LocalDateTime values
-					// TODO Confirm assumption that dt and dtLastUpdate are date of quote
-					dtValue = Instant.parse((CharSequence) quoteRow.get(n)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
-					returnRow.put(columnName, dtValue);
-				} else if (columnName.startsWith("d")) {
-					// Process Double values
-					returnRow.put(columnName, Double.parseDouble((String) quoteRow.get(n)));
-				} else if (columnName.startsWith("x")) {
-					// Process String values
-					returnRow.put(columnName, quoteRow.get(n));
-				} else {
-					// And finally process Long values
-					returnRow.put(columnName, Long.parseLong((String) quoteRow.get(n)));
+				if (!(value = (quoteRow.get(n)).toString()).equals(VALUE_NA)) {
+					columnName = (String) headerRow.get(n);
+					if (columnName.startsWith("dt")) {
+						// Process LocalDateTime values
+						// TODO Confirm assumption that dt and dtLastUpdate are date of quote
+						dtValue = Instant.parse(value).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
+						returnRow.put(columnName, dtValue);
+					} else if (columnName.startsWith("d")) {
+						// Process Double values
+						returnRow.put(columnName, Double.parseDouble(value));
+					} else if (columnName.startsWith("x")) {
+						// Process String values
+						returnRow.put(columnName, value);
+					} else {
+						// And finally process Long values
+						returnRow.put(columnName, Long.parseLong(value));
+					}
 				}
 			}
 			return returnRow;
