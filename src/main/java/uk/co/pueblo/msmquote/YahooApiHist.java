@@ -22,7 +22,7 @@ class YahooApiHist extends QuoteSource {
 	/**
 	 * Constructor.
 	 * 
-	 * @param apiUrl		the Yahoo Finance quote history API URL
+	 * @param apiUrl  the URL of the Yahoo Finance quote history API
 	 * @throws IOException
 	 */
 	YahooApiHist(String apiUrl) throws IOException {
@@ -46,58 +46,54 @@ class YahooApiHist extends QuoteSource {
 	/**
 	 * Gets the next row of quote data from the JSON node.
 	 * 
-	 * @return	the quote row or null if no more data
+	 * @return  the quote row or null if no more data
 	 */
 	@Override
 	Map<String, Object> getNext() {
-		Map<String, Object> quoteRow = new HashMap<>();
+		Map<String, Object> returnRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
 			return null;
 		}
 
-		// Get quote date
-		LocalDateTime quoteDate = Instant.ofEpochSecond(resultJn.at("/timestamp").get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-
-		// Build columns for msmquote internal use
-		quoteRow.put("xSymbol", symbol);
-
-		// Build SEC table columns
-		quoteRow.put("dtLastUpdate", quoteDate);			// TODO Confirm assumption that dtLastUpdate is date of quote data in SEC row
-
-		// Build SP table columns
-		quoteRow.put("dt", quoteDate);
+		// Process quote metadata
+		returnRow.put("xSymbol", symbol);
+		returnRow.put("xType", quoteType);
 
 		// SP table columns
-		quoteRow.put("dt", quoteDate);
 		try {
+			int n = 1;
 			String prop;
 			String[] apiHistMap;
-			double value;
-			int n = 1;
+			Double dValue = 0d;
+			LocalDateTime dtValue;
 			while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
 				apiHistMap = prop.split(",");
-				value = resultJn.at(apiHistMap[0]).get(quoteIndex).asDouble();
-				// Process adjustments
-				if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiHistMap[1]))) {
-					value = value / quoteDivisor;
-				}
-				// Now put key and value to quote row
-				LOGGER.debug("Key = {}, value = {}", apiHistMap[1], value);
-				if (apiHistMap[1].substring(0, 1).equals("d")) {
-					quoteRow.put(apiHistMap[1], value);
+				if (apiHistMap[0].startsWith("dt")) {
+					// Process LocalDateTime values
+					dtValue = Instant.ofEpochSecond(resultJn.at(apiHistMap[1]).get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();		
+					returnRow.put(apiHistMap[0], dtValue);
+				} else if (apiHistMap[0].startsWith("d")) {
+					// Process Double values
+					dValue = resultJn.at(apiHistMap[1]).get(quoteIndex).asDouble();
+					// Process adjustments
+					if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiHistMap[0]))) {
+						dValue = dValue / quoteDivisor;
+					}
+					returnRow.put(apiHistMap[0], dValue);
 				} else {
-					quoteRow.put(apiHistMap[1], (long) value);
+					// And finally process Long values
+					returnRow.put(apiHistMap[0], resultJn.at(apiHistMap[1]).get(quoteIndex).asLong());
 				}
 			}
 
 		} catch (NumberFormatException e) {
 			LOGGER.warn(e);
-			LOGGER.debug("Exception occured!", e);
-			quoteRow.put("xError", null);
+			LOGGER.debug("Exception occurred!", e);
+			returnRow.put("xWarn", null);
 		}
 
 		quoteIndex++;
-		return quoteRow;
+		return returnRow;
 	}
 }

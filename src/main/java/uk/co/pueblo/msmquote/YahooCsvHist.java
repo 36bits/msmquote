@@ -15,13 +15,13 @@ public class YahooCsvHist extends QuoteSource {
 
 	// Instance variables
 	private BufferedReader csvBr;
-	private String symbol;
+	private String[] quoteMeta;
 	private int quoteDivisor;
 	
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
-	 * @param fileName the name of the CSV file
+	 * @param fileName  the name of the CSV file
 	 * @throws IOException
 	 */
 	YahooCsvHist(String fileName) throws IOException {
@@ -33,10 +33,9 @@ public class YahooCsvHist extends QuoteSource {
 			csvBr.close();
 		}
 
-		// Get quote meta-data from CSV file name
+		// Get quote metadata from CSV file name
 		String tmp = csvFile.getName();
-		String[] quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // index 0 = symbol, index 1 = currency, index 2 = quote type
-		symbol = quoteMeta[0];
+		quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // symbol, currency, quote type		
 		// Set quote divisor according to currency
 		quoteDivisor = 1;
 		String quoteDivisorProp = PROPS.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
@@ -54,7 +53,7 @@ public class YahooCsvHist extends QuoteSource {
 	@Override
 	Map<String, Object> getNext() throws IOException {
 
-		Map<String, Object> quoteRow = new HashMap<>();
+		Map<String, Object> returnRow = new HashMap<>();
 
 		// Get next row from CSV file
 		String csvRow = csvBr.readLine();
@@ -65,44 +64,41 @@ public class YahooCsvHist extends QuoteSource {
 		}
 		String[] csvColumn = csvRow.split(",");
 
-		// Get quote date
-		LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-		// LocalDateTime quoteDate = LocalDateTime.parse(csvColumn[0] +
-		// "T00:00:00").toLocalDate().atStartOfDay();
+		// Process quote metadata
+		returnRow.put("xSymbol", quoteMeta[0]);
+		returnRow.put("xType", quoteMeta[2]);
 
-		// Build columns for msmquote internal use
-		quoteRow.put("xSymbol", symbol);
-
-		// Build SEC table columns
-		quoteRow.put("dtLastUpdate", quoteDate); // TODO Confirm assumption that dtLastUpdate is date of quote data in SEC row
-
-		// SP table columns
-		quoteRow.put("dt", quoteDate);
+		// Build SP table columns
 		try {
-			String prop;
-			double value;
-			for (int n = 1; n < csvColumn.length; n++) {
-				if ((prop = PROPS.getProperty("hist.csv." + n)) != null) {
-					value = Double.parseDouble(csvColumn[n]);
-					// Process adjustments
-					if (Boolean.parseBoolean(PROPS.getProperty("divide." + prop))) {
-						value = value / quoteDivisor;
-					}
-					// Now put key and value to quote row
-					LOGGER.debug("Key = {}, value = {}", prop, value);
-					if (prop.substring(0, 1).equals("d")) {
-						quoteRow.put(prop, value);
+			String spColumn;
+			Double dValue = 0d;
+			LocalDateTime dtValue;
+			for (int n = 0; n < csvColumn.length; n++) {
+				if ((spColumn = PROPS.getProperty("hist.csv." + n)) != null) {
+					if (spColumn.startsWith("dt")) {
+						// Process LocalDateTime values
+						dtValue = LocalDateTime.parse(csvColumn[n] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();		
+						returnRow.put(spColumn, dtValue);
+					} else if (spColumn.startsWith("d")) {
+						// Process Double values
+						dValue = Double.parseDouble(csvColumn[n]);
+						// Process adjustments
+						if (Boolean.parseBoolean(PROPS.getProperty("divide." + spColumn))) {
+							dValue = dValue / quoteDivisor;
+						}
+						returnRow.put(spColumn, dValue);
 					} else {
-						quoteRow.put(prop, (long) value);
+						// And finally process Long values
+						returnRow.put(spColumn, Long.parseLong(csvColumn[n]));
 					}
 				}
 			}
 		} catch (NumberFormatException e) {
 			LOGGER.warn(e);
-			LOGGER.debug("Exception occured!", e);
-			quoteRow.put("xError", null);
+			LOGGER.debug("Exception occurred!", e);
+			returnRow.put("xWarn", null);
 		}
 
-		return quoteRow;
+		return returnRow;
 	}
 }
