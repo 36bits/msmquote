@@ -154,7 +154,6 @@ public class YahooApiQuote extends QuoteSource {
 				if (result.has(apiMap[1])) {
 					if (apiMap[0].startsWith("dt")) {
 						// Process LocalDateTime values
-						// TODO Confirm assumption that dt and dtLastUpdate are date of quote
 						dtValue = Instant.ofEpochSecond(result.get(apiMap[1]).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
 						returnRow.put(apiMap[0], dtValue);
 					} else if (apiMap[0].startsWith("d")) {

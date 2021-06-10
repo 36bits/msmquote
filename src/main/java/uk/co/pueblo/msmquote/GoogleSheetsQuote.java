@@ -19,8 +19,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
@@ -80,7 +80,6 @@ class GoogleSheetsQuote extends QuoteSource {
 					columnName = (String) headerRow.get(n);
 					if (columnName.startsWith("dt")) {
 						// Process LocalDateTime values
-						// TODO Confirm assumption that dt and dtLastUpdate are date of quote
 						dtValue = Instant.parse(value).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
 						returnRow.put(columnName, dtValue);
 					} else if (columnName.startsWith("d")) {

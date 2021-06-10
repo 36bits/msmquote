@@ -1,16 +1,17 @@
 param (
     [Parameter(Mandatory=$true)][string]$mnyFile,
-    [Parameter(Mandatory=$false)][string]$mnyPswd,
-    [Parameter(Mandatory=$true)][string]$url
+    [Parameter(Mandatory=$true)][string]$mnyPswd,
+    [Parameter(Mandatory=$true)][string[]]$source
 )
 
 $log = $env:USERPROFILE + "\log\msmquote.log"
 $jre = $env:ProgramFiles + "\msmquote\bin\java.exe"
-$jar = $env:ProgramFiles + "\msmquote\msmquote-3.1.6-SNAPSHOT.jar"
+#$jar = $env:ProgramFiles + "\msmquote\msmquote-3.1.6.jar"
+$jar = $env:ProgramFiles + "\msmquote\msmquote-3.1.7-SNAPSHOT.jar"
 $jreOpts = @()
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started. File: $mnyFile."
-& $jre $jreOpts -jar $jar $mnyFile $mnyPswd $url *>> $log
+& $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source *>> $log
 $savedExitCode = $lastexitcode
 
 if ($savedExitCode -eq 1) {

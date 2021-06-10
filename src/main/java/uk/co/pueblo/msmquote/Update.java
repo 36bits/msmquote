@@ -46,28 +46,28 @@ public class Update {
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
 
 				// Instantiate quote object according to quote source
-				final QuoteSource quote;
+				final QuoteSource quoteSource;
 
 				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
-						quote = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmCore), msmCurrency.getIsoCodes(msmCore.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmCore), msmCurrency.getIsoCodes(msmCore.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
-						quote = new YahooApiQuote(args[2]);
+						quoteSource = new YahooApiQuote(args[2]);
 					}
 				} else if (args[2].contains("finance.yahoo.com/v7/finance/chart")) {
-					quote = new YahooApiHist(args[2]);
+					quoteSource = new YahooApiHist(args[2]);
 				} else if (args[2].endsWith(".csv")) {
-					quote = new YahooCsvHist(args[2]);
+					quoteSource = new YahooCsvHist(args[2]);
 				} else if (args.length == 4) {
-					quote = new GoogleSheetsQuote(args[2], args[3]);
+					quoteSource = new GoogleSheetsQuote(args[2], args[3]);
 				} else {
 					throw new IllegalArgumentException("Unrecogonised quote source");
 				}
 
 				// Update
-				if (!quote.isQuery()) {
+				if (!quoteSource.isQuery()) {
 					Map<String, Object> quoteRow = new HashMap<>();
-					while ((quoteRow = quote.getNext()) != null) {
+					while ((quoteRow = quoteSource.getNext()) != null) {
 						if (quoteRow.containsKey("xType")) {
 							if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
 								// Update exchange rate
