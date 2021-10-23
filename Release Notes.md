@@ -1,10 +1,12 @@
-# Version 3.1.7
+# Version 3.2.0
 
 ## New Features
+* Add support for Google Sheets as a quote data source.
 
 ## Changes
 * Update log4j-core to 2.14.1.
-* Update jackson-databind to 2.12.3.
+* Update jackson-databind to 2.13.0.
+* Update java to 11.0.13.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
