@@ -146,8 +146,7 @@ Example tables sizes in the Money files used for testing:
 
 ## Author
 Jonathan Casiot  
-[E-mail](mailto:jonathan@pueblo.co.uk)  
-[Telegram](https://t.me/thirtysixbits)
+[E-mail](mailto:msmquote@pueblo.co.uk)  
 
 ## Licence
 This project is licenced under the GNU GPL Version 3 - see the [LICENCE](./LICENSE) file.
