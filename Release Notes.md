@@ -1,4 +1,4 @@
-# Version 3.2.0
+# Version 4.0.0
 
 ## New Features
 * Add support for Google Sheets as a quote data source.
