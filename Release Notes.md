@@ -1,3 +1,9 @@
+# Version 3.1.7
+
+## Changes
+* Add Toronto exchange code.
+* Update java to 11.0.13.
+
 # Version 3.1.6
 
 ## New Features
