@@ -2,6 +2,7 @@
 
 ## Changes
 * Add Toronto exchange code.
+* Add support for ETF quote type.
 * Update java to 11.0.13.
 
 # Version 3.1.6
