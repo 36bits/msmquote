@@ -4,6 +4,9 @@
 * Add Toronto exchange code.
 * Add support for ETF quote type.
 * Update java to 11.0.13.
+* Update jackson-databind to 2.13.0.
+* Update jackcess to 4.0.1.
+* Update log4j-core to 2.14.1.
 
 # Version 3.1.6
 
