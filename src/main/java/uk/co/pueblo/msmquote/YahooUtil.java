@@ -65,6 +65,6 @@ class YahooUtil {
 				yahooSymbol = symbol + prop; 
 			}
 		}		
-		return yahooSymbol;
+		return yahooSymbol.toUpperCase();
 	}
 }
