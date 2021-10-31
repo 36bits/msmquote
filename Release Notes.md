@@ -4,12 +4,31 @@
 * Add support for Google Sheets as a quote data source.
 
 ## Changes
-* Update log4j-core to 2.14.1.
-* Update jackson-databind to 2.13.0.
-* Update java to 11.0.13.
+* Foo.
 
 ## Known Issues
 * Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
+
+## SHA512 Hash
+
+`foo`
+
+# Version 3.1.7
+
+## Changes
+* Add Toronto exchange code.
+* Add support for ETF quote type.
+* Update java to 11.0.13.
+* Update jackson-databind to 2.13.0.
+* Update jackcess to 4.0.1.
+* Update log4j-core to 2.14.1.
+
+## Known Issues
+* Portfolio update timestamp and status line index values are working in Money 2004 but not in Money 2005 or Money Plus Sunset.
+
+## SHA512 Hash
+
+`bb7c008c12f2583cd67f62a46f4f5cea3159cebe162def2a533ee82c0644c25da703356e3c93e1364d2ba1b7445525982372c29a07dec15f3c86dc8a5bd97abf  msmquote-3.1.7.zip`
 
 # Version 3.1.6
 
