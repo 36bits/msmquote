@@ -1,13 +1,17 @@
 param (
     [Parameter(Mandatory=$true)][string]$mnyFile,
     [Parameter(Mandatory=$true)][string]$mnyPswd,
-    [Parameter(Mandatory=$true)][string[]]$source
+    [Parameter(Mandatory=$true)][string]$source
 )
 
-$log = $env:USERPROFILE + "\log\msmquote.log"
+if ($PSVersionTable.PSVersion.Major -ne 5) {
+    Write-Host "This script requires PowerShell 5"
+    return
+}
+
+$log = $env:HOME + "\log\msmquote.log"
 $jre = $env:ProgramFiles + "\msmquote\bin\java.exe"
-#$jar = $env:ProgramFiles + "\msmquote\msmquote-3.1.6.jar"
-$jar = $env:ProgramFiles + "\msmquote\msmquote-3.1.7-SNAPSHOT.jar"
+$jar = $env:ProgramFiles + "\msmquote\msmquote-4.0.0-SNAPSHOT.jar"
 $jreOpts = @()
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started. File: $mnyFile."
