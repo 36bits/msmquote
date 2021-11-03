@@ -1,7 +1,7 @@
 param (
     [Parameter(Mandatory=$true)][string]$mnyFile,
     [Parameter(Mandatory=$true)][string]$mnyPswd,
-    [Parameter(Mandatory=$true)][string]$source
+    [Parameter(Mandatory=$true)][string[]]$source
 )
 
 if ($PSVersionTable.PSVersion.Major -ne 5) {
