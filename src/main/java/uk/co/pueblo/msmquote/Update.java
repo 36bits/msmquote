@@ -61,7 +61,7 @@ public class Update {
 				} else if (args.length == 4) {
 					quoteSource = new GoogleSheetsQuote(args[2], args[3]);
 				} else {
-					throw new IllegalArgumentException("Unrecogonised quote source");
+					throw new IllegalArgumentException("Unrecognised quote source");
 				}
 
 				// Update
