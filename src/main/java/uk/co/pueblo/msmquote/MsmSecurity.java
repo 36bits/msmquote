@@ -247,6 +247,7 @@ class MsmSecurity {
 
 		String prop;
 		String key;
+		String missing = "";
 		boolean quoteWarn = false;
 
 		// Process values common to all quote types
@@ -262,8 +263,11 @@ class MsmSecurity {
 				if ((prop = PROPS.getProperty("default." + key)) != null) {
 					quoteRow.put(key, prop);
 				}
-				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, key);
-				quoteWarn = true;
+				if (missing.isEmpty()) {
+					missing = key;
+				} else {
+					missing = missing + ", " + key;
+				}
 			}
 		}
 
@@ -272,14 +276,17 @@ class MsmSecurity {
 		n = 1;
 		while ((key = PROPS.getProperty("column." + quoteType + "." + n++)) != null) {
 			if (!quoteRow.containsKey(key)) {
-				LOGGER.warn("Incomplete quote data for symbol {}, missing = {}", symbol, key);
-				quoteWarn = true;
-				;
+				if (missing.isEmpty()) {
+					missing = key;
+				} else {
+					missing = missing + ", " + key;
+				}
 			}
 		}
 
-		if (quoteWarn) {
+		if (!missing.isEmpty()) {
 			quoteRow.put("xWarn", null);
+			LOGGER.warn("Incomplete quote data received for symbol {}: missing = {}", symbol, missing);
 		}
 		return quoteRow;
 	}
