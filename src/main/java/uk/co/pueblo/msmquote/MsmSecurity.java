@@ -248,7 +248,6 @@ class MsmSecurity {
 		String prop;
 		String key;
 		String missing = "";
-		boolean quoteWarn = false;
 
 		// Process values common to all quote types
 		String symbol = "UNDEFINED";
