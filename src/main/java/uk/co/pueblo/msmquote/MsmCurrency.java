@@ -101,7 +101,7 @@ class MsmCurrency {
 					// Reversed rate
 					newRate = 1 / newRate;
 				}
-				LOGGER.info("Found currency: from hcrnc = {}, to hcrnc = {}", hcrnc[n], hcrnc[(n + 1) % 2]);
+				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[n], hcrnc[(n + 1) % 2]);
 				if (oldRate != newRate) {
 					cursor.setCurrentRowValue(rateCol, newRate);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);
