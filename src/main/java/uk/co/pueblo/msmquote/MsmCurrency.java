@@ -30,13 +30,13 @@ class MsmCurrency {
 	private static final String CRNC_TABLE = "CRNC";
 	private static final String FX_TABLE = "CRNC_EXCHG";
 	private static final int UPDATE_OK = 0;
-	private static final int UPDATE_WARN = 1;
-	//private static final int UPDATE_ERROR = 2;
+	//private static final int UPDATE_WARN = 1;
+	private static final int UPDATE_ERROR = 2;
 
 	// Instance variables
 	private Table crncTable;
 	private Table fxTable;
-	private int[] summary = { 0, 0 };	// processed, warnings
+	private Map<String, int[]> summary = new HashMap<>();
 
 	// Constructor
 	public MsmCurrency(Database msmDb) throws IOException {
@@ -64,26 +64,18 @@ class MsmCurrency {
 	 */
 	int update(Map<String, Object> quoteRow) throws IOException {
 
-		int n = 1;
-		summary[0]++;
-
-		// Validate quote row
-		String symbol = "UNDEFINED";
-		String key;
-		while ((key = PROPS.getProperty("column." + n++)) != null) {
-			if (quoteRow.containsKey(key)) {
-				if (key.equals("xSymbol")) {
-					symbol = quoteRow.get("xSymbol").toString();
-				}
-			} else {
-				LOGGER.warn("Incomplete quote data for currency symbol {}, missing = {}", symbol, key);
-				summary[1]++;
-				return UPDATE_WARN;
-			}
+		// Validate incoming row and process status
+		quoteRow = validate(quoteRow);
+		int updateStatus = (int) quoteRow.get("xStatus");
+		String quoteType = quoteRow.get("xType").toString();
+		if (updateStatus == UPDATE_ERROR) {
+			incSummary(quoteType, updateStatus);
+			return updateStatus;
 		}
 
+		String symbol = quoteRow.get("xSymbol").toString();
 		LOGGER.info("Processing quote data for currency symbol {}", symbol);
-		
+
 		// Get hcrncs of currency pair
 		int[] hcrnc = { 0, 0 };
 		hcrnc[0] = getHcrnc(symbol.substring(0, 3));
@@ -95,28 +87,30 @@ class MsmCurrency {
 		Column rateCol = fxTable.getColumn("rate");
 		IndexCursor cursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
 		double oldRate = 0;
-		for (n = 0; n < 2; n++) {
-			rateRowPattern.put("hcrncFrom", hcrnc[n]);
-			rateRowPattern.put("hcrncTo", hcrnc[(n + 1) % 2]);
+		for (int i = 0; i < 2; i++) {
+			rateRowPattern.put("hcrncFrom", hcrnc[i]);
+			rateRowPattern.put("hcrncTo", hcrnc[(i + 1) % 2]);
 			if (cursor.findFirstRow(rateRowPattern)) {
 				oldRate = (double) cursor.getCurrentRowValue(rateCol);
-				if (n == 1) {
+				if (i == 1) {
 					// Reversed rate
 					newRate = 1 / newRate;
 				}
-				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[n], hcrnc[(n + 1) % 2]);
+				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[i], hcrnc[(i + 1) % 2]);
 				if (oldRate != newRate) {
 					cursor.setCurrentRowValue(rateCol, newRate);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);
 				} else {
 					LOGGER.info("Skipped exchange rate update, rate has not changed: previous rate = {}, new rate = {}", oldRate, newRate);
 				}
+				incSummary(quoteType, UPDATE_OK);
 				return UPDATE_OK;
 			}
 		}
-		LOGGER.warn("Cannot find previous exchange rate");
-		summary[1]++;
-		return UPDATE_WARN;
+
+		LOGGER.error("Cannot find previous exchange rate");
+		incSummary(quoteType, UPDATE_ERROR);
+		return UPDATE_ERROR;
 	}
 
 	/**
@@ -171,8 +165,50 @@ class MsmCurrency {
 		isoCodes.add(defIsoCode);
 		return isoCodes;
 	}
-	
+
+	private static Map<String, Object> validate(Map<String, Object> quoteRow) {
+		String prop;
+		String props[];
+		int column = 1;
+		int updateStatus = UPDATE_OK;
+
+		// Validate required columns
+		String reqLogMsg = "";
+		while ((prop = PROPS.getProperty("column." + column++)) != null) {
+			props = prop.split(",");
+			if (!quoteRow.containsKey(props[0])) {
+				if (props.length == 2) {
+					quoteRow.put(props[0], props[1]);		// apply default value
+				}
+				// Add column to log message
+				if (reqLogMsg.isEmpty()) {
+					reqLogMsg = props[0];
+				} else {
+					reqLogMsg = reqLogMsg + ", " + props[0];
+				}
+			}
+		}
+
+		// Emit log message
+		if (!reqLogMsg.isEmpty()) {
+			LOGGER.error("Required quote data missing for symbol {}: {}", quoteRow.get("xSymbol"), reqLogMsg);
+			updateStatus = UPDATE_ERROR;
+		}
+		quoteRow.put("xStatus", updateStatus);
+		return quoteRow;
+	}
+
+	private void incSummary(String key, int index) {
+		summary.putIfAbsent(key, new int[] { 0, 0, 0 });	// OK, warnings, errors
+		int[] count = summary.get(key);
+		count[index]++;
+		summary.put(key, count);
+		return;
+	}
+
 	protected void logSummary() {
-		LOGGER.info("Summary for quote type CURRENCY: processed = {}, with warnings = {}", summary[0], summary[1]);
+		summary.forEach((key, count) -> {
+			LOGGER.info("Summary for quote type {}: OK = {}, warnings = {}, errors = {}", key, count[0], count[1], count[2]);
+		});
 	}
 }
