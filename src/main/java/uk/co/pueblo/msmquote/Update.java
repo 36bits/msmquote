@@ -18,14 +18,14 @@ public class Update {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	private static final int EXIT_OK = 0;
-	private static final int EXIT_WARN = 1;
+	//private static final int EXIT_WARN = 1;
 	private static final int EXIT_ERROR = 2;
 
 	public static void main(String[] args) {
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
-		int exitCode = EXIT_OK;
+		int exitCode, finalExitCode = EXIT_OK;
 		final Instant startTime = Instant.now();
 		final MsmDb db;
 
@@ -71,15 +71,15 @@ public class Update {
 						if (quoteRow.containsKey("xType")) {
 							if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
 								// Update exchange rate
-								if (!msmCurrency.update(quoteRow)) {
-									exitCode = EXIT_WARN;
+								if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
+									finalExitCode = exitCode;
 								}
 								continue;
 							}
 						}
 						// All other quote types
-						if (msmSecurity.update(quoteRow) > 0) {
-							exitCode = EXIT_WARN;
+						if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) {
+							finalExitCode = exitCode;
 						}
 					}
 
@@ -97,7 +97,7 @@ public class Update {
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
-				exitCode = EXIT_ERROR;
+				finalExitCode = EXIT_ERROR;
 			}
 
 			// Close Money database
@@ -106,9 +106,9 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
-			exitCode = EXIT_ERROR;
+			finalExitCode = EXIT_ERROR;
 		}
 		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-		System.exit(exitCode);
+		System.exit(finalExitCode);
 	}
 }

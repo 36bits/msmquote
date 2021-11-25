@@ -29,6 +29,9 @@ class MsmCurrency {
 	private static final Properties PROPS = new Properties();
 	private static final String CRNC_TABLE = "CRNC";
 	private static final String FX_TABLE = "CRNC_EXCHG";
+	private static final int UPDATE_OK = 0;
+	private static final int UPDATE_WARN = 1;
+	//private static final int UPDATE_ERROR = 2;
 
 	// Instance variables
 	private Table crncTable;
@@ -56,10 +59,10 @@ class MsmCurrency {
 	 * Updates the exchange rate for a currency pair.
 	 * 
 	 * @param quoteRow a row containing the currency quote data to update
-	 * @return true if successful, otherwise false
+	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */
-	boolean update(Map<String, Object> quoteRow) throws IOException {
+	int update(Map<String, Object> quoteRow) throws IOException {
 
 		int n = 1;
 		summary[0]++;
@@ -75,7 +78,7 @@ class MsmCurrency {
 			} else {
 				LOGGER.warn("Incomplete quote data for currency symbol {}, missing = {}", symbol, key);
 				summary[1]++;
-				return false;
+				return UPDATE_WARN;
 			}
 		}
 
@@ -108,12 +111,12 @@ class MsmCurrency {
 				} else {
 					LOGGER.info("Skipped exchange rate update, rate has not changed: previous rate = {}, new rate = {}", oldRate, newRate);
 				}
-				return true;
+				return UPDATE_OK;
 			}
 		}
 		LOGGER.warn("Cannot find previous exchange rate");
 		summary[1]++;
-		return false;
+		return UPDATE_WARN;
 	}
 
 	/**

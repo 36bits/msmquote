@@ -118,12 +118,19 @@ public class YahooApiQuote extends QuoteSource {
 
 		JsonNode result = resultIt.next();
 		Map<String, Object> returnRow = new HashMap<>();
-		String yahooSymbol = null;
 
 		try {
-			// Get quote type
-			yahooSymbol = result.get("symbol").asText();
+			// Add quote type to return row
 			String quoteType = result.get("quoteType").asText();
+			returnRow.put("xType", quoteType);
+
+			// Add symbol to return ron
+			String yahooSymbol = result.get("symbol").asText();
+			if (useXlate) {
+				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
+			} else {
+				returnRow.put("xSymbol", yahooSymbol);
+			}
 
 			// Get divisor and multiplier for quote currency
 			String quoteCurrency = result.get("currency").asText();
@@ -136,14 +143,6 @@ public class YahooApiQuote extends QuoteSource {
 			if ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) != null) {
 				quoteMultiplier = Integer.parseInt(prop);
 			}
-
-			// Add quote symbol and type values to return row
-			if (useXlate) {
-				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
-			} else {
-				returnRow.put("xSymbol", yahooSymbol);
-			}
-			returnRow.put("xType", quoteType);
 
 			// Add quote values to return row
 			int n = 1;
@@ -174,9 +173,7 @@ public class YahooApiQuote extends QuoteSource {
 			}
 
 		} catch (NullPointerException e) {
-			LOGGER.warn("Incomplete quote data for symbol {}", yahooSymbol);
 			LOGGER.debug("Exception occurred!", e);
-			returnRow.put("xWarn", null);
 		}
 
 		return returnRow;

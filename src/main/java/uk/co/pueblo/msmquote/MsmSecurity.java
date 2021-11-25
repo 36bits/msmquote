@@ -39,6 +39,7 @@ class MsmSecurity {
 	private static final int SRC_ONLINE = 6;
 	private static final int UPDATE_OK = 0;
 	private static final int UPDATE_WARN = 1;
+	private static final int UPDATE_ERROR = 2;
 
 	// Instance variables
 	private final Table secTable;
@@ -75,18 +76,22 @@ class MsmSecurity {
 	 * Update the SEC and SP tables with the supplied quote row.
 	 * 
 	 * @param quoteRow the row containing the quote data to update
-	 * @return 0 if update processed without warnings, otherwise 1
+	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */
 	int update(Map<String, Object> quoteRow) throws IOException {
 
-		// Validate incoming row
+		// Validate incoming row and process status
 		quoteRow = validate(quoteRow);
+		int updateStatus = (int) quoteRow.get("xStatus");
+		String quoteType = quoteRow.get("xType").toString();
+		if (updateStatus == UPDATE_ERROR) {
+			incSummary(quoteType, updateStatus);
+			return updateStatus;
+		}
 
 		String symbol = quoteRow.get("xSymbol").toString();
-		String quoteType = quoteRow.get("xType").toString();
 		LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
-		incSummary(quoteType, 0);
 
 		// Truncate symbol if required
 		String origSymbol = symbol;
@@ -115,16 +120,12 @@ class MsmSecurity {
 			LOGGER.info("Updated SEC table for symbol {}", symbol);
 		} else {
 			LOGGER.warn("Cannot find symbol {} in SEC table", symbol);
-			incSummary(quoteType, 1);
+			incSummary(quoteType, UPDATE_WARN);
 			return UPDATE_WARN;
 		}
 
-		// Set update status and update summary
-		int updateStatus = UPDATE_OK;
-		if (quoteRow.containsKey("xWarn")) {
-			incSummary(quoteType, 1);
-			updateStatus = UPDATE_WARN;
-		}
+		// Update summary
+		incSummary(quoteType, updateStatus);
 
 		// Update SP table with quote row
 		LocalDateTime quoteDate = (LocalDateTime) quoteRow.get("dt");
@@ -201,6 +202,7 @@ class MsmSecurity {
 		spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
 		spRowAddList.add(spRow);
 		LOGGER.info("Added new quote for symbol {} to SP table update list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
+
 		return updateStatus;
 	}
 
@@ -243,55 +245,76 @@ class MsmSecurity {
 
 	private static Map<String, Object> validate(Map<String, Object> quoteRow) {
 
-		// TODO Add default value processing
-
 		String prop;
-		String key;
-		String missing = "";
+		String props[];
+		int column = 1;
 
-		// Process values common to all quote types
-		String symbol = "UNDEFINED";
-		int n = 1;
-		while ((key = PROPS.getProperty("column." + n++)) != null) {
-			if (quoteRow.containsKey(key)) {
-				if (key.equals("xSymbol")) {
-					symbol = quoteRow.get("xSymbol").toString();
+		// Validate required columns
+		String reqLogMsg = "";
+		while ((prop = PROPS.getProperty("column." + column++)) != null) {
+			props = prop.split(",");
+			if (!quoteRow.containsKey(props[0])) {
+				if (props.length == 2) {
+					quoteRow.put(props[0], props[1]);		// apply default value
 				}
-			} else {
-				// Put default value to quote row
-				if ((prop = PROPS.getProperty("default." + key)) != null) {
-					quoteRow.put(key, prop);
-				}
-				if (missing.isEmpty()) {
-					missing = key;
+				// Add column to log message
+				if (reqLogMsg.isEmpty()) {
+					reqLogMsg = props[0];
 				} else {
-					missing = missing + ", " + key;
+					reqLogMsg = reqLogMsg + ", " + props[0];
 				}
 			}
 		}
 
-		// Process values for specific quote type
+		// Emit log message and return if necessary
+		if (!reqLogMsg.isEmpty()) {
+			LOGGER.error("Required quote data missing for symbol {}: {}", quoteRow.get("xSymbol"), reqLogMsg);
+			quoteRow.put("xStatus", UPDATE_ERROR);
+			return quoteRow;
+		}
+
+		// Validate optional columns
+		String optLogMsg[][] = { { "Optional quote data missing", "", "" }, { "Default values applied", "", "" } };
 		String quoteType = quoteRow.get("xType").toString();
-		n = 1;
-		while ((key = PROPS.getProperty("column." + quoteType + "." + n++)) != null) {
-			if (!quoteRow.containsKey(key)) {
-				if (missing.isEmpty()) {
-					missing = key;
-				} else {
-					missing = missing + ", " + key;
+		column = 1;
+		int updateStatus = UPDATE_OK;
+		int i;
+		while ((prop = PROPS.getProperty("column." + quoteType + "." + column++)) != null) {
+			props = prop.split(",");
+			if (!quoteRow.containsKey(props[0])) {
+				updateStatus = UPDATE_WARN;
+				for (i = 0; i < optLogMsg.length; i++) {
+					if (i == 0) {
+						optLogMsg[i][1] = props[0];
+					}
+					if (i == 1 && props.length == 2) {
+						optLogMsg[i][1] = props[0];		
+						quoteRow.put(props[0], props[1]);	// apply default value
+					}
+					// Append to respective log message
+					if (optLogMsg[i][2].isEmpty()) {
+						optLogMsg[i][2] = optLogMsg[i][1];
+					} else {
+						optLogMsg[i][2] = optLogMsg[i][2] + ", " + optLogMsg[i][1];
+					}
+					optLogMsg[i][1] = "";
 				}
 			}
 		}
 
-		if (!missing.isEmpty()) {
-			quoteRow.put("xWarn", null);
-			LOGGER.warn("Incomplete quote data received for symbol {}: missing = {}", symbol, missing);
+		// Emit log messages
+		for (i = 0; i < optLogMsg.length; i++) {
+			if (!optLogMsg[i][2].isEmpty()) {
+				LOGGER.warn("{} for symbol {}: {}", optLogMsg[i][0], quoteRow.get("xSymbol").toString(), optLogMsg[i][2]);
+			}
 		}
+
+		quoteRow.put("xStatus", updateStatus);
 		return quoteRow;
 	}
 
 	private void incSummary(String key, int index) {
-		summary.putIfAbsent(key, new int[] { 0, 0 }); // processed, warnings
+		summary.putIfAbsent(key, new int[] { 0, 0, 0 }); // OK, warnings, errors
 		int[] count = summary.get(key);
 		count[index]++;
 		summary.put(key, count);
@@ -300,7 +323,7 @@ class MsmSecurity {
 
 	protected void logSummary() {
 		summary.forEach((key, count) -> {
-			LOGGER.info("Summary for quote type {}: processed = {}, with warnings = {}", key, count[0], count[1]);
+			LOGGER.info("Summary for quote type {}: OK = {}, warnings = {}, errors = {}", key, count[0], count[1], count[2]);
 		});
 	}
 }
