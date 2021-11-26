@@ -23,8 +23,8 @@ class MsmCurrency extends MsmInstrument {
 	private static final String FX_TABLE = "CRNC_EXCHG";
 
 	// Instance variables
-	private Table crncTable;
-	private Table fxTable;
+	private final Table crncTable;
+	private final Table fxTable;
 
 	// Constructor
 	MsmCurrency(Database msmDb) throws IOException {

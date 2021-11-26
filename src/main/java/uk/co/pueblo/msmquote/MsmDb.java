@@ -28,9 +28,9 @@ public class MsmDb extends DatabaseBuilder {
 
 	// Instance variables
 	private final Database db;
-	private Table dhdTable;
-	private Table cliDatTable;
-	private Table cntryTable;
+	private final Table dhdTable;
+	private final Table cliDatTable;
+	private final Table cntryTable;
 
 	// DHD table columns
 	enum DhdColumn {
