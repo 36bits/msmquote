@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -29,6 +32,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 class GoogleSheetsQuote extends QuoteSource {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsQuote.class);
 	private static final String PROPS_FILE = "";
 	private static final int HEADER_COLUMN = 0;
 	private static final String HEADER_FLAG = "symbol";

@@ -7,11 +7,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class YahooApiQuote extends QuoteSource {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
 	private static final String DELIM = ",";
 	private static final String JSON_ROOT = "/quoteResponse/result";
 	private static final String PROPS_FILE = "YahooSource.properties";

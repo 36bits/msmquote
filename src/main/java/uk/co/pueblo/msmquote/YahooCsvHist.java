@@ -8,9 +8,13 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class YahooCsvHist extends QuoteSource {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
 	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables

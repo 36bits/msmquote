@@ -5,11 +5,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 class YahooApiHist extends QuoteSource {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
 	private static final String PROPS_FILE = "YahooSource.properties";
 	
 	// Instance variables

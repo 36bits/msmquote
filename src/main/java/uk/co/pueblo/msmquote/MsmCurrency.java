@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
@@ -18,6 +22,7 @@ import com.healthmarketscience.jackcess.util.IterableBuilder;
 class MsmCurrency extends MsmInstrument {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(MsmCurrency.class);
 	private static final String PROPS_FILE = "MsmCurrency.properties";
 	private static final String CRNC_TABLE = "CRNC";
 	private static final String FX_TABLE = "CRNC_EXCHG";

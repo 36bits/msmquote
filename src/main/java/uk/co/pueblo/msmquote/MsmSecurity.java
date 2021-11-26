@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
@@ -21,6 +25,7 @@ import com.healthmarketscience.jackcess.util.IterableBuilder;
 class MsmSecurity extends MsmInstrument {
 
 	// Constants
+	static final Logger LOGGER = LogManager.getLogger(MsmSecurity.class);
 	private static final String PROPS_FILE = "MsmSecurity.properties";
 	private static final String SEC_TABLE = "SEC";
 	private static final String SP_TABLE = "SP";

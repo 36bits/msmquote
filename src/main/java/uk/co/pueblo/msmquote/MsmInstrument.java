@@ -15,7 +15,6 @@ abstract class MsmInstrument {
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(MsmInstrument.class);
 	static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
-	// static final Properties PROPS = new Properties();
 	static final int UPDATE_OK = 0;
 	static final int UPDATE_WARN = 1;
 	static final int UPDATE_ERROR = 2;
