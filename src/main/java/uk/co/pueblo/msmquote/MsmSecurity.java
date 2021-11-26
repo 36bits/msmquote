@@ -70,7 +70,7 @@ class MsmSecurity extends MsmInstrument {
 		}
 
 		String symbol = quoteRow.get("xSymbol").toString();
-		LOGGER.info("Processing quote data for symbol {}, quote type = {}", symbol, quoteType);
+		LOGGER.info("Updating quote data for symbol {}, quote type = {}", symbol, quoteType);
 
 		// Truncate symbol if required
 		String origSymbol = symbol;

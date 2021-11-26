@@ -55,7 +55,7 @@ class MsmCurrency extends MsmInstrument {
 		}
 
 		String symbol = quoteRow.get("xSymbol").toString();
-		LOGGER.info("Processing quote data for currency symbol {}", symbol);
+		LOGGER.info("Updating quote data for currency symbol {}", symbol);
 
 		// Get hcrncs of currency pair
 		int[] hcrnc = { 0, 0 };
