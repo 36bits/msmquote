@@ -1,10 +1,8 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -13,11 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
@@ -25,39 +18,25 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-class MsmSecurity {
+class MsmSecurity extends MsmInstrument {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmSecurity.class);
-	private static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	private static final String PROPS_FILE = "MsmSecurity.properties";
-	private static final Properties PROPS = new Properties();
 	private static final String SEC_TABLE = "SEC";
 	private static final String SP_TABLE = "SP";
 	private static final int SRC_BUY = 1;
 	private static final int SRC_MANUAL = 5;
 	private static final int SRC_ONLINE = 6;
-	private static final int UPDATE_OK = 0;
-	private static final int UPDATE_WARN = 1;
-	private static final int UPDATE_ERROR = 2;
 
 	// Instance variables
 	private final Table secTable;
 	private final Table spTable;
 	private ArrayList<Map<String, Object>> spRowAddList = new ArrayList<>();
 	private int hsp = 0;
-	private Map<String, int[]> summary = new HashMap<>();
 
 	// Constructor
 	MsmSecurity(Database msmDb) throws IOException {
-
-		// Open properties
-		try {
-			InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(PROPS_FILE);
-			PROPS.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.fatal(e);
-		}
+		super(PROPS_FILE);
 
 		// Open the securities tables
 		secTable = msmDb.getTable(SEC_TABLE);
@@ -241,89 +220,5 @@ class MsmSecurity {
 			}
 		}
 		return symbols;
-	}
-
-	private static Map<String, Object> validate(Map<String, Object> quoteRow) {
-
-		String prop;
-		String props[];
-		int column = 1;
-
-		// Validate required columns
-		String reqLogMsg = "";
-		while ((prop = PROPS.getProperty("column." + column++)) != null) {
-			props = prop.split(",");
-			if (!quoteRow.containsKey(props[0])) {
-				if (props.length == 2) {
-					quoteRow.put(props[0], props[1]);		// apply default value
-				}
-				// Add column to log message
-				if (reqLogMsg.isEmpty()) {
-					reqLogMsg = props[0];
-				} else {
-					reqLogMsg = reqLogMsg + ", " + props[0];
-				}
-			}
-		}
-
-		// Emit log message and return if necessary
-		if (!reqLogMsg.isEmpty()) {
-			LOGGER.error("Required quote data missing for symbol {}: {}", quoteRow.get("xSymbol"), reqLogMsg);
-			quoteRow.put("xStatus", UPDATE_ERROR);
-			return quoteRow;
-		}
-
-		// Validate optional columns
-		String optLogMsg[][] = { { "Optional quote data missing", "", "" }, { "Default values applied", "", "" } };
-		String quoteType = quoteRow.get("xType").toString();
-		column = 1;
-		int updateStatus = UPDATE_OK;
-		int i;
-		while ((prop = PROPS.getProperty("column." + quoteType + "." + column++)) != null) {
-			props = prop.split(",");
-			if (!quoteRow.containsKey(props[0])) {
-				updateStatus = UPDATE_WARN;
-				for (i = 0; i < optLogMsg.length; i++) {
-					if (i == 0) {
-						optLogMsg[i][1] = props[0];
-					}
-					if (i == 1 && props.length == 2) {
-						optLogMsg[i][1] = props[0];		
-						quoteRow.put(props[0], props[1]);	// apply default value
-					}
-					// Append to respective log message
-					if (optLogMsg[i][2].isEmpty()) {
-						optLogMsg[i][2] = optLogMsg[i][1];
-					} else {
-						optLogMsg[i][2] = optLogMsg[i][2] + ", " + optLogMsg[i][1];
-					}
-					optLogMsg[i][1] = "";
-				}
-			}
-		}
-
-		// Emit log messages
-		for (i = 0; i < optLogMsg.length; i++) {
-			if (!optLogMsg[i][2].isEmpty()) {
-				LOGGER.warn("{} for symbol {}: {}", optLogMsg[i][0], quoteRow.get("xSymbol").toString(), optLogMsg[i][2]);
-			}
-		}
-
-		quoteRow.put("xStatus", updateStatus);
-		return quoteRow;
-	}
-
-	private void incSummary(String key, int index) {
-		summary.putIfAbsent(key, new int[] { 0, 0, 0 }); // OK, warnings, errors
-		int[] count = summary.get(key);
-		count[index]++;
-		summary.put(key, count);
-		return;
-	}
-
-	protected void logSummary() {
-		summary.forEach((key, count) -> {
-			LOGGER.info("Summary for quote type {}: OK = {}, warnings = {}, errors = {}", key, count[0], count[1], count[2]);
-		});
 	}
 }

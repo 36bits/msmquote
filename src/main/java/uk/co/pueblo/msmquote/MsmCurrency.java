@@ -1,18 +1,12 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
@@ -21,33 +15,20 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.util.IterableBuilder;
 
-class MsmCurrency {
+class MsmCurrency extends MsmInstrument {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(MsmCurrency.class);
 	private static final String PROPS_FILE = "MsmCurrency.properties";
-	private static final Properties PROPS = new Properties();
 	private static final String CRNC_TABLE = "CRNC";
 	private static final String FX_TABLE = "CRNC_EXCHG";
-	private static final int UPDATE_OK = 0;
-	//private static final int UPDATE_WARN = 1;
-	private static final int UPDATE_ERROR = 2;
 
 	// Instance variables
 	private Table crncTable;
 	private Table fxTable;
-	private Map<String, int[]> summary = new HashMap<>();
 
 	// Constructor
-	public MsmCurrency(Database msmDb) throws IOException {
-
-		// Open properties
-		try {
-			InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(PROPS_FILE);
-			PROPS.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.fatal(e);
-		}
+	MsmCurrency(Database msmDb) throws IOException {
+		super(PROPS_FILE);
 
 		// Open the currency tables
 		crncTable = msmDb.getTable(CRNC_TABLE);
@@ -164,51 +145,5 @@ class MsmCurrency {
 		// Add the base currency as the last ISO code in the list
 		isoCodes.add(defIsoCode);
 		return isoCodes;
-	}
-
-	private static Map<String, Object> validate(Map<String, Object> quoteRow) {
-		String prop;
-		String props[];
-		int column = 1;
-		int updateStatus = UPDATE_OK;
-
-		// Validate required columns
-		String reqLogMsg = "";
-		while ((prop = PROPS.getProperty("column." + column++)) != null) {
-			props = prop.split(",");
-			if (!quoteRow.containsKey(props[0])) {
-				if (props.length == 2) {
-					quoteRow.put(props[0], props[1]);		// apply default value
-				}
-				// Add column to log message
-				if (reqLogMsg.isEmpty()) {
-					reqLogMsg = props[0];
-				} else {
-					reqLogMsg = reqLogMsg + ", " + props[0];
-				}
-			}
-		}
-
-		// Emit log message
-		if (!reqLogMsg.isEmpty()) {
-			LOGGER.error("Required quote data missing for symbol {}: {}", quoteRow.get("xSymbol"), reqLogMsg);
-			updateStatus = UPDATE_ERROR;
-		}
-		quoteRow.put("xStatus", updateStatus);
-		return quoteRow;
-	}
-
-	private void incSummary(String key, int index) {
-		summary.putIfAbsent(key, new int[] { 0, 0, 0 });	// OK, warnings, errors
-		int[] count = summary.get(key);
-		count[index]++;
-		summary.put(key, count);
-		return;
-	}
-
-	protected void logSummary() {
-		summary.forEach((key, count) -> {
-			LOGGER.info("Summary for quote type {}: OK = {}, warnings = {}, errors = {}", key, count[0], count[1], count[2]);
-		});
 	}
 }
