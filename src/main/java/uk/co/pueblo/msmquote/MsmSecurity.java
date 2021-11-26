@@ -200,7 +200,7 @@ class MsmSecurity extends MsmInstrument {
 	 * @return the list of symbols and corresponding countries
 	 * @throws IOException
 	 */
-	List<String[]> getSymbols(MsmCommon msmCore) throws IOException {
+	List<String[]> getSymbols(MsmDb db) throws IOException {
 		Map<String, Object> row = null;
 		Map<String, Object> rowPattern = new HashMap<>();
 		Iterator<Row> secIt;
@@ -215,7 +215,7 @@ class MsmSecurity extends MsmInstrument {
 			symbol = new String[2];
 			row = secIt.next();
 			if ((symbol[0] = (String) row.get("szSymbol")) != null) {
-				symbol[1] = msmCore.getCntryCode((int) row.get("hcntry"));
+				symbol[1] = db.getCntryCode((int) row.get("hcntry"));
 				symbols.add(symbol);
 			}
 		}
