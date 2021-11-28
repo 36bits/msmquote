@@ -21,11 +21,11 @@ public class YahooCsvHist extends QuoteSource {
 	private BufferedReader csvBr;
 	private String[] quoteMeta;
 	private int quoteDivisor;
-	
+
 	/**
 	 * Constructor for CSV file quote data source.
 	 * 
-	 * @param fileName  the name of the CSV file
+	 * @param fileName the name of the CSV file
 	 * @throws IOException
 	 */
 	YahooCsvHist(String fileName) throws IOException {
@@ -39,7 +39,7 @@ public class YahooCsvHist extends QuoteSource {
 
 		// Get quote metadata from CSV file name
 		String tmp = csvFile.getName();
-		quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // symbol, currency, quote type		
+		quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // symbol, currency, quote type
 		// Set quote divisor according to currency
 		quoteDivisor = 1;
 		String quoteDivisorProp = PROPS.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
@@ -81,7 +81,7 @@ public class YahooCsvHist extends QuoteSource {
 				if ((spColumn = PROPS.getProperty("hist.csv." + n)) != null) {
 					if (spColumn.startsWith("dt")) {
 						// Process LocalDateTime values
-						dtValue = LocalDateTime.parse(csvColumn[n] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();		
+						dtValue = LocalDateTime.parse(csvColumn[n] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
 						returnRow.put(spColumn, dtValue);
 					} else if (spColumn.startsWith("d")) {
 						// Process Double values
@@ -100,7 +100,6 @@ public class YahooCsvHist extends QuoteSource {
 		} catch (NumberFormatException e) {
 			LOGGER.warn(e);
 			LOGGER.debug("Exception occurred!", e);
-			returnRow.put("xWarn", null);
 		}
 
 		return returnRow;
