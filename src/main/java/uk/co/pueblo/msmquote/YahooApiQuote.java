@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +48,7 @@ public class YahooApiQuote extends QuoteSource {
 			// Append the symbols pair to the symbol translation table and the Yahoo symbol
 			// to the investment symbols string
 			symbol = symbols.get(n);
-			if ((yahooSymbol = YahooUtil.getYahooSymbol(symbol[0], symbol[1], PROPS)) != null) {
+			if ((yahooSymbol = getYahooSymbol(symbol[0], symbol[1], PROPS)) != null) {
 				symbolXlate.put(yahooSymbol, symbol[0]);
 				delim = DELIM;
 				if (n == 0) {
@@ -89,7 +90,7 @@ public class YahooApiQuote extends QuoteSource {
 			delim = "";
 		}
 
-		resultIt = YahooUtil.getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
+		resultIt = getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 	}
 
 	/**
@@ -100,7 +101,7 @@ public class YahooApiQuote extends QuoteSource {
 	 */
 	YahooApiQuote(String apiUrl) throws IOException {
 		super(PROPS_FILE);
-		resultIt = YahooUtil.getJson(apiUrl).at(JSON_ROOT).elements();
+		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
 	/**
@@ -176,5 +177,41 @@ public class YahooApiQuote extends QuoteSource {
 		}
 
 		return returnRow;
+	}
+	
+	/**
+	 * Generates a Yahoo symbol from the Money symbol.
+	 * 
+	 * @param	symbol			the Money symbol for the security
+	 * @param	country			the Money country for the security
+	 * @param	props			the YahooQuote properties
+	 * @return					the equivalent Yahoo symbol
+	 */
+	private static String getYahooSymbol(String symbol, String country, Properties props) {
+		String yahooSymbol = symbol;
+		String prop;
+		if (symbol.matches("^\\$US:.*")) {
+			// Symbol is in Money index format '$US:symbol'
+			if ((prop = props.getProperty("index." + symbol.substring(4))) != null) {
+				yahooSymbol = prop;
+			}
+		} else if (symbol.matches("^\\$..:.*")) {
+			// Symbol is in Money index format '$xx:symbol'
+			yahooSymbol = "^" + symbol.substring(4);							
+		} else if (symbol.matches("^\\$.*")) {
+			// Symbol is in Money index format '$symbol'
+			yahooSymbol = "^" + symbol.substring(1);
+		} else if (symbol.matches("^..:.*")) {
+			// Symbol is in Money security format 'xx:symbol'
+			if ((prop = props.getProperty("exchange." + country)) != null) {
+				yahooSymbol = symbol.substring(3) + prop;
+			}
+		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")){
+			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
+			if ((prop = props.getProperty("exchange." + country)) != null) {
+				yahooSymbol = symbol + prop; 
+			}
+		}		
+		return yahooSymbol.toUpperCase();
 	}
 }

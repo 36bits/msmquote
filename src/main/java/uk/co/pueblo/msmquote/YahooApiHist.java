@@ -34,7 +34,7 @@ class YahooApiHist extends QuoteSource {
 		super(PROPS_FILE);
 
 		// Get quote data
-		resultJn = YahooUtil.getJson(apiUrl).at("/chart/result/0");
+		resultJn = getJson(apiUrl).at("/chart/result/0");
 
 		// Get symbol and quote divisor
 		quoteDivisor = 1;

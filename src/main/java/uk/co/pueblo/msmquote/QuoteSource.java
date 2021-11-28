@@ -2,12 +2,16 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 abstract class QuoteSource {
 
@@ -40,5 +44,20 @@ abstract class QuoteSource {
 	 */
 	boolean isQuery() {
 		return isQuery;
+	}
+
+	/**
+	 * Gets JSON quote data from a web API.
+	 * 
+	 * @param apiUrl the URL of the web API
+	 * @return the quote data
+	 * @throws IOException
+	 */
+	static JsonNode getJson(String apiUrl) throws IOException {
+		LOGGER.info("Requesting quote data from web API");
+		try (InputStream quoteIs = new URL(apiUrl).openStream();) {		// using try-with-resources to get AutoClose of InputStream
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.readTree(quoteIs);
+		}
 	}
 }
