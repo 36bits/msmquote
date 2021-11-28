@@ -23,8 +23,7 @@ public class YahooApiQuote extends QuoteSource {
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private Map<String, String> symbolXlate;
-	private boolean useXlate;
+	private Map<String, String> symbolXlate = new HashMap<>();
 
 	/**
 	 * Constructor for auto-completed URL.
@@ -37,8 +36,6 @@ public class YahooApiQuote extends QuoteSource {
 	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
 		super(PROPS_FILE);
 
-		symbolXlate = new HashMap<>();
-		useXlate = true;
 		String yahooSymbol = "";
 		String delim;
 		int n;
@@ -74,8 +71,7 @@ public class YahooApiQuote extends QuoteSource {
 			if (n == isoCodesSz - 1) {
 				delim = "";
 			}
-			// Append the symbols pair to the symbol translation table and to the FX symbols
-			// string
+			// Append the symbols pair to the symbol translation table and to the FX symbols string
 			yahooSymbol = baseIsoCode + isoCodes.get(n - 1) + "=X";
 			symbolXlate.put(yahooSymbol, yahooSymbol);
 			fxSymbols = fxSymbols + delim + yahooSymbol;
@@ -104,8 +100,6 @@ public class YahooApiQuote extends QuoteSource {
 	 */
 	YahooApiQuote(String apiUrl) throws IOException {
 		super(PROPS_FILE);
-		useXlate = false;
-		symbolXlate = new HashMap<>();
 		resultIt = YahooUtil.getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
@@ -129,12 +123,12 @@ public class YahooApiQuote extends QuoteSource {
 			String quoteType = result.get("quoteType").asText();
 			returnRow.put("xType", quoteType);
 
-			// Add symbol to return ron
+			// Add symbol to return row
 			String yahooSymbol = result.get("symbol").asText();
-			if (useXlate) {
-				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
-			} else {
+			if (symbolXlate.isEmpty()) {
 				returnRow.put("xSymbol", yahooSymbol);
+			} else {
+				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
 			}
 
 			// Get divisor and multiplier for quote currency
