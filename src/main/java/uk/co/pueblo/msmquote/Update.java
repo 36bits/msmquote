@@ -66,16 +66,14 @@ public class Update {
 				if (!quoteSource.isQuery()) {
 					Map<String, Object> quoteRow = new HashMap<>();
 					while ((quoteRow = quoteSource.getNext()) != null) {
-						if (quoteRow.containsKey("xType")) {
-							if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
-								// Update exchange rate
-								if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
-									finalExitCode = exitCode;
-								}
-								continue;
+						if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
+							// Update exchange rate
+							if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
+								finalExitCode = exitCode;
 							}
+							continue;
 						}
-						// All other quote types
+						// Update all other quote types
 						if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) {
 							finalExitCode = exitCode;
 						}
