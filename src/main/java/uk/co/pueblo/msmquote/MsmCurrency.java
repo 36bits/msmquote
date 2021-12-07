@@ -69,22 +69,25 @@ class MsmCurrency extends MsmInstrument {
 
 		// Update exchange rate
 		double newRate = (double) quoteRow.get("dRate");
-		Map<String, Object> rateRowPattern = new HashMap<>();
-		Column rateCol = fxTable.getColumn("rate");
-		IndexCursor cursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
+		Map<String, Object> fxRowPattern = new HashMap<>();
+		IndexCursor fxCursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
+		Map<String, Object> fxRow = null;
 		double oldRate = 0;
 		for (int i = 0; i < 2; i++) {
-			rateRowPattern.put("hcrncFrom", hcrnc[i]);
-			rateRowPattern.put("hcrncTo", hcrnc[(i + 1) % 2]);
-			if (cursor.findFirstRow(rateRowPattern)) {
-				oldRate = (double) cursor.getCurrentRowValue(rateCol);
+			fxRowPattern.put("hcrncFrom", hcrnc[i]);
+			fxRowPattern.put("hcrncTo", hcrnc[(i + 1) % 2]);
+			if (fxCursor.findFirstRow(fxRowPattern)) {
+				fxRow = fxCursor.getCurrentRow();
+				oldRate = (double) fxRow.get("rate");
 				if (i == 1) {
 					// Reversed rate
 					newRate = 1 / newRate;
 				}
 				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[i], hcrnc[(i + 1) % 2]);
 				if (oldRate != newRate) {
-					cursor.setCurrentRowValue(rateCol, newRate);
+					// Merge quote row into FX row and write to FX table
+					fxRow.putAll(quoteRow);		// TODO Should fxRow be sanitised first?
+					fxCursor.updateCurrentRowFromMap(fxRow);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);
 				} else {
 					LOGGER.info("Skipped exchange rate update, rate has not changed: previous rate = {}, new rate = {}", oldRate, newRate);
