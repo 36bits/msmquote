@@ -11,7 +11,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.IndexCursor;
@@ -73,7 +72,8 @@ class MsmCurrency extends MsmInstrument {
 		IndexCursor fxCursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
 		Map<String, Object> fxRow = null;
 		double oldRate = 0;
-		for (int i = 0; i < 2; i++) {
+		int i;
+		for (i = 0; i < 2; i++) {
 			fxRowPattern.put("hcrncFrom", hcrnc[i]);
 			fxRowPattern.put("hcrncTo", hcrnc[(i + 1) % 2]);
 			if (fxCursor.findFirstRow(fxRowPattern)) {
@@ -92,14 +92,16 @@ class MsmCurrency extends MsmInstrument {
 				} else {
 					LOGGER.info("Skipped exchange rate update, rate has not changed: previous rate = {}, new rate = {}", oldRate, newRate);
 				}
-				incSummary(quoteType, UPDATE_OK);
-				return UPDATE_OK;
+				break;
 			}
 		}
 
-		LOGGER.error("Cannot find previous exchange rate");
-		incSummary(quoteType, UPDATE_ERROR);
-		return UPDATE_ERROR;
+		if (i == 2) {
+			updateStatus = UPDATE_ERROR;
+			LOGGER.error("Cannot find previous exchange rate");
+		}
+		incSummary(quoteType, updateStatus);
+		return updateStatus;
 	}
 
 	/**
