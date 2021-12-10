@@ -9,7 +9,7 @@ if ($PSVersionTable.PSVersion.Major -ne 5) {
     return
 }
 
-$log = $env:HOME + "\log\msmquote.log"
+$log = $env:UserProfile + "\log\msmquote.log"
 $jre = $env:ProgramFiles + "\msmquote\bin\java.exe"
 $jar = $env:ProgramFiles + "\msmquote\msmquote-4.0.0-SNAPSHOT.jar"
 $jreOpts = @()
