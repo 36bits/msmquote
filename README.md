@@ -22,7 +22,7 @@ Download the latest **msmquote** [ZIP archive](https://github.com/36bits/msmquot
 Where:
 * `moneyfile.mny` is the Microsoft Money file that you wish to update (the file must not be open in Microsoft Money when **msmquote** is run)
 * `password` is the file password if applicable (use `""` if the file is not password protected)
-* `source` is the source of the quote data (full details of this parameter can be found in the [msmquote wiki](https://github.com/36bits/msmquote/wiki))
+* `source` is the source of the quote data (full details of this parameter can be found in the [msmquote wiki](https://github.com/36bits/msmquote/wiki/Quote-Sources))
 
 # Exit Codes
 * `0` Execution completed successfully
