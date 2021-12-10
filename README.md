@@ -15,14 +15,14 @@ Quote data can be updated for any security or currency where a quote is availabl
 * Microsoft Money Plus Sunset (17.0.120.3817)
 
 # Getting Started
-Download the latest [msmquote ZIP archive](https://github.com/36bits/msmquote/releases) and extract it to a suitable folder on your machine. Then run the application from the root of the extracted folder using the following command line:
+Download the latest **msmquote** [ZIP archive](https://github.com/36bits/msmquote/releases) and extract it to a suitable folder on your machine. Then run **msmquote** from the root of the extracted folder using the following command line:
 
 `bin\java -jar msmquote-4.0.0.jar moneyfile.mny password source`
 
 Where:
-* **moneyfile.mny** is the Microsoft Money file that you wish to update
-* **password** is the file password if applicable (use `""` if the file is not password protected)
-* **source** is the source of the quote data (full details of this parameter can be found in the [msmquote wiki](https://github.com/36bits/msmquote/wiki))
+* `moneyfile.mny` is the Microsoft Money file that you wish to update (the file must not be open in Microsoft Money when **msmquote** is run)
+* `password` is the file password if applicable (use `""` if the file is not password protected)
+* `source` is the source of the quote data (full details of this parameter can be found in the [msmquote wiki](https://github.com/36bits/msmquote/wiki))
 
 # Exit Codes
 * `0` Execution completed successfully
@@ -36,5 +36,5 @@ Jonathan Casiot ([e-mail](mailto:msmquote@pueblo.co.uk))
 This project is licenced under the GNU GPL Version 3 (see the [LICENCE](./LICENSE) file).
 
 # With Thanks To
-* Hung Le for Sunriise, the original Microsoft Money quote updater.
-* Yahoo Finance for a decent securities quote API.
+* Hung Le for Sunriise, the original Microsoft Money quote updater
+* Yahoo Finance for a decent securities quote API
