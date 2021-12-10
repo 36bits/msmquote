@@ -33,7 +33,7 @@ Where:
 Jonathan Casiot ([e-mail](mailto:msmquote@pueblo.co.uk))
 
 # Licence
-This project is licenced under the GNU GPL Version 3 - see the [LICENCE](./LICENSE) file.
+This project is licenced under the GNU GPL Version 3 (see the [LICENCE](./LICENSE) file).
 
 # With Thanks To
 * Hung Le for Sunriise, the original Microsoft Money quote updater.
