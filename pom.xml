@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.14.1</version>
+			<version>2.15.0</version>
 		</dependency>
 	</dependencies>
 
@@ -133,4 +133,5 @@
 		<developerConnection>scm:git:file:///home/git/msmquote.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+	<url>https://github.com/36bits/msmquote</url>
 </project>
