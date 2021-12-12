@@ -11,7 +11,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class YahooCsvHist extends QuoteSource {
+public class YahooCsvHist extends YahooSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
@@ -54,8 +54,7 @@ public class YahooCsvHist extends QuoteSource {
 	 * @return the quote row or null if no more data
 	 * @throws IOException
 	 */
-	@Override
-	Map<String, Object> getNext() throws IOException {
+	public Map<String, Object> getNext() throws IOException {
 
 		Map<String, Object> returnRow = new HashMap<>();
 

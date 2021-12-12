@@ -39,13 +39,11 @@ public class Update {
 			final Database openedDb = msmDb.getDb();
 
 			try {
-				// Instantiate objects needed to process quote source types
 				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
-
-				// Instantiate quote object according to quote source
 				final QuoteSource quoteSource;
-
+				
+				// Instantiate quote object according to quote source
 				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
 						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));

@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class YahooApiQuote extends QuoteSource {
+public class YahooApiQuote extends YahooSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
@@ -106,8 +106,7 @@ public class YahooApiQuote extends QuoteSource {
 	 * 
 	 * @return the quote row or null if no more data
 	 */
-	@Override
-	Map<String, Object> getNext() {
+	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
 		if (resultIt == null || !resultIt.hasNext()) {
 			return null;

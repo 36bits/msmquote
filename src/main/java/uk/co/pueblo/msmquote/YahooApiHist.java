@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-class YahooApiHist extends QuoteSource {
+class YahooApiHist extends YahooSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
@@ -53,8 +53,7 @@ class YahooApiHist extends QuoteSource {
 	 * 
 	 * @return the quote row or null if no more data
 	 */
-	@Override
-	Map<String, Object> getNext() {
+	public Map<String, Object> getNext() {
 		Map<String, Object> returnRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
