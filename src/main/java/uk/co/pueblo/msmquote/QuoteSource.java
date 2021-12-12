@@ -20,9 +20,6 @@ abstract class QuoteSource {
 	static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	static final Properties PROPS = new Properties();
 
-	// Instance variables
-	boolean isQuery = false;
-
 	QuoteSource(String propsFile) {
 		// Open properties
 		if (!propsFile.isEmpty()) {
@@ -36,15 +33,6 @@ abstract class QuoteSource {
 	}
 
 	abstract Map<String, Object> getNext() throws IOException;
-
-	/**
-	 * Gets the query status of the quote.
-	 *
-	 * @return true if this is just a query with no update needed
-	 */
-	boolean isQuery() {
-		return isQuery;
-	}
 
 	/**
 	 * Gets JSON quote data from a web API.

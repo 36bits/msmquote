@@ -79,18 +79,15 @@ public class YahooApiQuote extends QuoteSource {
 		}
 		LOGGER.info("Building URL with these FX symbols: {}", fxSymbols);
 
-		if (apiUrl.endsWith("symbols=?")) {
-			isQuery = true;
-			return;
+		if (!apiUrl.endsWith("symbols=?")) {	
+			// Generate delimiter for FX symbols string
+			delim = DELIM;
+			if (invSymbols.isEmpty()) {
+				delim = "";
+			}
+			// Get quote data
+			resultIt = getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 		}
-
-		// Generate delimiter for FX symbols string
-		delim = DELIM;
-		if (invSymbols.isEmpty()) {
-			delim = "";
-		}
-
-		resultIt = getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
 	}
 
 	/**
@@ -112,7 +109,7 @@ public class YahooApiQuote extends QuoteSource {
 	@Override
 	Map<String, Object> getNext() {
 		// Get next JSON node from iterator
-		if (!resultIt.hasNext()) {
+		if (resultIt == null || !resultIt.hasNext()) {
 			return null;
 		}
 
@@ -178,14 +175,14 @@ public class YahooApiQuote extends QuoteSource {
 
 		return returnRow;
 	}
-	
+
 	/**
 	 * Generates a Yahoo symbol from the Money symbol.
 	 * 
-	 * @param	symbol			the Money symbol for the security
-	 * @param	country			the Money country for the security
-	 * @param	props			the YahooQuote properties
-	 * @return					the equivalent Yahoo symbol
+	 * @param symbol  the Money symbol for the security
+	 * @param country the Money country for the security
+	 * @param props   the YahooQuote properties
+	 * @return the equivalent Yahoo symbol
 	 */
 	private static String getYahooSymbol(String symbol, String country, Properties props) {
 		String yahooSymbol = symbol;
@@ -197,7 +194,7 @@ public class YahooApiQuote extends QuoteSource {
 			}
 		} else if (symbol.matches("^\\$..:.*")) {
 			// Symbol is in Money index format '$xx:symbol'
-			yahooSymbol = "^" + symbol.substring(4);							
+			yahooSymbol = "^" + symbol.substring(4);
 		} else if (symbol.matches("^\\$.*")) {
 			// Symbol is in Money index format '$symbol'
 			yahooSymbol = "^" + symbol.substring(1);
@@ -206,12 +203,12 @@ public class YahooApiQuote extends QuoteSource {
 			if ((prop = props.getProperty("exchange." + country)) != null) {
 				yahooSymbol = symbol.substring(3) + prop;
 			}
-		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")){
+		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")) {
 			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
 			if ((prop = props.getProperty("exchange." + country)) != null) {
-				yahooSymbol = symbol + prop; 
+				yahooSymbol = symbol + prop;
 			}
-		}		
+		}
 		return yahooSymbol.toUpperCase();
 	}
 }

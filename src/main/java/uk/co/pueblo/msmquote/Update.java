@@ -63,27 +63,26 @@ public class Update {
 				}
 
 				// Update
-				if (!quoteSource.isQuery()) {
-					Map<String, Object> quoteRow = new HashMap<>();
-					while ((quoteRow = quoteSource.getNext()) != null) {
-						if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
-							// Update exchange rate
-							if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
-								finalExitCode = exitCode;
-							}
-							continue;
-						}
-						// Update all other quote types
-						if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) {
+				boolean didUpdate = false;
+				Map<String, Object> quoteRow = new HashMap<>();
+				while ((quoteRow = quoteSource.getNext()) != null) {
+					didUpdate = true;
+					if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
+						// Update exchange rate
+						if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
 							finalExitCode = exitCode;
 						}
+						continue;
 					}
+					// Update all other quote types
+					if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) {
+						finalExitCode = exitCode;
+					}
+				}
 
-					// Add any new rows to the SP table
-					msmSecurity.addNewSpRows();
-
-					// Update online update time-stamp
-					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now());
+				if (didUpdate) {
+					msmSecurity.addNewSpRows();		// add any new rows to the SP table
+					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now());		// update online update time-stamp
 
 					// Print summaries
 					msmSecurity.logSummary();
