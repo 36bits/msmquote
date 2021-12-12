@@ -28,7 +28,7 @@ abstract class MsmInstrument {
 		// Open properties
 		if (!propsFile.isEmpty()) {
 			try {
-				InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(propsFile);
+				InputStream propsIs = getClass().getClassLoader().getResourceAsStream(propsFile);
 				props.load(propsIs);
 			} catch (IOException e) {
 				LOGGER.fatal(e);

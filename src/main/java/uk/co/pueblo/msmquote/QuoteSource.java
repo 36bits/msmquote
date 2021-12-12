@@ -24,7 +24,7 @@ abstract class QuoteSource {
 		// Open properties
 		if (!propsFile.isEmpty()) {
 			try {
-				InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(propsFile);
+				InputStream propsIs = getClass().getClassLoader().getResourceAsStream(propsFile);
 				PROPS.load(propsIs);
 			} catch (IOException e) {
 				LOGGER.fatal(e);
