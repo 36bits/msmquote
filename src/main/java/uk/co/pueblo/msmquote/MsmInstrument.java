@@ -87,12 +87,14 @@ abstract class MsmInstrument {
 						quoteRow.put(propArray[0], propArray[1]);	// apply default value
 					}
 					// Append to respective log message
-					if (optLogMsg[i][2].isEmpty()) {
-						optLogMsg[i][2] = optLogMsg[i][1];
-					} else {
-						optLogMsg[i][2] = optLogMsg[i][2] + ", " + optLogMsg[i][1];
+					if (!optLogMsg[i][1].isEmpty()) {
+						if (optLogMsg[i][2].isEmpty()) {
+							optLogMsg[i][2] = optLogMsg[i][1];
+						} else {
+							optLogMsg[i][2] = optLogMsg[i][2] + ", " + optLogMsg[i][1];
+						}
+						optLogMsg[i][1] = "";
 					}
-					optLogMsg[i][1] = "";
 				}
 			}
 		}
