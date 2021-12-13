@@ -42,7 +42,7 @@ public class Update {
 				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
 				final QuoteSource quoteSource;
-				
+
 				// Instantiate quote object according to quote source
 				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
@@ -54,6 +54,8 @@ public class Update {
 					quoteSource = new YahooApiHist(args[2]);
 				} else if (args[2].endsWith(".csv")) {
 					quoteSource = new YahooCsvHist(args[2]);
+				} else if (args.length == 4 && args[3].startsWith("hist ")) {
+					quoteSource = new GoogleSheetsHist(args[2], args[3]);
 				} else if (args.length == 4) {
 					quoteSource = new GoogleSheetsQuote(args[2], args[3]);
 				} else {
@@ -93,8 +95,7 @@ public class Update {
 				finalExitCode = EXIT_ERROR;
 			}
 
-			// Close Money database
-			msmDb.closeDb();
+			msmDb.closeDb();	// close Money database
 
 		} catch (Exception e) {
 			LOGGER.fatal(e);
