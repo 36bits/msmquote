@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,70 +44,43 @@ abstract class MsmInstrument {
 		String prop;
 		String propArray[];
 		int column = 1;
+		int pass;
+		String logMsg[] = {"Required quote data missing", "Required default values applied", "Optional quote data missing", "Optional default values applied"};
+		Level logLevel[] = {Level.ERROR, Level.ERROR, Level.WARN, Level.WARN};
+		String missingCols[] = { "", "", "", "" };	// required, required defaults, optional, optional defaults
+		String columnSet = "column.";
 
-		// Validate required columns
-		String reqLogMsg = "";
-		while ((prop = props.getProperty("column." + column++)) != null) {
-			propArray = prop.split(",");
-			if (!quoteRow.containsKey(propArray[0])) {
-				if (propArray.length == 2) {
-					quoteRow.put(propArray[0], propArray[1]);		// apply default value
-				}
-				// Add column to log message
-				if (reqLogMsg.isEmpty()) {
-					reqLogMsg = propArray[0];
-				} else {
-					reqLogMsg = reqLogMsg + ", " + propArray[0];
-				}
+		// Validate
+		for (pass = 0; pass < missingCols.length; pass+=2) {
+			if (pass == 2) {
+				columnSet = columnSet + quoteRow.get("xType").toString() + ".";
 			}
-		}
-
-		// Emit log message and return if necessary
-		if (!reqLogMsg.isEmpty()) {
-			LOGGER.error("Required quote data missing for symbol {}: {}", quoteRow.get("xSymbol"), reqLogMsg);
-			quoteRow.put("xStatus", UPDATE_ERROR);
-			return quoteRow;
-		}
-
-		// Validate optional columns
-		String optLogMsg[][] = { { "Optional quote data missing", "", "" }, { "Default values applied", "", "" } };
-		String quoteType = quoteRow.get("xType").toString();
-		column = 1;
-		int updateStatus = UPDATE_OK;
-		int i;
-		while ((prop = props.getProperty("column." + quoteType + "." + column++)) != null) {
-			propArray = prop.split(",");
-			if (!quoteRow.containsKey(propArray[0])) {
-				updateStatus = UPDATE_WARN;
-				for (i = 0; i < optLogMsg.length; i++) {
-					if (i == 0) {
-						optLogMsg[i][1] = propArray[0];
-					}
-					if (i == 1 && propArray.length == 2) {
-						optLogMsg[i][1] = propArray[0];
-						quoteRow.put(propArray[0], propArray[1]);	// apply default value
-					}
-					// Append to respective log message
-					if (!optLogMsg[i][1].isEmpty()) {
-						if (optLogMsg[i][2].isEmpty()) {
-							optLogMsg[i][2] = optLogMsg[i][1];
-						} else {
-							optLogMsg[i][2] = optLogMsg[i][2] + ", " + optLogMsg[i][1];
-						}
-						optLogMsg[i][1] = "";
+			while ((prop = props.getProperty(columnSet + column++)) != null) {
+				propArray = prop.split(",");
+				if (!quoteRow.containsKey(propArray[0])) {
+					missingCols[pass] = missingCols[pass] + propArray[0] + ", ";
+					// Process default value
+					if (propArray.length == 2) {
+						quoteRow.put(propArray[0], propArray[1]);
+						missingCols[pass + 1] = missingCols[pass + 1] + propArray[0] + ", ";
 					}
 				}
 			}
 		}
-
+		
 		// Emit log messages
-		for (i = 0; i < optLogMsg.length; i++) {
-			if (!optLogMsg[i][2].isEmpty()) {
-				LOGGER.warn("{} for symbol {}: {}", optLogMsg[i][0], quoteRow.get("xSymbol").toString(), optLogMsg[i][2]);
-			}
+		int status = UPDATE_OK;
+		int maxStatus = UPDATE_OK;
+		for (pass = 0; pass < missingCols.length; pass++) {
+			if (!missingCols[pass].isEmpty()) {
+				LOGGER.log(logLevel[pass], "{} for symbol {}: {}", logMsg[pass], quoteRow.get("xSymbol").toString(), missingCols[pass].substring(0, missingCols[pass].length() - 2));
+				if ((status = 4 - logLevel[pass].intLevel() / 100) > maxStatus) {
+					maxStatus = status;
+				}
+			}			
 		}
 
-		quoteRow.put("xStatus", updateStatus);
+		quoteRow.put("xStatus", maxStatus);
 		return quoteRow;
 	}
 
