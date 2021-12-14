@@ -18,7 +18,7 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import com.healthmarketscience.jackcess.crypt.CryptCodecProvider;
 
-public class MsmDb extends DatabaseBuilder {
+public class MsmDb {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(MsmDb.class);
