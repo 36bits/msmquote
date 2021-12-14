@@ -18,7 +18,6 @@ public class YahooApiQuote extends YahooSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
-	private static final String DELIM = ",";
 	private static final String JSON_ROOT = "/quoteResponse/result";
 	private static final String PROPS_FILE = "YahooSource.properties";
 
@@ -38,26 +37,24 @@ public class YahooApiQuote extends YahooSource {
 		super(PROPS_FILE);
 
 		String yahooSymbol = "";
-		String delim;
 		int n;
 
 		// Build Yahoo security symbols string
 		String invSymbols = "";
 		String[] symbol = new String[2];
 		for (n = 0; n < symbols.size(); n++) {
-			// Append the symbols pair to the symbol translation table and the Yahoo symbol
-			// to the investment symbols string
+			// Append the symbols pair to the symbol translation table and the Yahoo symbol to the investment symbols string
 			symbol = symbols.get(n);
 			if ((yahooSymbol = getYahooSymbol(symbol[0], symbol[1], PROPS)) != null) {
 				symbolXlate.put(yahooSymbol, symbol[0]);
-				delim = DELIM;
-				if (n == 0) {
-					delim = "";
-				}
-				invSymbols = invSymbols + delim + yahooSymbol;
+				invSymbols = invSymbols + yahooSymbol + ",";
 			}
 		}
-		LOGGER.info("Building URL with these security symbols: {}", invSymbols);
+		if (invSymbols.isEmpty()) {
+			LOGGER.warn("No security symbols found");
+		} else {
+			LOGGER.info("Building URL with these security symbols: {}", invSymbols.substring(0, invSymbols.length() - 1));
+		}
 
 		// Build Yahoo currency symbols string
 		String baseIsoCode = null;
@@ -68,25 +65,21 @@ public class YahooApiQuote extends YahooSource {
 				baseIsoCode = isoCodes.get(n - 1);
 				continue;
 			}
-			delim = DELIM;
-			if (n == isoCodesSz - 1) {
-				delim = "";
-			}
 			// Append the symbols pair to the symbol translation table and to the FX symbols string
 			yahooSymbol = baseIsoCode + isoCodes.get(n - 1) + "=X";
 			symbolXlate.put(yahooSymbol, yahooSymbol);
-			fxSymbols = fxSymbols + delim + yahooSymbol;
+			fxSymbols = fxSymbols + yahooSymbol + ",";
 		}
-		LOGGER.info("Building URL with these FX symbols: {}", fxSymbols);
+		if (fxSymbols.isEmpty()) {
+			LOGGER.warn("No FX symbols found");
+		} else {
+			LOGGER.info("Building URL with these FX symbols: {}", fxSymbols.substring(0, fxSymbols.length() - 1));
+		}
 
-		if (!apiUrl.endsWith("symbols=?")) {	
-			// Generate delimiter for FX symbols string
-			delim = DELIM;
-			if (invSymbols.isEmpty()) {
-				delim = "";
-			}
+		String allSymbols = invSymbols + fxSymbols;		
+		if (!apiUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {
 			// Get quote data
-			resultIt = getJson(apiUrl + invSymbols + delim + fxSymbols).at(JSON_ROOT).elements();
+			resultIt = getJson(apiUrl + allSymbols.substring(0, allSymbols.length() - 1)).at(JSON_ROOT).elements();
 		}
 	}
 
