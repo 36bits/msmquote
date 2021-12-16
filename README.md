@@ -17,7 +17,7 @@ Quote data can be updated for any security or currency where a quote is availabl
 # Getting Started
 Download the latest **msmquote** [ZIP archive](https://github.com/36bits/msmquote/releases) and extract it to a suitable folder on your machine. Then run **msmquote** from the root of the extracted folder using the following command line:
 
-`bin\java -jar msmquote-4.0.0.jar moneyfile.mny password source`
+`bin\java -jar msmquote-4.0.1.jar moneyfile.mny password source`
 
 Where:
 * `moneyfile.mny` is the Microsoft Money file that you wish to update (the file must not be open in Microsoft Money when **msmquote** is run)
