@@ -7,6 +7,20 @@
 * None.
 
 ## Maintenance
+* Update log4j-core to 2.17.0 for Log4Shell vulnerability fix.
+
+## Known Issues
+* Portfolio update timestamp and status line index values are updated in Money 2004 but not in Money 2005 or Money Plus Sunset.
+
+# Version 4.0.1
+
+## New Features
+* None.
+
+## Bug Fixes
+* None.
+
+## Maintenance
 * Update log4j-core to 2.16.0 for Log4Shell vulnerability fix.
 * Migrate from Oracle JDK to OpenJDK.
 
