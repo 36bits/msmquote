@@ -3,7 +3,7 @@
 
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>4.0.2-SNAPSHOT</version>
+	<version>4.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msmquote</name>
 
@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.16.0</version>
+			<version>2.17.0</version>
 		</dependency>
 	</dependencies>
 
