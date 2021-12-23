@@ -15,14 +15,14 @@ $jre = $env:ProgramFiles + "\msmquote\bin\java.exe"
 $jar = $env:ProgramFiles + "\msmquote\msmquote-4.0.2.jar"
 $jreOpts = @()
 
-Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started: file = $mnyFile."
+Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started.`nFile = $mnyFile"
 & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source *>> $log
 $savedExitCode = $lastexitcode
 
 if ($savedExitCode -eq 1) {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Warning -EventId 1001 -Category 0 -Message "Update completed with warnings: file = $mnyFile, exit code = $savedExitCode."
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Warning -EventId 1001 -Category 0 -Message "Update completed with warnings.`nFile = $mnyFile`nExit code = $savedExitCode"
 } elseif ($savedExitCode -eq 2) {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Error -EventId 1001 -Category 0 -Message "Update completed with errors: file = $mnyFile, exit code = $savedExitCode."
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Error -EventId 1001 -Category 0 -Message "Update completed with errors.`nFile = $mnyFile`nExit code = $savedExitCode"
 } else {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1001 -Category 0 -Message "Update completed successfully: file = $mnyFile, exit code = $savedExitCode."
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1001 -Category 0 -Message "Update completed successfully.`nFile = $mnyFile`nExit code = $savedExitCode"
 }
