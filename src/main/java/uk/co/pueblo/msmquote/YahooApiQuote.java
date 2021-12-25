@@ -51,7 +51,7 @@ public class YahooApiQuote extends YahooSource {
 			}
 		}
 		if (invSymbols.isEmpty()) {
-			LOGGER.warn("No security symbols found");
+			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
 			LOGGER.info("Building URL with these security symbols: {}", invSymbols.substring(0, invSymbols.length() - 1));
 		}
@@ -71,7 +71,7 @@ public class YahooApiQuote extends YahooSource {
 			fxSymbols = fxSymbols + yahooSymbol + ",";
 		}
 		if (fxSymbols.isEmpty()) {
-			LOGGER.warn("No FX symbols found");
+			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
 			LOGGER.info("Building URL with these FX symbols: {}", fxSymbols.substring(0, fxSymbols.length() - 1));
 		}
