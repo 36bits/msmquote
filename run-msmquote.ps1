@@ -12,7 +12,7 @@ if ($PSVersionTable.PSVersion.Major -ne 5) {
 $mnyFile = (Get-Item $mnyFile).FullName
 $log = $env:UserProfile + "\log\msmquote.log"
 $jre = $env:ProgramFiles + "\msmquote\bin\java.exe"
-$jar = $env:ProgramFiles + "\msmquote\msmquote-4.0.2.jar"
+$jar = $env:ProgramFiles + "\msmquote\msmquote-4.1.0.jar"
 $jreOpts = @()
 
 Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started.`nFile = $mnyFile"
