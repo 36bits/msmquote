@@ -39,7 +39,7 @@ public class YahooCsvHist extends YahooSource {
 
 		// Get quote metadata from CSV file name
 		String tmp = csvFile.getName();
-		quoteMeta = tmp.substring(0, tmp.length() - 4).split("_"); // symbol, currency, quote type
+		quoteMeta = tmp.substring(0, tmp.length() - 4).split(" "); // symbol, currency, quote type
 		// Set quote divisor according to currency
 		quoteDivisor = 1;
 		String quoteDivisorProp = PROPS.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2]);
