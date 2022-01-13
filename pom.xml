@@ -3,7 +3,7 @@
 
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>4.1.0</version>
+	<version>4.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>msmquote</name>
@@ -11,7 +11,7 @@
 
 	<scm>
 		<developerConnection>scm:git:file:///home/git/msmquote.git</developerConnection>
-		<tag>v4.1.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<properties>
