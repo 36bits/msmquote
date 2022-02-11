@@ -36,7 +36,7 @@ class MsmSecurity extends MsmInstrument {
 	// Instance variables
 	private final Table secTable;
 	private final Table spTable;
-	private ArrayList<Map<String, Object>> spRowAddList = new ArrayList<>();
+	private ArrayList<Map<String, Object>> newSpRows = new ArrayList<>();
 	private int hsp = 0;
 
 	// Constructor
@@ -184,16 +184,16 @@ class MsmSecurity extends MsmInstrument {
 		spRow.put("hsec", hsec);
 		spRow.put("src", SRC_ONLINE);
 		spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
-		spRowAddList.add(spRow);
-		LOGGER.info("Added new quote for symbol {} to SP table update list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
+		newSpRows.add(spRow);
+		LOGGER.info("Added new quote for symbol {} to SP table append list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
 
 		return updateStatus;
 	}
 
 	void addNewSpRows() throws IOException {
-		if (!spRowAddList.isEmpty()) {
-			spTable.addRowsFromMaps(spRowAddList);
-			LOGGER.info("Added new quotes to SP table from table update list");
+		if (!newSpRows.isEmpty()) {
+			spTable.addRowsFromMaps(newSpRows);
+			LOGGER.info("Added {} new {} to SP table from SP table append list", newSpRows.size(), newSpRows.size() == 1 ? "quote" : "quotes");
 		}
 		return;
 	}
