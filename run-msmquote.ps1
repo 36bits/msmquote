@@ -15,7 +15,6 @@ $jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
 $jar = $env:LOCALAPPDATA + "\Programs\msmquote-4.1.0.jar"
 $jreOpts = @()
 
-Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1000 -Category 0 -Message "Update started.`nFile = $mnyFile"
 & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source *>> $log
 $savedExitCode = $lastexitcode
 
