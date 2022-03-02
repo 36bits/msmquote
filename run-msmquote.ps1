@@ -12,16 +12,16 @@ if ($PSVersionTable.PSVersion.Major -ne 5) {
 $mnyFile = (Get-Item $mnyFile).FullName
 $log = $env:LOCALAPPDATA + "\log\msmquote.log"
 $jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
-$jar = $env:LOCALAPPDATA + "\Programs\msmquote-4.1.0.jar"
+$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.1.1.jar"
 $jreOpts = @()
 
-& $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source *>> $log
-$savedExitCode = $lastexitcode
+$duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log }
+$logMsg = -join ("`nFile = ", $mnyFile, "`nExit code = ", $LASTEXITCODE, "`nDuration = ", $duration)
 
-if ($savedExitCode -eq 1) {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Warning -EventId 1001 -Category 0 -Message "Update completed with warnings.`nFile = $mnyFile`nExit code = $savedExitCode"
-} elseif ($savedExitCode -eq 2) {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Error -EventId 1001 -Category 0 -Message "Update completed with errors.`nFile = $mnyFile`nExit code = $savedExitCode"
+if ($LASTEXITCODE -eq 1) {
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Warning -EventId 1001 -Category 0 -Message "Update completed with warnings.$logMsg"
+} elseif ($LASTEXITCODE -eq 2) {
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Error -EventId 1001 -Category 0 -Message "Update completed with errors.$logMsg"
 } else {
-    Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1001 -Category 0 -Message "Update completed successfully.`nFile = $mnyFile`nExit code = $savedExitCode"
+    Write-Eventlog -LogName Application -Source msmquote -EntryType Information -EventId 1001 -Category 0 -Message "Update completed successfully.$logMsg"
 }
