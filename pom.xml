@@ -10,7 +10,7 @@
 	<url>https://github.com/36bits/msmquote</url>
 
 	<scm>
-		<developerConnection>scm:git:file:///home/git/msmquote.git</developerConnection>
+		<developerConnection>scm:git:file:///home/dev/git/msmquote.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
