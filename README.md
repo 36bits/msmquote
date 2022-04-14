@@ -2,7 +2,7 @@
 
 **msmquote** is a Java application for updating current and historical security quotes and current currency exchange rates in Microsoft Money files.
 
-Quote data can be updated for any security or currency where a quote is available from these currently supported sources:
+Quote data can be updated for any security or currency where a quote is available from these supported sources:
 
 * The [Yahoo Finance](https://finance.yahoo.com) quote data API
 * A Google Sheets spreadsheet with quote data provided by the [GOOGLEFINANCE](https://support.google.com/docs/answer/3093281) security information function
@@ -18,20 +18,8 @@ Historical data for a single security can be updated where a quote is available 
 * Microsoft Money 2005 (14.0)
 * Microsoft Money Plus Sunset (17.0.120.3817)
 
-# Getting Started
-Download the latest **msmquote** [ZIP archive](https://github.com/36bits/msmquote/releases) and extract it to a suitable folder on your machine. Then run **msmquote** from the root of the extracted folder using the following command line:
-
-`bin\java -jar msmquote-4.1.1.jar moneyfile.mny password source`
-
-Where:
-* `moneyfile.mny` is the Microsoft Money file that you wish to update (the file must not be open in Microsoft Money when **msmquote** is run)
-* `password` is the file password if applicable (use `""` if the file is not password protected)
-* `source` is the source of the quote data (full details of this parameter can be found in the [msmquote wiki](https://github.com/36bits/msmquote/wiki))
-
-# Exit Codes
-* `0` Execution completed successfully
-* `1` Execution completed with warnings
-* `2` Execution completed with errors
+# Documentation
+Please see the [wiki](https://github.com/36bits/msmquote/wiki) for full details of how to use **msmquote**.
 
 # Author
 Jonathan Casiot ([e-mail](mailto:msmquote@pueblo.co.uk))
