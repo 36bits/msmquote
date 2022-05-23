@@ -32,8 +32,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @param symbols  the list of investment symbols + country codes
 	 * @param isoCodes the list of currency ISO codes, last element is base currency
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException {
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException {
 		super(PROPS_FILE);
 
 		String yahooSymbol = "";
@@ -88,8 +89,9 @@ public class YahooApiQuote extends YahooSource {
 	 * 
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	YahooApiQuote(String apiUrl) throws IOException {
+	YahooApiQuote(String apiUrl) throws IOException, InterruptedException {
 		super(PROPS_FILE);
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}

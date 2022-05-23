@@ -29,8 +29,9 @@ class YahooApiHist extends YahooSource {
 	 * 
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	YahooApiHist(String apiUrl) throws IOException {
+	YahooApiHist(String apiUrl) throws IOException, InterruptedException {
 		super(PROPS_FILE);
 
 		// Get quote data

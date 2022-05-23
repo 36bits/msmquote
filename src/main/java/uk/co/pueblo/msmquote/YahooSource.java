@@ -2,9 +2,13 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,9 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 abstract class YahooSource implements QuoteSource {
 
 	// Constants
-	static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
-	static final int CONNECT_TIMEOUT = 10000;	// milliseconds
-	static final int READ_TIMEOUT = 60000;		// milliseconds
+	static final Logger LOGGER = LogManager.getLogger(YahooSource.class);	
 
 	YahooSource(String propsFile) {
 		// Open properties
@@ -33,19 +35,22 @@ abstract class YahooSource implements QuoteSource {
 	/**
 	 * Gets JSON quote data from a web API.
 	 * 
-	 * @param apiUrl the URL of the web API
+	 * @param url the URL of the web API
 	 * @return the quote data
 	 * @throws IOException
+	 * @throws InterruptedException
 	 */
-	static JsonNode getJson(String apiUrl) throws IOException {
-		URL url = new URL(apiUrl);
-		URLConnection con = url.openConnection();
-		con.setConnectTimeout(CONNECT_TIMEOUT);
-		con.setReadTimeout(READ_TIMEOUT);		
+	static JsonNode getJson(String url) throws InterruptedException, IOException {
+		String[] urlSplit = url.split("(?<=\\=)", 2);	// Split parameters out of URL		
+		HttpClient httpClient = HttpClient.newHttpClient();
+		URI uri = URI.create(urlSplit[0] + URLEncoder.encode(urlSplit[1], StandardCharsets.UTF_8.toString()));
+		HttpRequest request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(30)).GET().build();
+		
 		LOGGER.info("Requesting quote data from Yahoo Finance API");
-		try (InputStream quoteIs = con.getInputStream();) {		// using try-with-resources to get AutoClose of InputStream
-			ObjectMapper mapper = new ObjectMapper();
-			return mapper.readTree(quoteIs);
-		}
+		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		LOGGER.info("Received {} bytes of quote data", response.body().length());
+		
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readTree(response.body());
 	}
 }
