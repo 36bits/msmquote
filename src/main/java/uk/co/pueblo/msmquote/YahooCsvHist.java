@@ -77,7 +77,7 @@ public class YahooCsvHist extends YahooSource {
 			Double dValue = 0d;
 			LocalDateTime dtValue;
 			for (int n = 0; n < csvColumn.length; n++) {
-				if ((spColumn = PROPS.getProperty("hist.csv." + n)) != null) {
+				if ((spColumn = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
 					if (spColumn.startsWith("dt")) {
 						// Process LocalDateTime values
 						dtValue = LocalDateTime.parse(csvColumn[n] + "T00:00:00").atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
