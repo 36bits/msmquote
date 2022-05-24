@@ -40,13 +40,18 @@ abstract class YahooSource implements QuoteSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	static JsonNode getJson(String url) throws InterruptedException, IOException {
+	static JsonNode getJson(String url) throws InterruptedException, IOException {		
+		// Get http timeout from properties file
+		String prop;
+		int httpTimeout = ((prop = PROPS.getProperty("api.http.timeout")) != null) ? Integer.parseInt(prop) : 20;
+				
+		// Build and send http request
 		String[] urlSplit = url.split("(?<=\\=)", 2);	// Split parameters out of URL		
 		HttpClient httpClient = HttpClient.newHttpClient();
 		URI uri = URI.create(urlSplit[0] + URLEncoder.encode(urlSplit[1], StandardCharsets.UTF_8.toString()));
-		HttpRequest request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(30)).GET().build();
+		HttpRequest request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(httpTimeout)).GET().build();
 		
-		LOGGER.info("Requesting quote data from Yahoo Finance API");
+		LOGGER.info("Requesting quote data from Yahoo Finance API, http timeout = {}s", httpTimeout);
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 		LOGGER.info("Received {} bytes of quote data", response.body().length());
 		
