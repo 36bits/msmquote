@@ -1,6 +1,6 @@
 # msmquote
 
-**msmquote** is a Java application for updating current and historical security quotes and current currency exchange rates in Microsoft Money files from a variety of online and offline sources.
+**msmquote** is a Java command-line application for updating current and historical security quotes and current currency exchange rates in Microsoft Money files, using a variety of online and offline quote sources.
 
 Quote data can be updated for any security or currency where a quote is available from these supported sources:
 
