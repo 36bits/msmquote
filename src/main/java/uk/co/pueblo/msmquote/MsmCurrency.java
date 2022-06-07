@@ -86,6 +86,7 @@ class MsmCurrency extends MsmInstrument {
 				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[i], hcrnc[(i + 1) % 2]);
 				if (oldRate != newRate) {
 					// Merge quote row into FX row and write to FX table
+					quoteRow.put("rate", newRate);
 					fxRow.putAll(quoteRow);		// TODO Should fxRow be sanitised first?
 					fxCursor.updateCurrentRowFromMap(fxRow);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);
