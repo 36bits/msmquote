@@ -67,7 +67,7 @@ class MsmCurrency extends MsmInstrument {
 		hcrnc[1] = getHcrnc(symbol.substring(3, 6));
 
 		// Update exchange rate
-		double newRate = (double) quoteRow.get("dRate");
+		double newRate = (double) quoteRow.get("rate");
 		Map<String, Object> fxRowPattern = new HashMap<>();
 		IndexCursor fxCursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
 		Map<String, Object> fxRow = null;
@@ -82,11 +82,11 @@ class MsmCurrency extends MsmInstrument {
 				if (i == 1) {
 					// Reversed rate
 					newRate = 1 / newRate;
+					quoteRow.put("rate", newRate);
 				}
 				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[i], hcrnc[(i + 1) % 2]);
 				if (oldRate != newRate) {
 					// Merge quote row into FX row and write to FX table
-					quoteRow.put("rate", newRate);
 					fxRow.putAll(quoteRow);		// TODO Should fxRow be sanitised first?
 					fxCursor.updateCurrentRowFromMap(fxRow);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);

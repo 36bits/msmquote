@@ -49,14 +49,14 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 						// Process LocalDateTime values
 						dtValue = Instant.parse(value).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
 						returnRow.put(columnName, dtValue);
-					} else if (columnName.startsWith("d")) {
+					} else if (columnName.startsWith("d") || value.matches("\\d+\\.\\d+")) {
 						// Process Double values
 						returnRow.put(columnName, Double.parseDouble(value));
 					} else if (columnName.startsWith("x")) {
 						// Process String values
 						returnRow.put(columnName, value);
 					} else {
-						// And finally process Long values
+						// And finally assume everything else is a Long value
 						returnRow.put(columnName, Long.parseLong(value));
 					}
 				}

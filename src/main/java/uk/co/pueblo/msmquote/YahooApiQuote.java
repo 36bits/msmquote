@@ -137,18 +137,19 @@ public class YahooApiQuote extends YahooSource {
 
 			// Add quote values to return row
 			int n = 1;
-			Double dValue = 0d;
+			String value;
+			Double dValue = 0d;			
 			LocalDateTime dtValue;
 			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
 				String[] apiMap = prop.split(",");
-				if (result.has(apiMap[1])) {
+				if ((value = result.get(apiMap[1]).asText()) != null ) {
 					if (apiMap[0].startsWith("dt")) {
 						// Process LocalDateTime values
-						dtValue = Instant.ofEpochSecond(result.get(apiMap[1]).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
+						dtValue = Instant.ofEpochSecond(Long.parseLong(value)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
 						returnRow.put(apiMap[0], dtValue);
-					} else if (apiMap[0].startsWith("d")) {
+					} else if (apiMap[0].startsWith("d") || value.matches("\\d+\\.\\d+")) {
 						// Process Double values
-						dValue = result.get(apiMap[1]).asDouble();
+						dValue = Double.parseDouble(value);
 						// Process adjustments
 						if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiMap[0]))) {
 							dValue = dValue / quoteDivisor;
@@ -157,8 +158,8 @@ public class YahooApiQuote extends YahooSource {
 						}
 						returnRow.put(apiMap[0], dValue);
 					} else {
-						// And finally process Long values
-						returnRow.put(apiMap[0], result.get(apiMap[1]).asLong());
+						// And finally assume everything else is a Long value
+						returnRow.put(apiMap[0], Long.parseLong(value));
 					}
 				}
 			}
