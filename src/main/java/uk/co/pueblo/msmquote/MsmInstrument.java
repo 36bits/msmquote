@@ -2,6 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,13 +46,13 @@ abstract class MsmInstrument {
 		String propArray[];
 		int column = 1;
 		int pass;
-		String logMsg[] = {"Required quote data missing", "Required default values applied", "Optional quote data missing", "Optional default values applied"};
-		Level logLevel[] = {Level.ERROR, Level.ERROR, Level.WARN, Level.WARN};
-		String missingCols[] = { "", "", "", "" };	// required, required defaults, optional, optional defaults
+		String logMsg[] = { "Required quote data missing", "Required default values applied", "Optional quote data missing", "Optional default values applied" };
+		Level logLevel[] = { Level.ERROR, Level.ERROR, Level.WARN, Level.WARN };
+		String missingCols[] = { "", "", "", "" }; // required, required defaults, optional, optional defaults
 		String columnSet = "column.";
 
 		// Validate
-		for (pass = 0; pass < missingCols.length; pass+=2) {
+		for (pass = 0; pass < missingCols.length; pass += 2) {
 			if (pass == 2) {
 				columnSet = columnSet + quoteRow.get("xType").toString() + ".";
 				column = 1;
@@ -62,13 +63,22 @@ abstract class MsmInstrument {
 					missingCols[pass] = missingCols[pass] + propArray[0] + ", ";
 					// Process default value
 					if (propArray.length == 2) {
-						quoteRow.put(propArray[0], propArray[1]);
+						if (propArray[0].startsWith("dt")) {
+							// Process LocalDateTime values
+							quoteRow.put(propArray[0], Instant.ofEpochSecond(Long.parseLong(propArray[1])).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay());
+						} else if (propArray[0].startsWith("d") || propArray[1].matches("\\d+\\.\\d+")) {
+							// Process Double values
+							quoteRow.put(propArray[0], Double.parseDouble(propArray[1]));
+						} else {
+							// And finally assume everything else is a Long value
+							quoteRow.put(propArray[0], Long.parseLong(propArray[1]));
+						}
 						missingCols[pass + 1] = missingCols[pass + 1] + propArray[0] + ", ";
 					}
 				}
 			}
 		}
-		
+
 		// Emit log messages
 		int status = UPDATE_OK;
 		int maxStatus = UPDATE_OK;
@@ -78,7 +88,7 @@ abstract class MsmInstrument {
 				if ((status = 4 - logLevel[pass].intLevel() / 100) > maxStatus) {
 					maxStatus = status;
 				}
-			}			
+			}
 		}
 
 		quoteRow.put("xStatus", maxStatus);
