@@ -54,6 +54,7 @@ abstract class MsmInstrument {
 		for (pass = 0; pass < missingCols.length; pass+=2) {
 			if (pass == 2) {
 				columnSet = columnSet + quoteRow.get("xType").toString() + ".";
+				column = 1;
 			}
 			while ((prop = props.getProperty(columnSet + column++)) != null) {
 				propArray = prop.split(",");
