@@ -137,12 +137,12 @@ public class YahooApiQuote extends YahooSource {
 
 			// Add quote values to return row
 			int n = 1;
-			String value;
 			Double dValue = 0d;			
 			LocalDateTime dtValue;
 			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
-				String[] apiMap = prop.split(",");
-				if ((value = result.get(apiMap[1]).asText()) != null ) {
+				String[] apiMap = prop.split(",");				
+				if (result.has(apiMap[1])) {
+					String value = result.get(apiMap[1]).asText();
 					if (apiMap[0].startsWith("dt")) {
 						// Process LocalDateTime values
 						dtValue = Instant.ofEpochSecond(Long.parseLong(value)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
