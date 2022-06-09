@@ -16,7 +16,7 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsQuote.class);
 	private static final int HEADER_COLUMN = 0;
-	private static final String HEADER_FLAG = "symbol";
+	private static final String HEADER_FLAG = "xSymbol";
 	private static final String VALUE_NA = "#N/A";
 
 	// Constructor
@@ -29,11 +29,9 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 		List<Object> quoteRow;
 
 		// Get quote row
-		String googleSymbol;
 		while (quoteIndex < quoteRows.size()) {
 			quoteRow = quoteRows.get(quoteIndex++);
-			googleSymbol = (String) quoteRow.get(HEADER_COLUMN);
-			if (googleSymbol.equals(HEADER_FLAG)) {
+			if (quoteRow.get(HEADER_COLUMN).toString().equals(HEADER_FLAG)) {
 				headerRow = quoteRow;
 				continue;
 			}
@@ -42,7 +40,7 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 			String value;
 			LocalDateTime dtValue;
 
-			for (int n = 1; n < quoteRow.size(); n++) {
+			for (int n = 0; n < quoteRow.size(); n++) {
 				if (!(value = (quoteRow.get(n)).toString()).equals(VALUE_NA)) {
 					columnName = (String) headerRow.get(n);
 					if (columnName.startsWith("dt")) {
