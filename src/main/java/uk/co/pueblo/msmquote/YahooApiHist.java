@@ -1,8 +1,6 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +19,7 @@ class YahooApiHist extends YahooSource {
 	private JsonNode resultJn;
 	private String symbol;
 	private int quoteDivisor;
+	private int quoteMultiplier;
 	private int quoteIndex;
 	private String quoteType;
 
@@ -29,23 +28,21 @@ class YahooApiHist extends YahooSource {
 	 * 
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
 	 * @throws IOException
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	YahooApiHist(String apiUrl) throws IOException, InterruptedException {
 		super(PROPS_FILE);
 
-		// Get quote data
+		// Get symbol and quote type
 		resultJn = getJson(apiUrl).at("/chart/result/0");
-
-		// Get symbol and quote divisor
-		quoteDivisor = 1;
 		symbol = resultJn.at("/meta").get("symbol").asText();
 		quoteType = resultJn.at("/meta").get("instrumentType").asText();
-		String quoteDivisorProp = PROPS.getProperty("divisor." + resultJn.at("/meta").get("currency").asText() + "." + quoteType);
-		if (quoteDivisorProp != null) {
-			quoteDivisor = Integer.parseInt(quoteDivisorProp);
-		}
-
+		
+		// Get divisor or multiplier for quote currency and quote type
+		String currency = resultJn.at("/meta").get("currency").asText();
+		String prop;
+		quoteDivisor = ((prop = PROPS.getProperty("divisor." + currency + "." + quoteType)) == null) ? 1 : Integer.parseInt(prop);
+		quoteMultiplier = ((prop = PROPS.getProperty("multiplier." + currency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
 		quoteIndex = 0;
 	}
 
@@ -54,8 +51,8 @@ class YahooApiHist extends YahooSource {
 	 * 
 	 * @return the quote row or null if no more data
 	 */
-	public Map<String, Object> getNext() {
-		Map<String, Object> returnRow = new HashMap<>();
+	public Map<String, String> getNext() {
+		Map<String, String> returnRow = new HashMap<>();
 
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
 			return null;
@@ -69,27 +66,17 @@ class YahooApiHist extends YahooSource {
 		try {
 			int n = 1;
 			String prop;
-			String[] apiHistMap;
-			Double dValue = 0d;
-			LocalDateTime dtValue;
 			while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
-				apiHistMap = prop.split(",");
-				if (apiHistMap[0].startsWith("dt")) {
-					// Process LocalDateTime values
-					dtValue = Instant.ofEpochSecond(resultJn.at(apiHistMap[1]).get(quoteIndex).asLong()).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay();
-					returnRow.put(apiHistMap[0], dtValue);
-				} else if (apiHistMap[0].startsWith("d")) {
-					// Process Double values
-					dValue = resultJn.at(apiHistMap[1]).get(quoteIndex).asDouble();
-					// Process adjustments
-					if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiHistMap[0]))) {
-						dValue = dValue / quoteDivisor;
+				String apiHistMap[] = prop.split(",");
+				String value = resultJn.at(apiHistMap[0]).get(quoteIndex).asText();
+				if (apiHistMap.length == 3) {
+					if (apiHistMap[2].equals("d")) {
+						value = String.valueOf(Double.parseDouble(value) / quoteDivisor);
+					} else if (apiHistMap[2].equals("m")) {
+						value = String.valueOf(Double.parseDouble(value) * quoteMultiplier);
 					}
-					returnRow.put(apiHistMap[0], dValue);
-				} else {
-					// And finally process Long values
-					returnRow.put(apiHistMap[0], resultJn.at(apiHistMap[1]).get(quoteIndex).asLong());
 				}
+				returnRow.put(apiHistMap[1], value);
 			}
 
 		} catch (NumberFormatException e) {

@@ -1,8 +1,6 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +30,7 @@ public class YahooApiQuote extends YahooSource {
 	 * @param symbols  the list of investment symbols + country codes
 	 * @param isoCodes the list of currency ISO codes, last element is base currency
 	 * @throws IOException
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException {
 		super(PROPS_FILE);
@@ -77,7 +75,7 @@ public class YahooApiQuote extends YahooSource {
 			LOGGER.info("Building URL with these FX symbols: {}", fxSymbols.substring(0, fxSymbols.length() - 1));
 		}
 
-		String allSymbols = invSymbols + fxSymbols;		
+		String allSymbols = invSymbols + fxSymbols;
 		if (!apiUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {
 			// Get quote data
 			resultIt = getJson(apiUrl + allSymbols.substring(0, allSymbols.length() - 1)).at(JSON_ROOT).elements();
@@ -89,7 +87,7 @@ public class YahooApiQuote extends YahooSource {
 	 * 
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	YahooApiQuote(String apiUrl) throws IOException, InterruptedException {
 		super(PROPS_FILE);
@@ -101,14 +99,14 @@ public class YahooApiQuote extends YahooSource {
 	 * 
 	 * @return the quote row or null if no more data
 	 */
-	public Map<String, Object> getNext() {
+	public Map<String, String> getNext() {
 		// Get next JSON node from iterator
 		if (resultIt == null || !resultIt.hasNext()) {
 			return null;
 		}
 
 		JsonNode result = resultIt.next();
-		Map<String, Object> returnRow = new HashMap<>();
+		Map<String, String> returnRow = new HashMap<>();
 
 		try {
 			// Add quote type to return row
@@ -123,44 +121,26 @@ public class YahooApiQuote extends YahooSource {
 				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
 			}
 
-			// Get divisor and multiplier for quote currency
+			// Get divisor or multiplier for quote currency and quote type
 			String quoteCurrency = result.get("currency").asText();
 			String prop;
-			int quoteDivisor = 1;
-			int quoteMultiplier = 100;
-			if ((prop = PROPS.getProperty("divisor." + quoteCurrency + "." + quoteType)) != null) {
-				quoteDivisor = Integer.parseInt(prop);
-			}
-			if ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) != null) {
-				quoteMultiplier = Integer.parseInt(prop);
-			}
+			int quoteDivisor = ((prop = PROPS.getProperty("divisor." + quoteCurrency + "." + quoteType)) == null) ? 1 : Integer.parseInt(prop);
+			int quoteMultiplier = ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
 
 			// Add quote values to return row
 			int n = 1;
-			Double dValue = 0d;			
-			LocalDateTime dtValue;
 			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
-				String[] apiMap = prop.split(",");				
-				if (result.has(apiMap[1])) {
-					String value = result.get(apiMap[1]).asText();
-					if (apiMap[0].startsWith("dt")) {
-						// Process LocalDateTime values
-						dtValue = Instant.ofEpochSecond(Long.parseLong(value)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay(); // Set to 00:00 in local system time-zone
-						returnRow.put(apiMap[0], dtValue);
-					} else if (apiMap[0].startsWith("d") || value.matches("\\d+\\.\\d+")) {
-						// Process Double values
-						dValue = Double.parseDouble(value);
-						// Process adjustments
-						if (Boolean.parseBoolean(PROPS.getProperty("divide." + apiMap[0]))) {
-							dValue = dValue / quoteDivisor;
-						} else if ((Boolean.parseBoolean(PROPS.getProperty("multiply." + apiMap[0])))) {
-							dValue = dValue * quoteMultiplier;
+				String[] apiMap = prop.split(",");
+				if (result.has(apiMap[0])) {
+					String value = result.get(apiMap[0]).asText();
+					if (apiMap.length == 3) {
+						if (apiMap[2].equals("d")) {
+							value = String.valueOf(Double.parseDouble(value) / quoteDivisor);
+						} else if (apiMap[2].equals("m")) {
+							value = String.valueOf(Double.parseDouble(value) * quoteMultiplier);
 						}
-						returnRow.put(apiMap[0], dValue);
-					} else {
-						// And finally assume everything else is a Long value
-						returnRow.put(apiMap[0], Long.parseLong(value));
 					}
+					returnRow.put(apiMap[1], value);
 				}
 			}
 
