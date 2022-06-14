@@ -42,9 +42,8 @@ public class YahooCsvHist extends YahooSource {
 		quoteMeta = tmp.substring(0, tmp.length() - 4).split(" "); // symbol, currency, quote type
 
 		// Get divisor or multiplier for quote currency and quote type
-		String prop;
-		quoteDivisor = ((prop = PROPS.getProperty("divisor." + quoteMeta[1] + "." + quoteMeta[2])) == null) ? 1 : Integer.parseInt(prop);
-		quoteMultiplier = ((prop = PROPS.getProperty("multiplier." + quoteMeta[1] + "." + quoteMeta[2])) == null) ? 100 : Integer.parseInt(prop);		
+		quoteDivisor = getDivisor(quoteMeta[1], quoteMeta[2]);
+		quoteMultiplier = getMultiplier(quoteMeta[1], quoteMeta[2]);
 	}
 
 	/**
@@ -75,16 +74,10 @@ public class YahooCsvHist extends YahooSource {
 			String prop;
 			for (int n = 0; n < csvColumn.length; n++) {
 				if ((prop = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
-					String[] csvMap = prop.split(",");
+					String[] columnMap = prop.split(",");
 					String value = csvColumn[n];
-					if (csvMap.length == 2) {
-						if (csvMap[1].equals("d")) {
-							value = String.valueOf(Double.parseDouble(value) / quoteDivisor);
-						} else if (csvMap[1].equals("m")) {
-							value = String.valueOf(Double.parseDouble(value) * quoteMultiplier);
-						}
-					}
-					returnRow.put(csvMap[0], value);
+					value = columnMap.length == 2 ? adjustQuote(value, columnMap[1], quoteDivisor, quoteMultiplier) : value;
+					returnRow.put(columnMap[0], value);
 				}
 			}
 		} catch (NumberFormatException e) {

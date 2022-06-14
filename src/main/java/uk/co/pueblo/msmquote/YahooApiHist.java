@@ -1,6 +1,7 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,8 +30,9 @@ class YahooApiHist extends YahooSource {
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
 	 * @throws IOException
 	 * @throws InterruptedException
+	 * @throws URISyntaxException 
 	 */
-	YahooApiHist(String apiUrl) throws IOException, InterruptedException {
+	YahooApiHist(String apiUrl) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
 
 		// Get symbol and quote type
@@ -40,9 +42,8 @@ class YahooApiHist extends YahooSource {
 		
 		// Get divisor or multiplier for quote currency and quote type
 		String currency = resultJn.at("/meta").get("currency").asText();
-		String prop;
-		quoteDivisor = ((prop = PROPS.getProperty("divisor." + currency + "." + quoteType)) == null) ? 1 : Integer.parseInt(prop);
-		quoteMultiplier = ((prop = PROPS.getProperty("multiplier." + currency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
+		quoteDivisor = getDivisor(currency, quoteType);
+		quoteMultiplier = getMultiplier(currency, quoteType);
 		quoteIndex = 0;
 	}
 
@@ -53,7 +54,6 @@ class YahooApiHist extends YahooSource {
 	 */
 	public Map<String, String> getNext() {
 		Map<String, String> returnRow = new HashMap<>();
-
 		if (!resultJn.at("/timestamp").has(quoteIndex)) {
 			return null;
 		}
@@ -67,16 +67,10 @@ class YahooApiHist extends YahooSource {
 			int n = 1;
 			String prop;
 			while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
-				String apiHistMap[] = prop.split(",");
-				String value = resultJn.at(apiHistMap[0]).get(quoteIndex).asText();
-				if (apiHistMap.length == 3) {
-					if (apiHistMap[2].equals("d")) {
-						value = String.valueOf(Double.parseDouble(value) / quoteDivisor);
-					} else if (apiHistMap[2].equals("m")) {
-						value = String.valueOf(Double.parseDouble(value) * quoteMultiplier);
-					}
-				}
-				returnRow.put(apiHistMap[1], value);
+				String columnMap[] = prop.split(",");
+				String value = resultJn.at(columnMap[0]).get(quoteIndex).asText();
+				value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteDivisor, quoteMultiplier) : value;
+				returnRow.put(columnMap[1], value);
 			}
 
 		} catch (NumberFormatException e) {

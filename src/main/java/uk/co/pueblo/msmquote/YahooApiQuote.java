@@ -1,6 +1,7 @@
 package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,8 +32,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @param isoCodes the list of currency ISO codes, last element is base currency
 	 * @throws IOException
 	 * @throws InterruptedException
+	 * @throws URISyntaxException 
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException {
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
 
 		String yahooSymbol = "";
@@ -88,8 +90,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 * @throws InterruptedException
+	 * @throws URISyntaxException 
 	 */
-	YahooApiQuote(String apiUrl) throws IOException, InterruptedException {
+	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
@@ -124,23 +127,17 @@ public class YahooApiQuote extends YahooSource {
 			// Get divisor or multiplier for quote currency and quote type
 			String quoteCurrency = result.get("currency").asText();
 			String prop;
-			int quoteDivisor = ((prop = PROPS.getProperty("divisor." + quoteCurrency + "." + quoteType)) == null) ? 1 : Integer.parseInt(prop);
-			int quoteMultiplier = ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
+			int quoteDivisor = getDivisor(quoteCurrency, quoteType);
+			int quoteMultiplier = getMultiplier(quoteCurrency, quoteType);
 
 			// Add quote values to return row
 			int n = 1;
 			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
-				String[] apiMap = prop.split(",");
-				if (result.has(apiMap[0])) {
-					String value = result.get(apiMap[0]).asText();
-					if (apiMap.length == 3) {
-						if (apiMap[2].equals("d")) {
-							value = String.valueOf(Double.parseDouble(value) / quoteDivisor);
-						} else if (apiMap[2].equals("m")) {
-							value = String.valueOf(Double.parseDouble(value) * quoteMultiplier);
-						}
-					}
-					returnRow.put(apiMap[1], value);
+				String[] columnMap = prop.split(",");
+				if (result.has(columnMap[0])) {
+					String value = result.get(columnMap[0]).asText();
+					value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteDivisor, quoteMultiplier) : value;
+					returnRow.put(columnMap[1], value);
 				}
 			}
 

@@ -71,7 +71,7 @@ abstract class YahooSource implements QuoteSource {
 		return ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
 	}
 
-	static String quoteAdjust(String value, String adjuster, int divisor, int multiplier) {
+	static String adjustQuote(String value, String adjuster, int divisor, int multiplier) {
 		if (adjuster.equals("d")) {
 			value = String.valueOf(Double.parseDouble(value) / divisor);
 		} else if (adjuster.equals("m")) {
