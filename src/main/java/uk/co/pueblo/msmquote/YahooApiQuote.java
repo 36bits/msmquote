@@ -32,7 +32,7 @@ public class YahooApiQuote extends YahooSource {
 	 * @param isoCodes the list of currency ISO codes, last element is base currency
 	 * @throws IOException
 	 * @throws InterruptedException
-	 * @throws URISyntaxException 
+	 * @throws URISyntaxException
 	 */
 	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
@@ -90,7 +90,7 @@ public class YahooApiQuote extends YahooSource {
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 * @throws InterruptedException
-	 * @throws URISyntaxException 
+	 * @throws URISyntaxException
 	 */
 	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
@@ -146,41 +146,5 @@ public class YahooApiQuote extends YahooSource {
 		}
 
 		return returnRow;
-	}
-
-	/**
-	 * Generates a Yahoo symbol from the Money symbol.
-	 * 
-	 * @param symbol  the Money symbol for the security
-	 * @param country the Money country for the security
-	 * @param props   the YahooQuote properties
-	 * @return the equivalent Yahoo symbol
-	 */
-	private static String getYahooSymbol(String symbol, String country, Properties props) {
-		String yahooSymbol = symbol;
-		String prop;
-		if (symbol.matches("^\\$US:.*")) {
-			// Symbol is in Money index format '$US:symbol'
-			if ((prop = props.getProperty("index." + symbol.substring(4))) != null) {
-				yahooSymbol = prop;
-			}
-		} else if (symbol.matches("^\\$..:.*")) {
-			// Symbol is in Money index format '$xx:symbol'
-			yahooSymbol = "^" + symbol.substring(4);
-		} else if (symbol.matches("^\\$.*")) {
-			// Symbol is in Money index format '$symbol'
-			yahooSymbol = "^" + symbol.substring(1);
-		} else if (symbol.matches("^..:.*")) {
-			// Symbol is in Money security format 'xx:symbol'
-			if ((prop = props.getProperty("exchange." + country)) != null) {
-				yahooSymbol = symbol.substring(3) + prop;
-			}
-		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")) {
-			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
-			if ((prop = props.getProperty("exchange." + country)) != null) {
-				yahooSymbol = symbol + prop;
-			}
-		}
-		return yahooSymbol.toUpperCase();
 	}
 }

@@ -9,6 +9,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +41,7 @@ abstract class YahooSource implements QuoteSource {
 	 * @return the quote data
 	 * @throws IOException
 	 * @throws InterruptedException
-	 * @throws URISyntaxException 
+	 * @throws URISyntaxException
 	 */
 	static JsonNode getJson(String url) throws InterruptedException, IOException, URISyntaxException {
 		// Get http timeout from properties file
@@ -59,6 +61,42 @@ abstract class YahooSource implements QuoteSource {
 
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.readTree(response.body());
+	}
+
+	/**
+	 * Generates a Yahoo symbol from the Money symbol.
+	 * 
+	 * @param symbol  the Money symbol for the security
+	 * @param country the Money country for the security
+	 * @param props   the YahooQuote properties
+	 * @return the equivalent Yahoo symbol
+	 */
+	static String getYahooSymbol(String symbol, String country, Properties props) {
+		String yahooSymbol = symbol;
+		String prop;
+		if (symbol.matches("^\\$US:.*")) {
+			// Symbol is in Money index format '$US:symbol'
+			if ((prop = props.getProperty("index." + symbol.substring(4))) != null) {
+				yahooSymbol = prop;
+			}
+		} else if (symbol.matches("^\\$..:.*")) {
+			// Symbol is in Money index format '$xx:symbol'
+			yahooSymbol = "^" + symbol.substring(4);
+		} else if (symbol.matches("^\\$.*")) {
+			// Symbol is in Money index format '$symbol'
+			yahooSymbol = "^" + symbol.substring(1);
+		} else if (symbol.matches("^..:.*")) {
+			// Symbol is in Money security format 'xx:symbol'
+			if ((prop = props.getProperty("exchange." + country)) != null) {
+				yahooSymbol = symbol.substring(3) + prop;
+			}
+		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")) {
+			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
+			if ((prop = props.getProperty("exchange." + country)) != null) {
+				yahooSymbol = symbol + prop;
+			}
+		}
+		return yahooSymbol.toUpperCase();
 	}
 
 	static int getDivisor(String quoteCurrency, String quoteType) {
