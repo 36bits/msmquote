@@ -11,6 +11,6 @@ interface QuoteSource {
 	static final ZoneId SYS_ZONE_ID = ZoneId.systemDefault();
 	static final Properties PROPS = new Properties();
 
-	Map<String, Object> getNext() throws IOException;
+	Map<String, String> getNext() throws IOException;
 
 }

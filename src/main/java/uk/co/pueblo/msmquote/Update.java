@@ -64,7 +64,7 @@ public class Update {
 
 				// Update
 				boolean didUpdate = false;
-				Map<String, Object> quoteRow = new HashMap<>();
+				Map<String, String> quoteRow = new HashMap<>();
 				while ((quoteRow = quoteSource.getNext()) != null) {
 					didUpdate = true;
 					if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {

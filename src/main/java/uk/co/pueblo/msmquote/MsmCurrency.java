@@ -47,18 +47,18 @@ class MsmCurrency extends MsmInstrument {
 	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */
-	int update(Map<String, Object> quoteRow) throws IOException {
+	int update(Map<String, String> sourceRow) throws IOException {
 
 		// Validate incoming row and process status
-		quoteRow = validate(quoteRow);
-		int updateStatus = (int) quoteRow.get("xStatus");
-		String quoteType = quoteRow.get("xType").toString();
+		Map<String, Object> msmRow = new HashMap<>(buildMsmRow(sourceRow));
+		int updateStatus = (int) msmRow.get("xStatus");
+		String quoteType = msmRow.get("xType").toString();
 		if (updateStatus == UPDATE_ERROR) {
 			incSummary(quoteType, updateStatus);
 			return updateStatus;
 		}
 
-		String symbol = quoteRow.get("xSymbol").toString();
+		String symbol = msmRow.get("xSymbol").toString();
 		LOGGER.info("Updating exchange rate for symbol {}", symbol);
 
 		// Get hcrncs of currency pair
@@ -67,7 +67,7 @@ class MsmCurrency extends MsmInstrument {
 		hcrnc[1] = getHcrnc(symbol.substring(3, 6));
 
 		// Update exchange rate
-		double newRate = (double) quoteRow.get("dRate");
+		double newRate = (double) msmRow.get("rate");
 		Map<String, Object> fxRowPattern = new HashMap<>();
 		IndexCursor fxCursor = CursorBuilder.createCursor(fxTable.getPrimaryKeyIndex());
 		Map<String, Object> fxRow = null;
@@ -82,11 +82,12 @@ class MsmCurrency extends MsmInstrument {
 				if (i == 1) {
 					// Reversed rate
 					newRate = 1 / newRate;
+					msmRow.put("rate", newRate);
 				}
 				LOGGER.info("Found exchange rate: from hcrnc = {}, to hcrnc = {}", hcrnc[i], hcrnc[(i + 1) % 2]);
 				if (oldRate != newRate) {
 					// Merge quote row into FX row and write to FX table
-					fxRow.putAll(quoteRow);		// TODO Should fxRow be sanitised first?
+					fxRow.putAll(msmRow);		// TODO Should fxRow be sanitised first?
 					fxCursor.updateCurrentRowFromMap(fxRow);
 					LOGGER.info("Updated exchange rate: previous rate = {}, new rate = {}", oldRate, newRate);
 				} else {

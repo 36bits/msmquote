@@ -2,6 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,51 +38,76 @@ abstract class MsmInstrument {
 		}
 	}
 
-	abstract int update(Map<String, Object> quoteRow) throws IOException;
+	abstract int update(Map<String, String> inRow) throws IOException;
 
-	Map<String, Object> validate(Map<String, Object> quoteRow) {
-
+	Map<String, Object> buildMsmRow(Map<String, String> inRow) {
+		Map<String, Object> returnRow = new HashMap<>();
 		String prop;
-		String propArray[];
 		int column = 1;
 		int pass;
-		String logMsg[] = {"Required quote data missing", "Required default values applied", "Optional quote data missing", "Optional default values applied"};
-		Level logLevel[] = {Level.ERROR, Level.ERROR, Level.WARN, Level.WARN};
-		String missingCols[] = { "", "", "", "" };	// required, required defaults, optional, optional defaults
+		String logMsg[] = { "Required quote data missing", "Required default values applied", "Optional quote data missing", "Optional default values applied" };
+		Level logLevel[] = { Level.ERROR, Level.ERROR, Level.WARN, Level.WARN };
+		String missingCols[] = { "", "", "", "" }; // required, required defaults, optional, optional defaults
 		String columnSet = "column.";
 
 		// Validate
-		for (pass = 0; pass < missingCols.length; pass+=2) {
+		for (pass = 0; pass < missingCols.length; pass += 2) {
 			if (pass == 2) {
-				columnSet = columnSet + quoteRow.get("xType").toString() + ".";
+				columnSet = columnSet + inRow.get("xType") + ".";
+				column = 1;
 			}
 			while ((prop = props.getProperty(columnSet + column++)) != null) {
-				propArray = prop.split(",");
-				if (!quoteRow.containsKey(propArray[0])) {
+				String propArray[] = prop.split(",");
+				String value;
+
+				if (inRow.containsKey(propArray[0])) {
+					value = inRow.get(propArray[0]);
+				} else {
+					// Get default value
 					missingCols[pass] = missingCols[pass] + propArray[0] + ", ";
-					// Process default value
 					if (propArray.length == 2) {
-						quoteRow.put(propArray[0], propArray[1]);
+						value = propArray[1];
 						missingCols[pass + 1] = missingCols[pass + 1] + propArray[0] + ", ";
+					} else {
+						continue;
 					}
+				}
+				
+				// Now build MSM row
+				if (propArray[0].startsWith("dt") && value.matches("\\d+")) {
+					// Process LocalDateTime value in epoch seconds
+					returnRow.put(propArray[0], Instant.ofEpochSecond(Long.parseLong(value)).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay());
+				} else if (propArray[0].startsWith("dt")) {
+					// Process LocalDateTime value in UTC format
+					value = value.matches("^\\d{4}\\-\\d{2}\\-\\d{2}$") ? value + "T00:00:00Z" : value;
+					returnRow.put(propArray[0], Instant.parse(value).atZone(SYS_ZONE_ID).toLocalDate().atStartOfDay());
+				} else if (propArray[0].startsWith("d") || value.matches("\\d+\\.\\d+")) {
+					// Process Double values
+					returnRow.put(propArray[0], Double.parseDouble(value));
+				} else if (propArray[0].startsWith("x")) {
+					// Process msmquote internal values
+					returnRow.put(propArray[0], value);
+				} else {
+					// And finally assume everything else is a Long value
+					returnRow.put(propArray[0], Long.parseLong(value));
 				}
 			}
 		}
-		
+
 		// Emit log messages
 		int status = UPDATE_OK;
 		int maxStatus = UPDATE_OK;
 		for (pass = 0; pass < missingCols.length; pass++) {
 			if (!missingCols[pass].isEmpty()) {
-				LOGGER.log(logLevel[pass], "{} for symbol {}: {}", logMsg[pass], quoteRow.get("xSymbol").toString(), missingCols[pass].substring(0, missingCols[pass].length() - 2));
+				LOGGER.log(logLevel[pass], "{} for symbol {}: {}", logMsg[pass], returnRow.get("xSymbol").toString(), missingCols[pass].substring(0, missingCols[pass].length() - 2));
 				if ((status = 4 - logLevel[pass].intLevel() / 100) > maxStatus) {
 					maxStatus = status;
 				}
-			}			
+			}
 		}
 
-		quoteRow.put("xStatus", maxStatus);
-		return quoteRow;
+		returnRow.put("xStatus", maxStatus);
+		return returnRow;
 	}
 
 	void incSummary(String key, int index) {

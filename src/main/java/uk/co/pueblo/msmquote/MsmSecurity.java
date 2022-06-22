@@ -63,18 +63,18 @@ class MsmSecurity extends MsmInstrument {
 	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */
-	int update(Map<String, Object> quoteRow) throws IOException {
+	int update(Map<String, String> sourceRow) throws IOException {
 
 		// Validate incoming row and process status
-		quoteRow = validate(quoteRow);
-		int updateStatus = (int) quoteRow.get("xStatus");
-		String quoteType = quoteRow.get("xType").toString();
+		Map<String, Object> msmRow = new HashMap<>(buildMsmRow(sourceRow));
+		int updateStatus = Integer.parseInt(msmRow.get("xStatus").toString());
+		String quoteType = msmRow.get("xType").toString();
 		if (updateStatus == UPDATE_ERROR) {
 			incSummary(quoteType, updateStatus);
 			return updateStatus;
 		}
 
-		String symbol = quoteRow.get("xSymbol").toString();
+		String symbol = msmRow.get("xSymbol").toString();
 		LOGGER.info("Updating quote data for symbol {}, quote type = {}", symbol, quoteType);
 
 		// Truncate symbol if required
@@ -82,12 +82,12 @@ class MsmSecurity extends MsmInstrument {
 		if (origSymbol.length() > 12) {
 			symbol = origSymbol.substring(0, 12);
 			LOGGER.info("Truncated symbol {} to {}", origSymbol, symbol);
-			quoteRow.put("xSymbol", symbol);
+			msmRow.put("xSymbol", symbol);
 		}
 
 		// Add dtSerial to quote row
 		// TODO Confirm assumption that dtSerial is time-stamp of quote update
-		quoteRow.put("dtSerial", LocalDateTime.now());
+		msmRow.put("dtSerial", LocalDateTime.now());
 
 		// Update SEC table with quote row
 		int hsec = -1;
@@ -99,7 +99,7 @@ class MsmSecurity extends MsmInstrument {
 			hsec = (int) secRow.get("hsec");
 			LOGGER.info("Found symbol {} in SEC table: sct = {}, hsec = {}", symbol, secRow.get("sct"), hsec);
 			// Merge quote row into SEC row and write to SEC table
-			secRow.putAll(quoteRow); // TODO Should secRow be sanitised first?
+			secRow.putAll(msmRow); // TODO Should secRow be sanitised first?
 			secCursor.updateCurrentRowFromMap(secRow);
 			LOGGER.info("Updated SEC table for symbol {}", symbol);
 		} else {
@@ -112,7 +112,7 @@ class MsmSecurity extends MsmInstrument {
 		incSummary(quoteType, updateStatus);
 
 		// Update SP table with quote row
-		LocalDateTime quoteDate = (LocalDateTime) quoteRow.get("dt");
+		LocalDateTime quoteDate = (LocalDateTime) msmRow.get("dt");
 		Map<String, Object> spRowPattern = new HashMap<>();
 		Map<String, Object> spRow = new HashMap<>();
 		Map<String, Object> prevSpRow = new HashMap<>();
@@ -150,7 +150,7 @@ class MsmSecurity extends MsmInstrument {
 				rowInstant = ZonedDateTime.of((LocalDateTime) spRow.get("dt"), SYS_ZONE_ID).toInstant();
 				if ((src == SRC_ONLINE || src == SRC_MANUAL) && rowInstant.equals(quoteInstant)) {
 					// Found existing quote for this hsec and quote date so update SP table
-					spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
+					spRow.putAll(msmRow); // TODO Should spRow be sanitised first?
 					spCursor.updateCurrentRowFromMap(spRow);
 					LOGGER.info("Updated previous quote for symbol {} in SP table: {}, new price = {}", symbol, spRow.get("dt"), spRow.get("dPrice"));
 					return updateStatus;
@@ -183,7 +183,7 @@ class MsmSecurity extends MsmInstrument {
 		spRow.put("hsp", hsp);
 		spRow.put("hsec", hsec);
 		spRow.put("src", SRC_ONLINE);
-		spRow.putAll(quoteRow); // TODO Should spRow be sanitised first?
+		spRow.putAll(msmRow); // TODO Should spRow be sanitised first?
 		newSpRows.add(spRow);
 		LOGGER.info("Added new quote for symbol {} to SP table append list: {}, new price = {}, new hsp = {}", symbol, spRow.get("dt"), spRow.get("dPrice"), spRow.get("hsp"));
 
