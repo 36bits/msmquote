@@ -43,7 +43,7 @@ class MsmCurrency extends MsmInstrument {
 	/**
 	 * Updates the exchange rate for a currency pair.
 	 * 
-	 * @param quoteRow a row containing the currency quote data to update
+	 * @param sourceRow a row containing the currency quote data to update
 	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */

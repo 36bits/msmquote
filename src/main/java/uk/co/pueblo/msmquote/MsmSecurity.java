@@ -59,7 +59,7 @@ class MsmSecurity extends MsmInstrument {
 	/**
 	 * Update the SEC and SP tables with the supplied quote row.
 	 * 
-	 * @param quoteRow the row containing the quote data to update
+	 * @param sourceRow the row containing the quote data to update
 	 * @return 0 update OK; 1 update with warnings; 2 update with errors
 	 * @throws IOException
 	 */
@@ -201,7 +201,7 @@ class MsmSecurity extends MsmInstrument {
 	/**
 	 * Create a list of investment symbols and corresponding country codes.
 	 * 
-	 * @param cntryTable the country table
+	 * @param db the MS Money database
 	 * @return the list of symbols and corresponding countries
 	 * @throws IOException
 	 */
