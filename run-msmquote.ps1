@@ -12,7 +12,7 @@ if ($PSVersionTable.PSVersion.Major -ne 5) {
 $mnyFile = (Get-Item $mnyFile).FullName
 $log = $env:LOCALAPPDATA + "\log\msmquote.log"
 $jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
-$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.1.1.jar"
+$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.1.3.jar"
 $jreOpts = @()
 
 $duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log }

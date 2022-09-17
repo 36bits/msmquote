@@ -9,8 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.healthmarketscience.jackcess.Database;
 
-import uk.co.pueblo.msmquote.MsmDb.CliDatRow;
-import uk.co.pueblo.msmquote.MsmDb.DhdColumn;
+import uk.co.pueblo.msmcore.MsmCurrency;
+import uk.co.pueblo.msmcore.MsmDb;
+import uk.co.pueblo.msmcore.MsmDb.CliDatRow;
+import uk.co.pueblo.msmcore.MsmDb.DhdColumn;
+import uk.co.pueblo.msmcore.MsmSecurity;
 
 public class Update {
 
