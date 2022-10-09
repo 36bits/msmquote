@@ -17,11 +17,11 @@ Historical data for a single security can be updated where a quote is available 
 Please see the [wiki](https://github.com/36bits/msmquote/wiki) for full details of how to use **msmquote**.
 
 # Author
-Jonathan Casiot ([e-mail](mailto:msm@pueblo.co.uk))
+Jonathan Casiot ([e-mail](mailto:msm@pueblo.co.uk)).
 
 # Licence
 This project is licenced under the GNU GPL Version 3 (see the [LICENCE](./LICENSE) file).
 
 # With Thanks To
-* Hung Le for Sunriise, the original Microsoft Money quote updater
-* Yahoo Finance for a decent securities quote API
+* Hung Le for Sunriise, the original Microsoft Money quote updater;
+* Yahoo Finance for a decent securities quote API.
