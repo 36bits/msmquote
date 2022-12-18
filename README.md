@@ -17,7 +17,7 @@ Historical data for a single security can be updated where a quote is available 
 Please see the [wiki](https://github.com/36bits/msmquote/wiki) for full details of how to use **msmquote**.
 
 # Author
-Jonathan Casiot ([e-mail](mailto:msm@pueblo.co.uk)).
+Jonathan Casiot.
 
 # Licence
 This project is licenced under the GNU GPL Version 3 (see the [LICENCE](./LICENSE) file).
