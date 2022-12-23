@@ -56,7 +56,7 @@ abstract class YahooSource implements QuoteSource {
 		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(apiTimeout)).GET().build();
 
-		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout = {}s", apiTimeout);
+		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout={}s", apiTimeout);
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 		LOGGER.info("Received {} bytes of quote data", response.body().length());
 
