@@ -14,10 +14,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class YahooApiQuote extends YahooSource {
 
 	// Constants
-	static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
+	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
 	private static final String JSON_ROOT = "/quoteResponse/result";
 	private static final String PROPS_FILE = "YahooSource.properties";
-
+	private static final String API_URL = "https://query2.finance.yahoo.com/v7/finance/quote?symbols=";
+	
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, String> symbolXlate = new HashMap<>();
@@ -34,6 +35,12 @@ public class YahooApiQuote extends YahooSource {
 	 */
 	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
 		super(PROPS_FILE);
+		
+		// Get api url from properties file 
+		if (apiUrl == null) {
+			String prop;
+			apiUrl = ((prop = PROPS.getProperty("api.url")) != null) ? prop : API_URL;
+		}		
 
 		String yahooSymbol = "";
 		int n;
@@ -82,6 +89,19 @@ public class YahooApiQuote extends YahooSource {
 		}
 	}
 
+	/**
+	 * Constructor for auto-completed default URL.
+	 * 
+	 * @param symbols  the list of investment symbols + country codes
+	 * @param isoCodes the list of currency ISO codes, last element is base currency
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws URISyntaxException
+	 */
+	YahooApiQuote(List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
+		this(null, symbols, isoCodes);
+	}
+	
 	/**
 	 * Constructor for user-completed URL.
 	 * 

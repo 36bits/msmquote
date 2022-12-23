@@ -20,7 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 abstract class YahooSource implements QuoteSource {
 
 	// Constants
-	static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
+	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
+	private static final int API_TIMEOUT = 20;
 
 	YahooSource(String propsFile) {
 		// Open properties
@@ -44,18 +45,18 @@ abstract class YahooSource implements QuoteSource {
 	 * @throws URISyntaxException
 	 */
 	static JsonNode getJson(String url) throws InterruptedException, IOException, URISyntaxException {
-		// Get http timeout from properties file
+		// Get api http timeout from properties file
 		String prop;
-		int httpTimeout = ((prop = PROPS.getProperty("api.http.timeout")) != null) ? Integer.parseInt(prop) : 20;
+		int apiTimeout = ((prop = PROPS.getProperty("api.timeout")) != null) ? Integer.parseInt(prop) : API_TIMEOUT;
 
 		// Build and send http request
 		URL apiUrl = new URL(url);
 		URI apiUri = new URI(apiUrl.getProtocol(), apiUrl.getUserInfo(), apiUrl.getHost(), apiUrl.getPort(), apiUrl.getPath(), apiUrl.getQuery(), apiUrl.getRef());
 		LOGGER.debug(apiUri.toASCIIString());
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(httpTimeout)).GET().build();
+		HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(apiTimeout)).GET().build();
 
-		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout = {}s", httpTimeout);
+		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout = {}s", apiTimeout);
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 		LOGGER.info("Received {} bytes of quote data", response.body().length());
 

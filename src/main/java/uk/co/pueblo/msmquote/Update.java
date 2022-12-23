@@ -33,8 +33,8 @@ public class Update {
 
 		try {
 			// Process command-line arguments
-			if (args.length < 3) {
-				throw new IllegalArgumentException("Usage: filename password source");
+			if (args.length < 2) {
+				throw new IllegalArgumentException("Usage: filename password [source]");
 			}
 
 			// Open Money database
@@ -47,7 +47,9 @@ public class Update {
 				final QuoteSource quoteSource;
 
 				// Instantiate quote object according to quote source
-				if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
+				if (args.length == 2) {
+					quoteSource = new YahooApiQuote(msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+				} else if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
 						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
