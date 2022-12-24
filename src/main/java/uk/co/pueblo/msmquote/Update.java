@@ -41,6 +41,8 @@ public class Update {
 			msmDb = new MsmDb(args[0], args[1]);
 			final Database openedDb = msmDb.getDb();
 
+			Map<String, int[]> summary = new HashMap<>();
+
 			try {
 				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
@@ -70,28 +72,33 @@ public class Update {
 				// Update
 				boolean didUpdate = false;
 				Map<String, String> quoteRow = new HashMap<>();
+				String quoteType;
 				while ((quoteRow = quoteSource.getNext()) != null) {
 					didUpdate = true;
-					if ((quoteRow.get("xType")).toString().equals("CURRENCY")) {
-						// Update exchange rate
-						if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) {
+					quoteType = quoteRow.get("xType").toString();
+					if (quoteType.equals("CURRENCY")) {
+						if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) { // update currency FX rates
 							finalExitCode = exitCode;
 						}
-						continue;
-					}
-					// Update all other quote types
-					if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) {
+					} else if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) { // update other security types
 						finalExitCode = exitCode;
 					}
+					// Increment update summary
+					summary.putIfAbsent(quoteType, new int[] { 0, 0, 0, 0 }); // OK, warnings, errors, processed
+					int[] count = summary.get(quoteType);
+					count[exitCode]++;
+					count[3]++;
+					summary.put(quoteType, count);
 				}
 
 				if (didUpdate) {
-					msmSecurity.addNewSpRows();		// add any new rows to the SP table
-					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now());		// update online update time-stamp
-
-					// Print summaries
-					msmSecurity.logSummary();
-					msmCurrency.logSummary();
+					msmSecurity.addNewSpRows(); // add any new rows to the SP table
+					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
+					
+					// Print update summary
+					summary.forEach((key, count) -> {
+						LOGGER.info("Summary for quote type {}: processed={}, OK={}, warnings={}, errors={}", key, count[3], count[0], count[1], count[2]);
+					});
 				}
 
 			} catch (Exception e) {
@@ -100,7 +107,7 @@ public class Update {
 				finalExitCode = EXIT_ERROR;
 			}
 
-			msmDb.closeDb();	// close Money database
+			msmDb.closeDb(); // close Money database
 
 		} catch (Exception e) {
 			LOGGER.fatal(e);
