@@ -84,20 +84,19 @@ public class Update {
 						finalExitCode = exitCode;
 					}
 					// Increment update summary
-					summary.putIfAbsent(quoteType, new int[] { 0, 0, 0, 0 }); // OK, warnings, errors, processed
+					summary.putIfAbsent(quoteType, new int[] { 0, 0, 0, 0, 0 }); // OK, skipped, warnings, errors, processed
 					int[] count = summary.get(quoteType);
 					count[exitCode]++;
-					count[3]++;
+					count[4]++;
 					summary.put(quoteType, count);
 				}
 
 				if (didUpdate) {
 					msmSecurity.addNewSpRows(); // add any new rows to the SP table
 					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
-					
 					// Print update summary
 					summary.forEach((key, count) -> {
-						LOGGER.info("Summary for quote type {}: processed={}, OK={}, warnings={}, errors={}", key, count[3], count[0], count[1], count[2]);
+						LOGGER.info("Summary for quote type {}: processed={}, OK={}, skipped={}, warnings={}, errors={}", key, count[4], count[0], count[1], count[2], count[3]);
 					});
 				}
 
