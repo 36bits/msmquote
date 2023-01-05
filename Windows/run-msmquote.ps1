@@ -12,7 +12,7 @@ $jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.1.4.jar"
 $jreOpts = @()
 
 if ($winLog) {
-    $duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log }
+    $duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log -Encoding utf8 }
     if ($LASTEXITCODE -eq 2) {
         New-WinEvent -ProviderName msmquote -Id 1001 -Payload @($mnyFile, $LASTEXITCODE, $duration)
     }
@@ -24,5 +24,5 @@ if ($winLog) {
     }
 }
 else {
-    & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log
+    & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log -Encoding utf8
 }
