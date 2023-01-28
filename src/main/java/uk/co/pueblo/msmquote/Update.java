@@ -70,33 +70,32 @@ public class Update {
 				}
 
 				// Update
-				boolean didUpdate = false;
 				Map<String, String> quoteRow = new HashMap<>();
 				String quoteType;
 				while ((quoteRow = quoteSource.getNext()) != null) {
-					didUpdate = true;
 					quoteType = quoteRow.get("xType").toString();
 					if (quoteType.equals("CURRENCY")) {
-						if ((exitCode = msmCurrency.update(quoteRow)) > finalExitCode) { // update currency FX rates
-							finalExitCode = exitCode;
-						}
-					} else if ((exitCode = msmSecurity.update(quoteRow)) > finalExitCode) { // update other security types
+						exitCode = msmCurrency.update(quoteRow); // update currency FX rates
+					} else {
+						exitCode = msmSecurity.update(quoteRow); // update other security types
+					}
+					// Process exit code
+					if (exitCode > finalExitCode) {
 						finalExitCode = exitCode;
 					}
-					// Increment update summary
-					summary.putIfAbsent(quoteType, new int[] { 0, 0, 0, 0, 0 }); // OK, skipped, warnings, errors, processed
+					summary.putIfAbsent(quoteType, new int[4]); // OK, skipped, warnings, errors
 					int[] count = summary.get(quoteType);
 					count[exitCode]++;
-					count[4]++;
 					summary.put(quoteType, count);
 				}
-
-				if (didUpdate) {
+				
+				if (!summary.isEmpty()) {
 					msmSecurity.addNewSpRows(); // add any new rows to the SP table
 					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
 					// Print update summary
 					summary.forEach((key, count) -> {
-						LOGGER.info("Summary for quote type {}: processed={}, OK={}, skipped={}, warnings={}, errors={}", key, count[4], count[0], count[1], count[2], count[3]);
+						int processed = count[0] + count[1] + count[2] + count[3];
+						LOGGER.info("Summary for quote type {}: processed={}, OK={}, skipped={}, warnings={}, errors={}", key, processed, count[0], count[1], count[2], count[3]);
 					});
 				}
 
