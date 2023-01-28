@@ -13,13 +13,13 @@ $jreOpts = @()
 if (Get-WinEvent -LogName msmquote/Operational -ErrorAction SilentlyContinue) {
     $duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log -Encoding utf8 }
     if ($LASTEXITCODE -eq 2) {
-        New-WinEvent -ProviderName msmquote -Id 1001 -Payload @($mnyFile, $LASTEXITCODE, $duration)
+        New-WinEvent -ProviderName msmquote -Id 1001 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # warnings
     }
     elseif ($LASTEXITCODE -eq 3) {
-        New-WinEvent -ProviderName msmquote -Id 1002 -Payload @($mnyFile, $LASTEXITCODE, $duration)
+        New-WinEvent -ProviderName msmquote -Id 1002 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # errors
     }
     else {
-        New-WinEvent -ProviderName msmquote -Id 1000 -Payload @($mnyFile, $LASTEXITCODE, $duration)
+        New-WinEvent -ProviderName msmquote -Id 1000 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # OK
     }
 }
 else {
