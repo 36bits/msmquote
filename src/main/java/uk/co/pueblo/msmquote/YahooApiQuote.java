@@ -32,8 +32,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
+	 * @throws APIErrorException 
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIErrorException {
 		super(PROPS_FILE);
 		
 		// Get api url from properties file 
@@ -97,8 +98,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
+	 * @throws APIErrorException 
 	 */
-	YahooApiQuote(List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException {
+	YahooApiQuote(List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIErrorException {
 		this(null, symbols, isoCodes);
 	}
 	
@@ -109,8 +111,9 @@ public class YahooApiQuote extends YahooSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
+	 * @throws APIErrorException 
 	 */
-	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException {
+	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIErrorException {
 		super(PROPS_FILE);
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}

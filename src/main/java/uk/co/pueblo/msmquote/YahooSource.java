@@ -43,8 +43,9 @@ abstract class YahooSource implements QuoteSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
+	 * @throws APIErrorException 
 	 */
-	static JsonNode getJson(String url) throws InterruptedException, IOException, URISyntaxException {
+	static JsonNode getJson(String url) throws InterruptedException, IOException, URISyntaxException, APIErrorException {
 		// Get api http timeout from properties file
 		String prop;
 		int apiTimeout = ((prop = PROPS.getProperty("api.timeout")) != null) ? Integer.parseInt(prop) : API_TIMEOUT;
@@ -58,10 +59,14 @@ abstract class YahooSource implements QuoteSource {
 
 		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout={}s", apiTimeout);
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-		LOGGER.info("Received {} bytes of quote data", response.body().length());
+		LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
 		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readTree(response.body());
+		JsonNode responseJn = mapper.readTree(response.body());
+		if (responseJn.at("/finance/error").has("code")) {			
+			throw new APIErrorException(responseJn.at("/finance/error").get("code").asText() + ", " + responseJn.at("/finance/error").get("description").asText());
+		}
+		return responseJn;
 	}
 
 	/**

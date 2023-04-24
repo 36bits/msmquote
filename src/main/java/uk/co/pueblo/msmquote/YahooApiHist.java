@@ -31,8 +31,9 @@ class YahooApiHist extends YahooSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException 
+	 * @throws APIErrorException 
 	 */
-	YahooApiHist(String apiUrl) throws IOException, InterruptedException, URISyntaxException {
+	YahooApiHist(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIErrorException {
 		super(PROPS_FILE);
 
 		// Get symbol and quote type
