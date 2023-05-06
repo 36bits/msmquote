@@ -14,6 +14,7 @@ import uk.co.pueblo.msmcore.MsmDb;
 import uk.co.pueblo.msmcore.MsmDb.CliDatRow;
 import uk.co.pueblo.msmcore.MsmDb.DhdColumn;
 import uk.co.pueblo.msmcore.MsmSecurity;
+import uk.co.pueblo.msmcore.MsmInstrument;
 
 public class Update {
 
@@ -27,9 +28,8 @@ public class Update {
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
-		int exitCode, finalExitCode = EXIT_OK;
+		int exitCode = EXIT_OK;
 		final Instant startTime = Instant.now();
-		final MsmDb msmDb;
 
 		try {
 			// Process command-line arguments
@@ -38,17 +38,16 @@ public class Update {
 			}
 
 			// Open Money database
-			msmDb = new MsmDb(args[0], args[1]);
-			final Database openedDb = msmDb.getDb();
-
-			Map<String, int[]> summary = new HashMap<>();
+			final MsmDb msmDb = new MsmDb(args[0], args[1]);
 
 			try {
+				// Instantiate Money objects
+				final Database openedDb = msmDb.getDb();
 				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
 				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
-				final QuoteSource quoteSource;
 
 				// Instantiate quote object according to quote source
+				final QuoteSource quoteSource;
 				if (args.length == 2) {
 					quoteSource = new YahooApiQuote(msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 				} else if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
@@ -69,50 +68,38 @@ public class Update {
 					throw new IllegalArgumentException("Unrecognised quote source");
 				}
 
-				// Update
+				// Do update
 				Map<String, String> quoteRow = new HashMap<>();
 				String quoteType;
 				while ((quoteRow = quoteSource.getNext()) != null) {
 					quoteType = quoteRow.get("xType").toString();
 					if (quoteType.equals("CURRENCY")) {
-						exitCode = msmCurrency.update(quoteRow); // update currency FX rates
+						msmCurrency.update(quoteRow); // update currency FX rates
 					} else {
-						exitCode = msmSecurity.update(quoteRow); // update other security types
+						msmSecurity.update(quoteRow); // update other security types
 					}
-					// Process exit code
-					if (exitCode > finalExitCode) {
-						finalExitCode = exitCode;
-					}
-					summary.putIfAbsent(quoteType, new int[4]); // OK, skipped, warnings, errors
-					int[] count = summary.get(quoteType);
-					count[exitCode]++;
-					summary.put(quoteType, count);
 				}
-				
-				if (!summary.isEmpty()) {
-					msmSecurity.addNewSpRows(); // add any new rows to the SP table
-					msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
-					// Print update summary
-					summary.forEach((key, count) -> {
-						int processed = count[0] + count[1] + count[2] + count[3];
-						LOGGER.info("Summary for quote type {}: processed={}, OK={}, skipped={}, warnings={}, errors={}", key, processed, count[0], count[1], count[2], count[3]);
-					});
-				}
+
+				// Post update processing
+				msmSecurity.addNewSpRows(); // add any new rows to the SP table
+				msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
+				exitCode = MsmInstrument.logSummary();
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
-				finalExitCode = EXIT_ERROR;
+				exitCode = EXIT_ERROR;
+			} finally {
+				msmDb.closeDb(); // close Money database
 			}
-
-			msmDb.closeDb(); // close Money database
 
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
-			finalExitCode = EXIT_ERROR;
+			exitCode = EXIT_ERROR;
+		} finally {
+			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
+			System.exit(exitCode);
 		}
-		LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-		System.exit(finalExitCode);
 	}
 }
