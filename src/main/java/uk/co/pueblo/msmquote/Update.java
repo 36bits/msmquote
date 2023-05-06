@@ -50,13 +50,13 @@ public class Update {
 				final QuoteSource quoteSource;
 				if (args.length == 2) {
 					quoteSource = new YahooApiQuote(msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
-				} else if (args[2].contains("finance.yahoo.com/v7/finance/quote")) {
+				} else if (args[2].matches("^https://query2.finance.yahoo.com/v[0-9]+/finance/quote.*")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
 						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 					} else {
 						quoteSource = new YahooApiQuote(args[2]);
 					}
-				} else if (args[2].contains("finance.yahoo.com/v7/finance/chart")) {
+				} else if (args[2].matches("^https://query2.finance.yahoo.com/v[0-9]+/finance/chart.*")) {
 					quoteSource = new YahooApiHist(args[2]);
 				} else if (args[2].endsWith(".csv")) {
 					quoteSource = new YahooCsvHist(args[2]);
