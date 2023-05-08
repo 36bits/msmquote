@@ -19,7 +19,7 @@ abstract class YahooSource implements QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
-	
+
 	// Class variables
 	static int finalStatus = SOURCE_OK;
 
@@ -68,8 +68,8 @@ abstract class YahooSource implements QuoteSource {
 				URL apiUrl = new URL(url);
 				URI apiUri = new URI(apiUrl.getProtocol(), apiUrl.getUserInfo(), apiUrl.getHost(), apiUrl.getPort(), apiUrl.getPath(), apiUrl.getQuery(), apiUrl.getRef());
 				LOGGER.debug(apiUri.toASCIIString());
-				HttpClient httpClient = HttpClient.newHttpClient();
-				HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(apiTimeout)).GET().build();
+				HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(apiTimeout)).build();
+				HttpRequest request = HttpRequest.newBuilder(apiUri).GET().build();
 
 				LOGGER.info("Requesting quote data from Yahoo Finance API, url={}", n);
 				HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -143,16 +143,16 @@ abstract class YahooSource implements QuoteSource {
 		}
 		return value;
 	}
-	
+
 	public int getStatus() {
 		return finalStatus;
 	}
-	
+
 	static void setStatus(int status) {
 		if (status > finalStatus) {
 			finalStatus = status;
 		}
 		return;
 	}
-	
+
 }
