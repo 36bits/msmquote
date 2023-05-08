@@ -17,14 +17,13 @@ public class YahooApiQuote extends YahooSource {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
 	private static final String JSON_ROOT = "/quoteResponse/result";
 	private static final String PROPS_FILE = "YahooSource.properties";
-	private static final String API_URL = "https://query2.finance.yahoo.com/v7/finance/quote?symbols=";
-	
+
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
 	private Map<String, String> symbolXlate = new HashMap<>();
 
 	/**
-	 * Constructor for auto-completed URL.
+	 * Constructor for auto-generated URL.
 	 * 
 	 * @param apiUrl   the base URL
 	 * @param symbols  the list of investment symbols + country codes
@@ -32,16 +31,10 @@ public class YahooApiQuote extends YahooSource {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
-	 * @throws APIResponseException 
+	 * @throws APIException
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIResponseException {
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIException {
 		super(PROPS_FILE);
-		
-		// Get api url from properties file 
-		if (apiUrl == null) {
-			String prop;
-			apiUrl = ((prop = PROPS.getProperty("api.url")) != null) ? prop : API_URL;
-		}		
 
 		String yahooSymbol = "";
 		int n;
@@ -83,37 +76,23 @@ public class YahooApiQuote extends YahooSource {
 			LOGGER.info("Building URL with these FX symbols: {}", fxSymbols.substring(0, fxSymbols.length() - 1));
 		}
 
+		// Get quote data from api
 		String allSymbols = invSymbols + fxSymbols;
 		if (!apiUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {
-			// Get quote data
 			resultIt = getJson(apiUrl + allSymbols.substring(0, allSymbols.length() - 1)).at(JSON_ROOT).elements();
 		}
 	}
 
 	/**
-	 * Constructor for auto-completed default URL.
-	 * 
-	 * @param symbols  the list of investment symbols + country codes
-	 * @param isoCodes the list of currency ISO codes, last element is base currency
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws URISyntaxException
-	 * @throws APIResponseException 
-	 */
-	YahooApiQuote(List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIResponseException {
-		this(null, symbols, isoCodes);
-	}
-	
-	/**
-	 * Constructor for user-completed URL.
+	 * Constructor for user-supplied URL.
 	 * 
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws URISyntaxException
-	 * @throws APIResponseException 
+	 * @throws APIException
 	 */
-	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIResponseException {
+	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIException {
 		super(PROPS_FILE);
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}

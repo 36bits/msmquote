@@ -3,14 +3,12 @@ package uk.co.pueblo.msmquote;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Properties;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +19,9 @@ abstract class YahooSource implements QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
-	private static final int API_TIMEOUT = 20;
+	
+	// Class variables
+	static int finalStatus = SOURCE_OK;
 
 	YahooSource(String propsFile) {
 		// Open properties
@@ -38,35 +38,55 @@ abstract class YahooSource implements QuoteSource {
 	/**
 	 * Gets JSON quote data from a web API.
 	 * 
-	 * @param url the URL of the web API
+	 * @param param either the URL of the web API or a comma-separated list of symbols
 	 * @return the quote data
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws URISyntaxException
-	 * @throws APIResponseException 
+	 * @throws APIException
 	 */
-	static JsonNode getJson(String url) throws InterruptedException, IOException, URISyntaxException, APIResponseException {
+	static JsonNode getJson(String param) throws APIException {
+
 		// Get api http timeout from properties file
+		int apiTimeout = Integer.parseInt(PROPS.getProperty("api.timeout"));
+		LOGGER.info("Yahoo Finance API request timeout={}s", apiTimeout);
+
+		// Build and send http requests to API
+		boolean loop = true;
+		int n = 0;
 		String prop;
-		int apiTimeout = ((prop = PROPS.getProperty("api.timeout")) != null) ? Integer.parseInt(prop) : API_TIMEOUT;
+		String url;
+		while (loop) {
+			if (param.startsWith("https://")) {
+				url = param;
+				loop = false;
+			} else {
+				if ((prop = PROPS.getProperty("api.url." + ++n)) == null) {
+					break;
+				} else {
+					url = prop + param;
+				}
+			}
+			try {
+				URL apiUrl = new URL(url);
+				URI apiUri = new URI(apiUrl.getProtocol(), apiUrl.getUserInfo(), apiUrl.getHost(), apiUrl.getPort(), apiUrl.getPath(), apiUrl.getQuery(), apiUrl.getRef());
+				LOGGER.debug(apiUri.toASCIIString());
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(apiTimeout)).GET().build();
 
-		// Build and send http request
-		URL apiUrl = new URL(url);
-		URI apiUri = new URI(apiUrl.getProtocol(), apiUrl.getUserInfo(), apiUrl.getHost(), apiUrl.getPort(), apiUrl.getPath(), apiUrl.getQuery(), apiUrl.getRef());
-		LOGGER.debug(apiUri.toASCIIString());
-		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder(apiUri).timeout(Duration.ofSeconds(apiTimeout)).GET().build();
+				LOGGER.info("Requesting quote data from Yahoo Finance API, url={}", n);
+				HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
-		LOGGER.info("Requesting quote data from Yahoo Finance API, request timeout={}s", apiTimeout);
-		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-		LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
-
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode responseJn = mapper.readTree(response.body());
-		if (responseJn.at("/finance/error").has("code")) {			
-			throw new APIResponseException("Error: " + responseJn.at("/finance/error").get("code").asText() + ", " + responseJn.at("/finance/error").get("description").asText());
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode responseJn = mapper.readTree(response.body());
+				if (responseJn.at("/finance/error").has("code")) {
+					throw new APIException("Yahoo Finance API error response: " + responseJn.at("/finance/error").get("code").asText() + ", " + responseJn.at("/finance/error").get("description").asText());
+				}
+				return responseJn;
+			} catch (Exception e) {
+				LOGGER.error(e);
+				setStatus(SOURCE_ERROR);
+			}
 		}
-		return responseJn;
+		throw new APIException("All Yahoo Finance API requests failed!");
 	}
 
 	/**
@@ -123,4 +143,16 @@ abstract class YahooSource implements QuoteSource {
 		}
 		return value;
 	}
+	
+	public int getStatus() {
+		return finalStatus;
+	}
+	
+	static void setStatus(int status) {
+		if (status > finalStatus) {
+			finalStatus = status;
+		}
+		return;
+	}
+	
 }

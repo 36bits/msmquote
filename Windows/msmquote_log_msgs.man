@@ -11,8 +11,8 @@
             <provider name="msmquote"
                 symbol="msmquote"
                 guid="{8e72e1e7-ba54-4ed5-be88-f5a85c47d1d5}"
-                resourceFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll"
-                messageFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll">
+                resourceFileName="%ProgramData%\msmquote\msmquote_log_msgs.dll"
+                messageFileName="%ProgramData%\msmquote\msmquote_log_msgs.dll">
                 <events>
                     <event symbol="msmquote_info" value="1000" version="1"
                         channel="msmquote/Operational" level="win:Informational"
@@ -26,6 +26,10 @@
                         channel="msmquote/Operational" level="win:Error"
                         template="msmquote"
                         message="$(string.msmquote.event.1002.message)" />
+                    <event symbol="msmquote_critical" value="1003" version="1"
+                        channel="msmquote/Operational" level="win:Critical"
+                        template="msmquote"
+                        message="$(string.msmquote.event.1003.message)" />
                 </events>
                 <levels />
                 <tasks />
@@ -53,6 +57,9 @@
                     value="Update completed with warnings.%nFile: %1%nExit code: %2%nDuration: %3" />
                 <string id="msmquote.event.1002.message"
                     value="Update completed with errors.%nFile: %1%nExit code: %2%nDuration: %3" />
+                <string id="msmquote.event.1003.message"
+                    value="Update terminated with critical errors.%nFile: %1%nExit code: %2%nDuration: %3" />
+                    
             </stringTable>
         </resources>
     </localization>

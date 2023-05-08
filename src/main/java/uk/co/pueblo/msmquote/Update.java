@@ -22,7 +22,8 @@ public class Update {
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	private static final int EXIT_OK = 0;
 	// private static final int EXIT_WARN = 1;
-	private static final int EXIT_ERROR = 2;
+	//private static final int EXIT_ERROR = 2;
+	private static final int EXIT_FATAL = 3;
 
 	public static void main(String[] args) {
 
@@ -49,7 +50,7 @@ public class Update {
 				// Instantiate quote object according to quote source
 				final QuoteSource quoteSource;
 				if (args.length == 2) {
-					quoteSource = new YahooApiQuote(msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
 				} else if (args[2].matches("^https://query2.finance.yahoo.com/v[0-9]+/finance/quote.*")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
 						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
@@ -83,12 +84,16 @@ public class Update {
 				// Post update processing
 				msmSecurity.addNewSpRows(); // add any new rows to the SP table
 				msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
-				exitCode = MsmInstrument.logSummary();
+				
+				// Set exit code
+				int sourceStatus = quoteSource.getStatus();				
+				int updateStatus = MsmInstrument.logSummary();
+				exitCode = updateStatus > sourceStatus ? updateStatus : sourceStatus;				
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
-				exitCode = EXIT_ERROR;
+				exitCode = EXIT_FATAL;
 			} finally {
 				msmDb.closeDb(); // close Money database
 			}
@@ -96,7 +101,7 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
-			exitCode = EXIT_ERROR;
+			exitCode = EXIT_FATAL;
 		} finally {
 			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
 			System.exit(exitCode);
