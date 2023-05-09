@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>uk.co.pueblo</groupId>
 			<artifactId>msmcore</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
