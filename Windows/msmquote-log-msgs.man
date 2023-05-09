@@ -11,8 +11,8 @@
             <provider name="msmquote"
                 symbol="msmquote"
                 guid="{8e72e1e7-ba54-4ed5-be88-f5a85c47d1d5}"
-                resourceFileName="%ProgramData%\msmquote\msmquote_log_msgs.dll"
-                messageFileName="%ProgramData%\msmquote\msmquote_log_msgs.dll">
+                resourceFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll"
+                messageFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll">
                 <events>
                     <event symbol="msmquote_info" value="1000" version="1"
                         channel="msmquote/Operational" level="win:Informational"
