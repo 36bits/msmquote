@@ -2,7 +2,10 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.CookieManager;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -19,6 +22,8 @@ abstract class YahooSource implements QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
+	private static final String COOKIE_URL = "https://fc.yahoo.com";
+	private static final String CRUMB_URL = "https://query2.finance.yahoo.com/v1/test/getcrumb";
 
 	// Class variables
 	static int finalStatus = SOURCE_OK;
@@ -41,38 +46,47 @@ abstract class YahooSource implements QuoteSource {
 	 * @param param either the URL of the web API or a comma-separated list of symbols
 	 * @return the quote data
 	 * @throws APIException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws IOException
 	 */
-	static JsonNode getJson(String param) throws APIException {
+	static JsonNode getJson(String param) throws APIException, URISyntaxException, IOException, InterruptedException {
 
-		// Get api http timeout from properties file
-		int apiTimeout = Integer.parseInt(PROPS.getProperty("api.timeout"));
-		LOGGER.info("Yahoo Finance API request timeout={}s", apiTimeout);
+		// Get http client timeout from properties file
+		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
+		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 
-		// Build and send http requests to API
+		// Get Yahoo cookie and crumb
+		HttpClient httpClient = HttpClient.newBuilder().cookieHandler(new CookieManager()).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
+		HttpRequest request;
+		HttpResponse<String> response;
+		
+		request = buildHttpRequest(COOKIE_URL);
+		httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		request = buildHttpRequest(CRUMB_URL);
+		String crumb = "&crumb=" + httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+
+		// Now get data from the API
 		boolean loop = true;
 		int n = 0;
 		String prop;
-		String url;
+		String apiUrl;
 		while (loop) {
 			if (param.startsWith("https://")) {
-				url = param;
+				apiUrl = param;
 				loop = false;
 			} else {
 				if ((prop = PROPS.getProperty("api.url." + ++n)) == null) {
 					break;
 				} else {
-					url = prop + param;
+					apiUrl = prop + param;
 				}
 			}
-			try {
-				URL apiUrl = new URL(url);
-				URI apiUri = new URI(apiUrl.getProtocol(), apiUrl.getUserInfo(), apiUrl.getHost(), apiUrl.getPort(), apiUrl.getPath(), apiUrl.getQuery(), apiUrl.getRef());
-				LOGGER.debug(apiUri.toASCIIString());
-				HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(apiTimeout)).build();
-				HttpRequest request = HttpRequest.newBuilder(apiUri).GET().build();
 
+			try {
+				request = buildHttpRequest(apiUrl + crumb);
 				LOGGER.info("Requesting quote data from Yahoo Finance API, url={}", n);
-				HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+				response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
 				ObjectMapper mapper = new ObjectMapper();
@@ -153,6 +167,13 @@ abstract class YahooSource implements QuoteSource {
 			finalStatus = status;
 		}
 		return;
+	}
+	
+	static HttpRequest buildHttpRequest(String inUrl) throws URISyntaxException, MalformedURLException {
+		URL url = new URL(inUrl);
+		URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+		LOGGER.debug(uri.toASCIIString());
+		return HttpRequest.newBuilder(uri).GET().build();
 	}
 
 }
