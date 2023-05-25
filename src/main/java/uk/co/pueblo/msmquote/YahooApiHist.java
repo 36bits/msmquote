@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-class YahooApiHist extends YahooSource {
+class YahooApiHist extends YahooApiSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);

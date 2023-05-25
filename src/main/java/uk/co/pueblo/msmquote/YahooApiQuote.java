@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class YahooApiQuote extends YahooSource {
+public class YahooApiQuote extends YahooApiSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
@@ -45,7 +45,7 @@ public class YahooApiQuote extends YahooSource {
 		for (n = 0; n < symbols.size(); n++) {
 			// Append the symbols pair to the symbol translation table and the Yahoo symbol to the investment symbols string
 			symbol = symbols.get(n);
-			if ((yahooSymbol = getYahooSymbol(symbol[0], symbol[1], PROPS)) != null) {
+			if ((yahooSymbol = getYahooSymbol(symbol[0], symbol[1])) != null) {
 				symbolXlate.put(yahooSymbol, symbol[0]);
 				invSymbols = invSymbols + yahooSymbol + ",";
 			}
