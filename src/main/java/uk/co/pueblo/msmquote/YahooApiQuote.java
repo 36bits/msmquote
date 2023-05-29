@@ -1,7 +1,5 @@
 package uk.co.pueblo.msmquote;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,7 +14,6 @@ public class YahooApiQuote extends YahooApiSource {
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
 	private static final String JSON_ROOT = "/quoteResponse/result";
-	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
@@ -28,13 +25,9 @@ public class YahooApiQuote extends YahooApiSource {
 	 * @param apiUrl   the base URL
 	 * @param symbols  the list of investment symbols + country codes
 	 * @param isoCodes the list of currency ISO codes, last element is base currency
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws URISyntaxException
-	 * @throws APIException
+	 * @throws APIException 
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws IOException, InterruptedException, URISyntaxException, APIException {
-		super(PROPS_FILE);
+	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws APIException {
 
 		String yahooSymbol = "";
 		int n;
@@ -87,13 +80,9 @@ public class YahooApiQuote extends YahooApiSource {
 	 * Constructor for user-supplied URL.
 	 * 
 	 * @param apiUrl the complete Yahoo Finance quote API URL
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws URISyntaxException
 	 * @throws APIException
 	 */
-	YahooApiQuote(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIException {
-		super(PROPS_FILE);
+	YahooApiQuote(String apiUrl) throws APIException  {
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 

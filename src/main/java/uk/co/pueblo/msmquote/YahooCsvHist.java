@@ -14,7 +14,6 @@ public class YahooCsvHist extends YahooSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooCsvHist.class);
-	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables
 	private BufferedReader csvBr;
@@ -29,7 +28,6 @@ public class YahooCsvHist extends YahooSource {
 	 * @throws IOException
 	 */
 	YahooCsvHist(String fileName) throws IOException {
-		super(PROPS_FILE);
 		File csvFile = new File(fileName);
 		csvBr = new BufferedReader(new FileReader(csvFile));
 		if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {

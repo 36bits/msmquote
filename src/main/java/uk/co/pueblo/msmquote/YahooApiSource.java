@@ -26,22 +26,24 @@ public abstract class YahooApiSource extends YahooSource {
 	private static HttpClient httpClient;
 	private static String crumb;
 
-	YahooApiSource(String propsFile) throws URISyntaxException, IOException, InterruptedException {
-		super(propsFile);
-
+	static {
 		// Get http client timeout from properties file
 		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 
 		// Get Yahoo cookie and crumb
 		httpClient = HttpClient.newBuilder().cookieHandler(new CookieManager()).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
-		HttpRequest request = buildHttpRequest(PROPS.getProperty("cookie.url")); // cookie
-		httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-		request = buildHttpRequest(PROPS.getProperty("crumb.url")); // crumb
-		crumb = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+		try {
+			HttpRequest request = buildHttpRequest(PROPS.getProperty("cookie.url")); // cookie
+			httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+			request = buildHttpRequest(PROPS.getProperty("crumb.url")); // crumb
+			crumb = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+		} catch (Exception e) {
+			LOGGER.fatal(e);
+		}
 		LOGGER.info("API crumb={}", crumb);
 	}
-
+	
 	/**
 	 * Gets JSON quote data from the web API.
 	 * 
@@ -72,7 +74,7 @@ public abstract class YahooApiSource extends YahooSource {
 					apiUrl = prop + param;
 				}
 			}
-			
+
 			apiUrl = apiUrl + "&crumb=" + crumb; // add crumb parameter to url
 
 			try {

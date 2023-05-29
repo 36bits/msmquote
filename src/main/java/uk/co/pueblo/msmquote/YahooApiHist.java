@@ -1,7 +1,5 @@
 package uk.co.pueblo.msmquote;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +12,6 @@ class YahooApiHist extends YahooApiSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
-	private static final String PROPS_FILE = "YahooSource.properties";
 
 	// Instance variables
 	private JsonNode resultJn;
@@ -28,13 +25,9 @@ class YahooApiHist extends YahooApiSource {
 	 * Constructor.
 	 * 
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws URISyntaxException 
 	 * @throws APIException 
 	 */
-	YahooApiHist(String apiUrl) throws IOException, InterruptedException, URISyntaxException, APIException {
-		super(PROPS_FILE);
+	YahooApiHist(String apiUrl) throws APIException  {
 
 		// Get symbol and quote type
 		resultJn = getJson(apiUrl).at("/chart/result/0");

@@ -9,19 +9,18 @@ abstract class YahooSource implements QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
-	
+	private static final String PROPS_FILE = "YahooSource.properties";
+
 	// Class variables
 	private static int finalStatus = SOURCE_OK;
 
-	YahooSource(String propsFile) {
+	static {
 		// Open properties
-		if (!propsFile.isEmpty()) {
-			try {
-				InputStream propsIs = getClass().getClassLoader().getResourceAsStream(propsFile);
-				PROPS.load(propsIs);
-			} catch (IOException e) {
-				LOGGER.fatal(e);
-			}
+		try {
+			InputStream propsIs = YahooSource.class.getClassLoader().getResourceAsStream(PROPS_FILE);
+			PROPS.load(propsIs);
+		} catch (IOException e) {
+			LOGGER.fatal(e);
 		}
 	}
 
@@ -89,5 +88,5 @@ abstract class YahooSource implements QuoteSource {
 			finalStatus = status;
 		}
 		return;
-	}	
+	}
 }
