@@ -2,7 +2,6 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.net.CookieManager;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -24,26 +23,42 @@ public abstract class YahooApiSource extends YahooSource {
 
 	// Class variables
 	private static HttpClient httpClient;
-	private static String crumb;
+	private static String crumb = "";
 
 	static {
-		// Get http client timeout from properties file
+		// Set up http client
 		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
+		CookieManager cm = new CookieManager();
+		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
 
 		// Get Yahoo cookie and crumb
-		httpClient = HttpClient.newBuilder().cookieHandler(new CookieManager()).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
+		int n = 0;
+		String cookieUrl;
 		try {
-			HttpRequest request = buildHttpRequest(PROPS.getProperty("cookie.url")); // cookie
-			httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-			request = buildHttpRequest(PROPS.getProperty("crumb.url")); // crumb
-			crumb = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+			while (true) {
+				if ((cookieUrl = PROPS.getProperty("cookie.url." + ++n)) == null) {
+					break;
+				}
+				LOGGER.info("Getting API crumb, cookie url={}", n);
+				httpClient.send(HttpRequest.newBuilder(new URI(cookieUrl)).GET().build(), HttpResponse.BodyHandlers.ofString());
+				if (!cm.getCookieStore().getCookies().isEmpty()) {
+					break;
+				}
+			}
+			crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("crumb.url"))).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 		} catch (Exception e) {
+			LOGGER.debug("Exception occurred!", e);
 			LOGGER.fatal(e);
 		}
-		LOGGER.info("API crumb={}", crumb);
+
+		if (crumb.isEmpty()) {
+			LOGGER.fatal("Could not get API crumb");
+		} else {
+			LOGGER.info("API crumb={}", crumb);
+		}
 	}
-	
+
 	/**
 	 * Gets JSON quote data from the web API.
 	 * 
@@ -59,28 +74,27 @@ public abstract class YahooApiSource extends YahooSource {
 		// Get data from the API
 		boolean loop = true;
 		int n = 0;
-		String prop;
 		String apiUrl;
-		HttpRequest request;
 		HttpResponse<String> response;
 		while (loop) {
 			if (param.startsWith("https://")) {
 				apiUrl = param;
 				loop = false;
 			} else {
-				if ((prop = PROPS.getProperty("api.url." + ++n)) == null) {
+				if ((apiUrl = PROPS.getProperty("api.url." + ++n)) == null) {
 					break;
 				} else {
-					apiUrl = prop + param;
+					apiUrl = apiUrl + param;
 				}
 			}
 
 			apiUrl = apiUrl + "&crumb=" + crumb; // add crumb parameter to url
 
 			try {
-				request = buildHttpRequest(apiUrl);
+				URL url = new URL(apiUrl);
+				URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
 				LOGGER.info("Requesting quote data from Yahoo Finance API, url={}", n);
-				response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+				response = httpClient.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
 				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
 				ObjectMapper mapper = new ObjectMapper();
@@ -95,12 +109,5 @@ public abstract class YahooApiSource extends YahooSource {
 			}
 		}
 		throw new APIException("All Yahoo Finance API requests failed!");
-	}
-
-	static HttpRequest buildHttpRequest(String inUrl) throws URISyntaxException, MalformedURLException {
-		URL url = new URL(inUrl);
-		URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
-		LOGGER.debug(uri.toASCIIString());
-		return HttpRequest.newBuilder(uri).GET().build();
 	}
 }
