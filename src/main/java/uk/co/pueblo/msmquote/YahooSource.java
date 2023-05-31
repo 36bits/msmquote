@@ -5,14 +5,11 @@ import java.io.InputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-abstract class YahooSource implements QuoteSource {
+abstract class YahooSource extends QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
 	private static final String PROPS_FILE = "YahooSource.properties";
-
-	// Class variables
-	private static int finalStatus = SOURCE_OK;
 
 	static {
 		// Open properties
@@ -77,16 +74,5 @@ abstract class YahooSource implements QuoteSource {
 			value = String.valueOf(Double.parseDouble(value) * multiplier);
 		}
 		return value;
-	}
-
-	public int getStatus() {
-		return finalStatus;
-	}
-
-	static void setStatus(int status) {
-		if (status > finalStatus) {
-			finalStatus = status;
-		}
-		return;
-	}
+	}	
 }

@@ -22,14 +22,14 @@ public class Update {
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
 	private static final int EXIT_OK = 0;
 	// private static final int EXIT_WARN = 1;
-	//private static final int EXIT_ERROR = 2;
+	// private static final int EXIT_ERROR = 2;
 	private static final int EXIT_FATAL = 3;
 
 	public static void main(String[] args) {
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
-		int exitCode = EXIT_OK;
+		int finalExit = EXIT_OK;
 		final Instant startTime = Instant.now();
 
 		try {
@@ -84,16 +84,11 @@ public class Update {
 				// Post update processing
 				msmSecurity.addNewSpRows(); // add any new rows to the SP table
 				msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
-				
-				// Set exit code
-				int sourceStatus = quoteSource.getStatus();				
-				int updateStatus = MsmInstrument.logSummary();
-				exitCode = updateStatus > sourceStatus ? updateStatus : sourceStatus;				
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
-				exitCode = EXIT_FATAL;
+				finalExit = EXIT_FATAL;
 			} finally {
 				msmDb.closeDb(); // close Money database
 			}
@@ -101,10 +96,16 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
-			exitCode = EXIT_FATAL;
+			finalExit = EXIT_FATAL;
 		} finally {
+			// Set exit code and finish
+			int sourceStatus = QuoteSource.getStatus();
+			int updateStatus = MsmInstrument.logSummary();
+			int tmpExit = updateStatus > sourceStatus ? updateStatus : sourceStatus;
+			finalExit = finalExit > tmpExit ? finalExit : tmpExit;
+
 			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-			System.exit(exitCode);
+			System.exit(finalExit);
 		}
 	}
 }

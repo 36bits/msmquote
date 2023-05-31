@@ -21,7 +21,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
-abstract class GoogleSheetsSource implements QuoteSource {
+abstract class GoogleSheetsSource extends QuoteSource {
 
 	// Constants for Google API
 	private static final String APPLICATION_NAME = "msmquote Google Sheets source";
@@ -30,9 +30,6 @@ abstract class GoogleSheetsSource implements QuoteSource {
 	private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
 	private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 	
-	// Class variables
-	static int finalStatus = SOURCE_OK;
-
 	// Instance variables
 	final List<List<Object>> quoteRows;
 	List<Object> headerRow;
@@ -71,16 +68,4 @@ abstract class GoogleSheetsSource implements QuoteSource {
 		LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
 		return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 	}
-	
-	public int getStatus() {
-		return finalStatus;
-	}
-	
-	static void setStatus(int status) {
-		if (status > finalStatus) {
-			finalStatus = status;
-		}
-		return;
-	}
-	
 }
