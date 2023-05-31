@@ -53,7 +53,9 @@ public abstract class YahooApiSource extends YahooSource {
 		}
 
 		if (crumb.isEmpty()) {
+			setStatus(SOURCE_FATAL);
 			LOGGER.fatal("Could not get API crumb");
+			throw new RuntimeException();			
 		} else {
 			LOGGER.info("API crumb={}", crumb);
 		}
