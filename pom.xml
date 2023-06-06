@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>4.1.7-SNAPSHOT</version>
+	<version>4.1.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msmquote</name>
 	<url>https://github.com/36bits/msmquote</url>
