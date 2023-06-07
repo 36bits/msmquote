@@ -61,7 +61,7 @@ abstract class YahooSource extends QuoteSource {
 		}
 
 		if (exchangeNotFound) {
-			LOGGER.warn("No Yahoo Finance exchange suffix found for symbol {}, country={}", symbol, country);
+			LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country={}", symbol, country);
 			QuoteSource.setStatus(SOURCE_WARN);
 		}
 		
