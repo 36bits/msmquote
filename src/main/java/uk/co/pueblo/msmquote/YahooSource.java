@@ -32,6 +32,7 @@ abstract class YahooSource extends QuoteSource {
 	static String getYahooSymbol(String symbol, String country) {
 		String yahooSymbol = symbol;
 		String prop;
+		boolean exchangeNotFound = false;
 		if (symbol.matches("^\\$US:.*")) {
 			// Symbol is in Money index format '$US:symbol'
 			if ((prop = PROPS.getProperty("index." + symbol.substring(4))) != null) {
@@ -45,15 +46,25 @@ abstract class YahooSource extends QuoteSource {
 			yahooSymbol = "^" + symbol.substring(1);
 		} else if (symbol.matches("^..:.*")) {
 			// Symbol is in Money security format 'xx:symbol'
-			if ((prop = PROPS.getProperty("exchange." + country)) != null) {
+			if ((prop = PROPS.getProperty("exchange." + country)) == null) {
+				exchangeNotFound = true;
+			} else {
 				yahooSymbol = symbol.substring(3) + prop;
 			}
-		} else if (!symbol.matches("(.*\\..$|.*\\...$|^\\^.*)")) {
-			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx' or '^symbol"
-			if ((prop = PROPS.getProperty("exchange." + country)) != null) {
+		} else if (!symbol.matches("(.*\\..{1,3}$|^\\^.*)")) {
+			// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx', 'symbol.xxx' or '^symbol"
+			if ((prop = PROPS.getProperty("exchange." + country)) == null) {
+				exchangeNotFound = true;
+			} else {
 				yahooSymbol = symbol + prop;
 			}
 		}
+
+		if (exchangeNotFound) {
+			LOGGER.warn("No Yahoo Finance exchange suffix found for symbol {}, country={}", symbol, country);
+			QuoteSource.setStatus(SOURCE_WARN);
+		}
+		
 		return yahooSymbol.toUpperCase();
 	}
 
@@ -74,5 +85,5 @@ abstract class YahooSource extends QuoteSource {
 			value = String.valueOf(Double.parseDouble(value) * multiplier);
 		}
 		return value;
-	}	
+	}
 }
