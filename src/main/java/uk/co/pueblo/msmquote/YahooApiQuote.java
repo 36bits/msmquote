@@ -17,60 +17,50 @@ public class YahooApiQuote extends YahooApiSource {
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private Map<String, String> symbolXlate = new HashMap<>();
+	private Map<String, String> symbolMap = new HashMap<>();
 
 	/**
 	 * Constructor for auto-generated URL.
 	 * 
-	 * @param apiUrl   the base URL
-	 * @param symbols  the list of investment symbols + country codes
-	 * @param isoCodes the list of currency ISO codes, last element is base currency
-	 * @throws APIException 
+	 * @param apiUrl     the base URL
+	 * @param secSymbols the list of investment symbols + country codes
+	 * @param isoCodes   the list of currency ISO codes, last element is base currency
+	 * @throws APIException
 	 */
-	YahooApiQuote(String apiUrl, List<String[]> symbols, List<String> isoCodes) throws APIException {
+	YahooApiQuote(String apiUrl, List<String> secSymbols, List<String> cntryCodes, List<String> crncPairs) throws APIException {
 
 		String yahooSymbol = "";
-		int n;
 
 		// Build Yahoo security symbols string
-		String invSymbols = "";
-		String[] symbol = new String[2];
-		for (n = 0; n < symbols.size(); n++) {
-			// Append the symbols pair to the symbol translation table and the Yahoo symbol to the investment symbols string
-			symbol = symbols.get(n);
-			if ((yahooSymbol = getYahooSymbol(symbol[0], symbol[1])) != null) {
-				symbolXlate.put(yahooSymbol, symbol[0]);
-				invSymbols = invSymbols + yahooSymbol + ",";
-			}
+		String secSymbolsCsv = "";
+		int n = 0;
+		for (String secSymbol : secSymbols) {
+			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string
+			yahooSymbol = getYahooSymbol(secSymbol, cntryCodes.get(n++));
+			symbolMap.put(yahooSymbol, secSymbol);
+			secSymbolsCsv = secSymbolsCsv + yahooSymbol + ",";
 		}
-		if (invSymbols.isEmpty()) {
+		if (secSymbolsCsv.isEmpty()) {
 			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with these security symbols: {}", invSymbols.substring(0, invSymbols.length() - 1));
+			LOGGER.info("Building URL with these security symbols: {}", secSymbolsCsv.substring(0, secSymbolsCsv.length() - 1));
 		}
 
 		// Build Yahoo currency symbols string
-		String baseIsoCode = null;
-		String fxSymbols = "";
-		int isoCodesSz = isoCodes.size();
-		for (n = isoCodesSz; n > 0; n--) {
-			if (n == isoCodesSz) {
-				baseIsoCode = isoCodes.get(n - 1);
-				continue;
-			}
-			// Append the symbols pair to the symbol translation table and to the FX symbols string
-			yahooSymbol = baseIsoCode + isoCodes.get(n - 1) + "=X";
-			symbolXlate.put(yahooSymbol, yahooSymbol);
-			fxSymbols = fxSymbols + yahooSymbol + ",";
+		String fxSymbolsCsv = "";
+		for (String crncPair : crncPairs) {
+			yahooSymbol = crncPair + "=X";
+			symbolMap.put(yahooSymbol, crncPair);
+			fxSymbolsCsv = fxSymbolsCsv + yahooSymbol + ",";
 		}
-		if (fxSymbols.isEmpty()) {
+		if (fxSymbolsCsv.isEmpty()) {
 			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with these FX symbols: {}", fxSymbols.substring(0, fxSymbols.length() - 1));
+			LOGGER.info("Building URL with these FX symbols: {}", fxSymbolsCsv.substring(0, fxSymbolsCsv.length() - 1));
 		}
 
 		// Get quote data from api
-		String allSymbols = invSymbols + fxSymbols;
+		String allSymbols = secSymbolsCsv + fxSymbolsCsv;
 		if (!apiUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {
 			resultIt = getJson(apiUrl + allSymbols.substring(0, allSymbols.length() - 1)).at(JSON_ROOT).elements();
 		}
@@ -82,7 +72,7 @@ public class YahooApiQuote extends YahooApiSource {
 	 * @param apiUrl the complete Yahoo Finance quote API URL
 	 * @throws APIException
 	 */
-	YahooApiQuote(String apiUrl) throws APIException  {
+	YahooApiQuote(String apiUrl) throws APIException {
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
@@ -107,10 +97,10 @@ public class YahooApiQuote extends YahooApiSource {
 
 			// Add symbol to return row
 			String yahooSymbol = result.get("symbol").asText();
-			if (symbolXlate.isEmpty()) {
+			if (symbolMap.isEmpty()) {
 				returnRow.put("xSymbol", yahooSymbol);
 			} else {
-				returnRow.put("xSymbol", symbolXlate.get(yahooSymbol));
+				returnRow.put("xSymbol", symbolMap.get(yahooSymbol));
 			}
 
 			// Get divisor or multiplier for quote currency and quote type

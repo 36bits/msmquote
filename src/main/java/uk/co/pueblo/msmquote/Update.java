@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.healthmarketscience.jackcess.Database;
-
 import uk.co.pueblo.msmcore.MsmCurrency;
 import uk.co.pueblo.msmcore.MsmDb;
 import uk.co.pueblo.msmcore.MsmDb.CliDatRow;
-import uk.co.pueblo.msmcore.MsmDb.DhdColumn;
 import uk.co.pueblo.msmcore.MsmSecurity;
 import uk.co.pueblo.msmcore.MsmInstrument;
 
@@ -43,17 +40,16 @@ public class Update {
 
 			try {
 				// Instantiate Money objects
-				final Database openedDb = msmDb.getDb();
-				final MsmSecurity msmSecurity = new MsmSecurity(openedDb);
-				final MsmCurrency msmCurrency = new MsmCurrency(openedDb);
+				final MsmSecurity msmSecurity = new MsmSecurity(msmDb);
+				final MsmCurrency msmCurrency = new MsmCurrency(msmDb);
 
 				// Instantiate quote object according to quote source
 				final QuoteSource quoteSource;
 				if (args.length == 2) {
-					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(), msmSecurity.getCntryCodes(), msmCurrency.getSymbols());
 				} else if (args[2].matches("^https://query2.finance.yahoo.com/v[0-9]+/finance/quote.*")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
-						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(msmDb), msmCurrency.getIsoCodes(msmDb.getDhdVal(DhdColumn.BASE_CURRENCY.getName())));
+						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(), msmSecurity.getCntryCodes(), msmCurrency.getSymbols());
 					} else {
 						quoteSource = new YahooApiQuote(args[2]);
 					}
