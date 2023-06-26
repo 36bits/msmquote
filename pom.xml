@@ -2,13 +2,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>4.1.8-SNAPSHOT</version>
+	<version>4.1.8</version>
 	<packaging>jar</packaging>
 	<name>msmquote</name>
 	<url>https://github.com/36bits/msmquote</url>
 	<scm>
 		<developerConnection>scm:git:file:///home/dev/git/msmquote.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>v4.1.8</tag>
 	</scm>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
