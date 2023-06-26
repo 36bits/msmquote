@@ -64,25 +64,22 @@ abstract class YahooSource extends QuoteSource {
 			LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", symbol, country);
 			QuoteSource.setStatus(SOURCE_WARN);
 		}
-		
+
 		return yahooSymbol.toUpperCase();
 	}
-
-	static int getDivisor(String quoteCurrency, String quoteType) {
-		String prop;
-		return ((prop = PROPS.getProperty("divisor." + quoteCurrency + "." + quoteType)) == null) ? 1 : Integer.parseInt(prop);
+	
+	static int getAdjuster(String currency) {
+		if (currency.matches("..[a-z]")) { // currency is in cents, pence, etc.
+			return 100;
+		}
+		return 1;
 	}
 
-	static int getMultiplier(String quoteCurrency, String quoteType) {
-		String prop;
-		return ((prop = PROPS.getProperty("multiplier." + quoteCurrency + "." + quoteType)) == null) ? 100 : Integer.parseInt(prop);
-	}
-
-	static String adjustQuote(String value, String adjuster, int divisor, int multiplier) {
-		if (adjuster.equals("d")) {
-			value = String.valueOf(Double.parseDouble(value) / divisor);
-		} else if (adjuster.equals("m")) {
-			value = String.valueOf(Double.parseDouble(value) * multiplier);
+	static String adjustQuote(String value, String operation, int adjuster) {
+		if (operation.equals("d")) {
+			value = String.valueOf(Double.parseDouble(value) / adjuster);
+		} else if (operation.equals("m")) {
+			value = String.valueOf(Double.parseDouble(value) * 100 * adjuster);
 		}
 		return value;
 	}

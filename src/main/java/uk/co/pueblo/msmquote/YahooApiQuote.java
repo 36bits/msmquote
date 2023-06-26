@@ -103,19 +103,17 @@ public class YahooApiQuote extends YahooApiSource {
 				returnRow.put("xSymbol", symbolMap.get(yahooSymbol));
 			}
 
-			// Get divisor or multiplier for quote currency and quote type
-			String quoteCurrency = result.get("currency").asText();
-			String prop;
-			int quoteDivisor = getDivisor(quoteCurrency, quoteType);
-			int quoteMultiplier = getMultiplier(quoteCurrency, quoteType);
+			// Get quote adjuster for currency
+			int quoteAdjuster = getAdjuster(result.get("currency").asText()); 
 
 			// Add quote values to return row
+			String prop;
 			int n = 1;
 			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
 				String[] columnMap = prop.split(",");
 				if (result.has(columnMap[0])) {
 					String value = result.get(columnMap[0]).asText();
-					value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteDivisor, quoteMultiplier) : value;
+					value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteAdjuster) : value;
 					returnRow.put(columnMap[1], value);
 				}
 			}

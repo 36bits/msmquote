@@ -16,29 +16,25 @@ class YahooApiHist extends YahooApiSource {
 	// Instance variables
 	private JsonNode resultJn;
 	private String symbol;
-	private int quoteDivisor;
-	private int quoteMultiplier;
-	private int quoteIndex;
+	private int quoteAdjuster;
+	private int quoteIndex = 0;
 	private String quoteType;
 
 	/**
 	 * Constructor.
 	 * 
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
-	 * @throws APIException 
+	 * @throws APIException
 	 */
-	YahooApiHist(String apiUrl) throws APIException  {
+	YahooApiHist(String apiUrl) throws APIException {
 
 		// Get symbol and quote type
 		resultJn = getJson(apiUrl).at("/chart/result/0");
 		symbol = resultJn.at("/meta").get("symbol").asText();
 		quoteType = resultJn.at("/meta").get("instrumentType").asText();
-		
-		// Get divisor or multiplier for quote currency and quote type
-		String currency = resultJn.at("/meta").get("currency").asText();
-		quoteDivisor = getDivisor(currency, quoteType);
-		quoteMultiplier = getMultiplier(currency, quoteType);
-		quoteIndex = 0;
+
+		// Get quote adjuster for currency
+		quoteAdjuster = getAdjuster(resultJn.at("/meta").get("currency").asText());
 	}
 
 	/**
@@ -63,7 +59,7 @@ class YahooApiHist extends YahooApiSource {
 			while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
 				String columnMap[] = prop.split(",");
 				String value = resultJn.at(columnMap[0]).get(quoteIndex).asText();
-				value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteDivisor, quoteMultiplier) : value;
+				value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteAdjuster) : value;
 				returnRow.put(columnMap[1], value);
 			}
 

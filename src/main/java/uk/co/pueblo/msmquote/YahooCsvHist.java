@@ -18,8 +18,7 @@ public class YahooCsvHist extends YahooSource {
 	// Instance variables
 	private BufferedReader csvBr;
 	private String[] quoteMeta;
-	private int quoteDivisor;
-	private int quoteMultiplier;
+	private int quoteAdjuster;
 
 	/**
 	 * Constructor for CSV file quote data source.
@@ -38,10 +37,9 @@ public class YahooCsvHist extends YahooSource {
 		// Get quote metadata from CSV file name
 		String tmp = csvFile.getName();
 		quoteMeta = tmp.substring(0, tmp.length() - 4).split(" "); // symbol, currency, quote type
-
-		// Get divisor or multiplier for quote currency and quote type
-		quoteDivisor = getDivisor(quoteMeta[1], quoteMeta[2]);
-		quoteMultiplier = getMultiplier(quoteMeta[1], quoteMeta[2]);
+		
+		// Get quote adjuster for currency
+		quoteAdjuster = getAdjuster(quoteMeta[1]); 
 	}
 
 	/**
@@ -74,7 +72,7 @@ public class YahooCsvHist extends YahooSource {
 				if ((prop = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
 					String[] columnMap = prop.split(",");
 					String value = csvColumn[n];
-					value = columnMap.length == 2 ? adjustQuote(value, columnMap[1], quoteDivisor, quoteMultiplier) : value;
+					value = columnMap.length == 2 ? adjustQuote(value, columnMap[1], quoteAdjuster) : value;
 					returnRow.put(columnMap[0], value);
 				}
 			}
