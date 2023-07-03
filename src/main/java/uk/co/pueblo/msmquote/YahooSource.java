@@ -1,7 +1,6 @@
 package uk.co.pueblo.msmquote;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,17 +8,7 @@ abstract class YahooSource extends QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
-	private static final String PROPS_FILE = "YahooSource.properties";
-
-	static {
-		// Open properties
-		try {
-			InputStream propsIs = YahooSource.class.getClassLoader().getResourceAsStream(PROPS_FILE);
-			PROPS.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.fatal(e);
-		}
-	}
+	static final Properties PROPS = getProps("YahooSource.properties");
 
 	/**
 	 * Generates a Yahoo symbol from the Money symbol.
@@ -66,21 +55,5 @@ abstract class YahooSource extends QuoteSource {
 		}
 
 		return yahooSymbol.toUpperCase();
-	}
-	
-	static int getAdjuster(String currency) {
-		if (currency.matches("..[a-z]")) { // currency is in cents, pence, etc.
-			return 100;
-		}
-		return 1;
-	}
-
-	static String adjustQuote(String value, String operation, int adjuster) {
-		if (operation.equals("d")) {
-			value = String.valueOf(Double.parseDouble(value) / adjuster);
-		} else if (operation.equals("m")) {
-			value = String.valueOf(Double.parseDouble(value) * 100 * adjuster);
-		}
-		return value;
 	}
 }

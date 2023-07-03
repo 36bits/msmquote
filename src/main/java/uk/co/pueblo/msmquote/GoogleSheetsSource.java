@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -22,6 +24,9 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 abstract class GoogleSheetsSource extends QuoteSource {
+	
+	// Constants
+	static final Properties PROPS = getProps("GoogleSheetsSource.properties");
 
 	// Constants for Google API
 	private static final String APPLICATION_NAME = "msmquote Google Sheets source";

@@ -13,39 +13,45 @@ class GoogleSheetsHist extends GoogleSheetsSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsHist.class);
-	private static final int HEADER_COLUMN = 0;
-	private static final int START_COLUMN = 0;
+	private static final int HEADER_INDEX = 0;
 	private static final String HEADER_FLAG = "dPrice";
 	private static final String VALUE_NA = "#N/A";
 
 	// Instance variables
 	private String[] quoteMeta;
+	private int quoteAdjuster;
 
 	// Constructor
 	GoogleSheetsHist(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
 		super(spreadsheetId, range);
-		quoteMeta = range.substring(range.indexOf(" ") + 1, range.indexOf("!")).split(" ");	// symbol, quote type
+		quoteMeta = range.substring(range.indexOf(" ") + 1, range.indexOf("!")).split(" "); // symbol, currency, quote type
+		quoteAdjuster = getAdjuster(quoteMeta[1]);
 	}
 
 	public Map<String, String> getNext() throws IOException {
 		Map<String, String> returnRow = new HashMap<>();
-		List<Object> quoteRow;
-
+		List<Object> quoteRow;		
+		
 		// Get quote row
 		while (quoteIndex < quoteRows.size()) {
 			quoteRow = quoteRows.get(quoteIndex++);
-			if (((String) quoteRow.get(HEADER_COLUMN)).equals(HEADER_FLAG)) {
+			if (((String) quoteRow.get(HEADER_INDEX)).equals(HEADER_FLAG)) {
 				headerRow = quoteRow;
 				continue;
 			}
 			// Build return row
+			String headerCol;
 			String value;
+			int n = 0;
 			returnRow.put("xSymbol", quoteMeta[0]);
-			returnRow.put("xType", quoteMeta[1]);
-			for (int n = START_COLUMN; n < quoteRow.size(); n++) {
-				if (!(value = (quoteRow.get(n)).toString()).equals(VALUE_NA)) {
-					returnRow.put((String) headerRow.get(n), value);
+			returnRow.put("xType", quoteMeta[2]);
+			for (Object object : quoteRow) {
+				value = object.toString();
+				if (!value.equals(VALUE_NA)) {
+					headerCol = (String) headerRow.get(n);
+					returnRow.put((String) headerCol, adjustQuote(value, PROPS.getProperty("column." + headerCol), quoteAdjuster));
 				}
+				n++;
 			}
 			return returnRow;
 		}

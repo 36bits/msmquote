@@ -5,7 +5,6 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,7 +12,7 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsQuote.class);
-	private static final int HEADER_COLUMN = 0;
+	private static final int HEADER_INDEX = 0;
 	private static final String HEADER_FLAG = "xSymbol";
 	private static final String VALUE_NA = "#N/A";
 
@@ -29,16 +28,26 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 		// Get quote row
 		while (quoteIndex < quoteRows.size()) {
 			quoteRow = quoteRows.get(quoteIndex++);
-			if (quoteRow.get(HEADER_COLUMN).toString().equals(HEADER_FLAG)) {
+			if (quoteRow.get(HEADER_INDEX).toString().equals(HEADER_FLAG)) {
 				headerRow = quoteRow;
 				continue;
 			}
 			// Build return row
+			String headerCol;
 			String value;
-			for (int n = 0; n < quoteRow.size(); n++) {
-				if (!(value = (quoteRow.get(n)).toString()).equals(VALUE_NA)) {
-					returnRow.put((String) headerRow.get(n), value);
+			int quoteAdjuster = 1;
+			int n = 0;
+			for (Object object : quoteRow) {
+				value = object.toString();
+				if (!value.equals(VALUE_NA)) {
+					headerCol = (String) headerRow.get(n);
+					if (headerCol.equals("currency")) {
+						quoteAdjuster = getAdjuster(value);
+					} else {
+						returnRow.put((String) headerCol, adjustQuote(value, PROPS.getProperty("column." + headerCol), quoteAdjuster));
+					}
 				}
+				n++;
 			}
 			return returnRow;
 		}
