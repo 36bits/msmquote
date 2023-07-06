@@ -33,33 +33,35 @@ public class YahooApiQuote extends YahooApiSource {
 	public YahooApiQuote(String apiUrl, List<String> secSymbols, List<String> cntryCodes, List<String> crncPairs) throws APIException {
 
 		String yahooSymbol = "";
-
+		
 		// Build Yahoo security symbols string
 		String secSymbolsCsv = "";
-		int n = 0;
+		int i = 0;
 		for (String secSymbol : secSymbols) {
 			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string
-			yahooSymbol = getYahooSymbol(secSymbol, cntryCodes.get(n++));
+			yahooSymbol = getYahooSymbol(secSymbol, cntryCodes.get(i++));
 			symbolMap.put(yahooSymbol, secSymbol);
 			secSymbolsCsv = secSymbolsCsv + yahooSymbol + ",";
 		}
-		if (secSymbolsCsv.isEmpty()) {
+		if (i == 0) {
 			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with these security symbols: {}", secSymbolsCsv.substring(0, secSymbolsCsv.length() - 1));
+			LOGGER.info("Building URL with {} security {}: {}", i, i == 1 ? "symbol" : "symbols", secSymbolsCsv.substring(0, secSymbolsCsv.length() - 1));
 		}
 
 		// Build Yahoo currency symbols string
 		String fxSymbolsCsv = "";
+		i = 0;
 		for (String crncPair : crncPairs) {
 			yahooSymbol = crncPair + "=X";
 			symbolMap.put(yahooSymbol, crncPair);
 			fxSymbolsCsv = fxSymbolsCsv + yahooSymbol + ",";
+			i++;
 		}
-		if (fxSymbolsCsv.isEmpty()) {
+		if (i == 0) {
 			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with these FX symbols: {}", fxSymbolsCsv.substring(0, fxSymbolsCsv.length() - 1));
+			LOGGER.info("Building URL with {} FX {}: {}", i, i == 1 ? "symbol" : "symbols", fxSymbolsCsv.substring(0, fxSymbolsCsv.length() - 1));
 		}
 
 		// Get quote data from api
