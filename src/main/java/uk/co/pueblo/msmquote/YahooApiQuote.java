@@ -9,6 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * A Yahoo Finance API quote source.
+ */
 public class YahooApiQuote extends YahooApiSource {
 
 	// Constants
@@ -20,14 +23,14 @@ public class YahooApiQuote extends YahooApiSource {
 	private Map<String, String> symbolMap = new HashMap<>();
 
 	/**
-	 * Constructor for auto-generated URL.
+	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
-	 * @param apiUrl     the base URL
-	 * @param secSymbols the list of investment symbols + country codes
-	 * @param isoCodes   the list of currency ISO codes, last element is base currency
-	 * @throws APIException
+	 * @param apiUrl     the base URL for the Yahoo Finance API
+	 * @param secSymbols the list of Money security symbols for which to get quotes
+	 * @param cntryCodes the corresponding list of Money country codes for each security symbol
+	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 */
-	YahooApiQuote(String apiUrl, List<String> secSymbols, List<String> cntryCodes, List<String> crncPairs) throws APIException {
+	public YahooApiQuote(String apiUrl, List<String> secSymbols, List<String> cntryCodes, List<String> crncPairs) throws APIException {
 
 		String yahooSymbol = "";
 
@@ -67,28 +70,22 @@ public class YahooApiQuote extends YahooApiSource {
 	}
 
 	/**
-	 * Constructor for user-supplied URL.
+	 * Constructs a Yahoo Finance API quote source from a user-supplied URL.
 	 * 
-	 * @param apiUrl the complete Yahoo Finance quote API URL
-	 * @throws APIException
+	 * @param apiUrl the complete URL for the Yahoo Finance API
 	 */
-	YahooApiQuote(String apiUrl) throws APIException {
+	public YahooApiQuote(String apiUrl) throws APIException {
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
-	/**
-	 * Gets the next row of quote data from the JSON iterator.
-	 * 
-	 * @return the quote row or null if no more data
-	 */
+	
 	public Map<String, String> getNext() {
 		// Get next JSON node from iterator
-		if (resultIt == null || !resultIt.hasNext()) {
-			return null;
-		}
-
-		JsonNode result = resultIt.next();
 		Map<String, String> returnRow = new HashMap<>();
+		if (resultIt == null || !resultIt.hasNext()) {
+			return returnRow;
+		}
+		JsonNode result = resultIt.next();
 
 		try {
 			// Add quote type to return row
@@ -104,7 +101,7 @@ public class YahooApiQuote extends YahooApiSource {
 			}
 
 			// Get quote adjuster for currency
-			int quoteAdjuster = getAdjuster(result.get("currency").asText()); 
+			int quoteAdjuster = getAdjuster(result.get("currency").asText());
 
 			// Add quote values to return row
 			String prop;

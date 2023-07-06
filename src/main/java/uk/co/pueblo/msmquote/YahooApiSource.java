@@ -1,9 +1,7 @@
 package uk.co.pueblo.msmquote;
 
-import java.io.IOException;
 import java.net.CookieManager;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -15,8 +13,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
-public abstract class YahooApiSource extends YahooSource {
+/**
+ * Parent class for the Yahoo Finance API quote sources.
+ */
+abstract class YahooApiSource extends YahooSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
@@ -61,16 +63,6 @@ public abstract class YahooApiSource extends YahooSource {
 		}
 	}
 
-	/**
-	 * Gets JSON quote data from the web API.
-	 * 
-	 * @param param either the URL of the web API or a comma-separated list of symbols
-	 * @return the quote data
-	 * @throws APIException
-	 * @throws URISyntaxException
-	 * @throws InterruptedException
-	 * @throws IOException
-	 */
 	static JsonNode getJson(String param) throws APIException {
 
 		// Get data from the API
@@ -99,8 +91,11 @@ public abstract class YahooApiSource extends YahooSource {
 				response = httpClient.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
 				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
-				ObjectMapper mapper = new ObjectMapper();
+				//ObjectMapper mapper = new ObjectMapper();
+				//ObjectMapper mapper = JsonMapper.builder().enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN).build();
+				ObjectMapper mapper = JsonMapper.builder().build();
 				JsonNode responseJn = mapper.readTree(response.body());
+	
 				if (responseJn.at("/finance/error").has("code")) {
 					throw new APIException("Yahoo Finance API error response: " + responseJn.at("/finance/error").get("code").asText() + ", " + responseJn.at("/finance/error").get("description").asText());
 				}

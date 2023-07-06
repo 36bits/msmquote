@@ -68,7 +68,7 @@ public class Update {
 				// Do update
 				Map<String, String> quoteRow = new HashMap<>();
 				String quoteType;
-				while ((quoteRow = quoteSource.getNext()) != null) {
+				while (!(quoteRow = quoteSource.getNext()).isEmpty()) {
 					quoteType = quoteRow.get("xType").toString();
 					if (quoteType.equals("CURRENCY")) {
 						msmCurrency.update(quoteRow); // update currency FX rates

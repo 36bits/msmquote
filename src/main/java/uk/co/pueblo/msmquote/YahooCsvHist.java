@@ -10,6 +10,9 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * A Yahoo Finance CSV file historical quote source.
+ */
 public class YahooCsvHist extends YahooSource {
 
 	// Constants
@@ -20,13 +23,15 @@ public class YahooCsvHist extends YahooSource {
 	private String[] quoteMeta;
 	private int quoteAdjuster;
 
+	
+	
+	
 	/**
-	 * Constructor for CSV file quote data source.
-	 * 
-	 * @param fileName the name of the CSV file
-	 * @throws IOException
+	 * Constructs a Yahoo Finance CSV file historical quote source.
+	 *  
+	 * @param fileName the name of the CSV file containing the historical quote data
 	 */
-	YahooCsvHist(String fileName) throws IOException {
+	public YahooCsvHist(String fileName) throws IOException {
 		File csvFile = new File(fileName);
 		csvBr = new BufferedReader(new FileReader(csvFile));
 		if (!csvBr.readLine().equals("Date,Open,High,Low,Close,Adj Close,Volume")) {
@@ -42,12 +47,6 @@ public class YahooCsvHist extends YahooSource {
 		quoteAdjuster = getAdjuster(quoteMeta[1]); 
 	}
 
-	/**
-	 * Gets the next row of quote data from the CSV file.
-	 * 
-	 * @return the quote row or null if no more data
-	 * @throws IOException
-	 */
 	public Map<String, String> getNext() throws IOException {
 
 		Map<String, String> returnRow = new HashMap<>();
@@ -57,7 +56,7 @@ public class YahooCsvHist extends YahooSource {
 		if (csvRow == null) {
 			// End of file
 			csvBr.close();
-			return null;
+			return returnRow;
 		}
 		String[] csvColumn = csvRow.split(",");
 

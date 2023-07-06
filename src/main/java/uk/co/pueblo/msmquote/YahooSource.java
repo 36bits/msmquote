@@ -4,6 +4,9 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Parent class for the Yahoo Finance quote sources.
+ */
 abstract class YahooSource extends QuoteSource {
 
 	// Constants
@@ -11,12 +14,11 @@ abstract class YahooSource extends QuoteSource {
 	static final Properties PROPS = getProps("YahooSource.properties");
 
 	/**
-	 * Generates a Yahoo symbol from the Money symbol.
+	 * Attempts to generate a Yahoo Finance symbol from a Money symbol and country code.
 	 * 
-	 * @param symbol  the Money symbol for the security
-	 * @param country the Money country for the security
-	 * @param props   the YahooQuote properties
-	 * @return the equivalent Yahoo symbol
+	 * @param symbol the Money symbol for the security
+	 * @param country the Money country code for the security
+	 * @return the equivalent Yahoo Finance symbol
 	 */
 	static String getYahooSymbol(String symbol, String country) {
 		String yahooSymbol = symbol;
