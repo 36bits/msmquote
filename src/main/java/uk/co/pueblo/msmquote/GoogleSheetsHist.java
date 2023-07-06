@@ -9,7 +9,10 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class GoogleSheetsHist extends GoogleSheetsSource {
+/**
+ * A Google Sheets historical quote source.
+ */
+public class GoogleSheetsHist extends GoogleSheetsSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsHist.class);
@@ -21,8 +24,13 @@ class GoogleSheetsHist extends GoogleSheetsSource {
 	private String[] quoteMeta;
 	private int quoteAdjuster;
 
-	// Constructor
-	GoogleSheetsHist(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
+	/**
+	 * Constructs a Google Sheets historical quote source.
+	 * 
+	 * @param spreadsheetId the ID of the spreadsheet containing the GOOGLEFINANCE historical quote data
+	 * @param range         the range containing the quote data within the spreadsheet
+	 */
+	public GoogleSheetsHist(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
 		super(spreadsheetId, range);
 		quoteMeta = range.substring(range.indexOf(" ") + 1, range.indexOf("!")).split(" "); // symbol, currency, quote type
 		quoteAdjuster = getAdjuster(quoteMeta[1]);
@@ -30,8 +38,8 @@ class GoogleSheetsHist extends GoogleSheetsSource {
 
 	public Map<String, String> getNext() throws IOException {
 		Map<String, String> returnRow = new HashMap<>();
-		List<Object> quoteRow;		
-		
+		List<Object> quoteRow;
+
 		// Get quote row
 		while (quoteIndex < quoteRows.size()) {
 			quoteRow = quoteRows.get(quoteIndex++);
@@ -53,8 +61,8 @@ class GoogleSheetsHist extends GoogleSheetsSource {
 				}
 				n++;
 			}
-			return returnRow;
+			break;
 		}
-		return null;
+		return returnRow;
 	}
 }

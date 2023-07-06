@@ -8,7 +8,10 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class GoogleSheetsQuote extends GoogleSheetsSource {
+/**
+ * A Google Sheets quote source.
+ */
+public class GoogleSheetsQuote extends GoogleSheetsSource {
 
 	// Constants
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsQuote.class);
@@ -16,8 +19,13 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 	private static final String HEADER_FLAG = "xSymbol";
 	private static final String VALUE_NA = "#N/A";
 
-	// Constructor
-	GoogleSheetsQuote(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
+	/**
+	 * Constructs a Google Sheets quote source.
+	 * 
+	 * @param spreadsheetId	the ID of the spreadsheet containing the GOOGLEFINANCE quote data
+	 * @param range			the range containing the quote data within the spreadsheet
+	 */
+	public GoogleSheetsQuote(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
 		super(spreadsheetId, range);
 	}
 
@@ -49,8 +57,8 @@ class GoogleSheetsQuote extends GoogleSheetsSource {
 				}
 				n++;
 			}
-			return returnRow;
+			break;
 		}
-		return null;
+		return returnRow;
 	}
 }
