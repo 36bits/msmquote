@@ -50,14 +50,16 @@ abstract class YahooApiSource extends YahooSource {
 			}
 			crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("crumb.url"))).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 		} catch (Exception e) {
+			setStatus(SOURCE_FATAL);
 			LOGGER.debug("Exception occurred!", e);
 			LOGGER.fatal(e);
 		}
 
-		if (crumb.isEmpty()) {
+		// Validate crumb
+		if (crumb.isEmpty() || crumb.contains(" ")) {
 			setStatus(SOURCE_FATAL);
-			LOGGER.fatal("Could not get API crumb");
-			throw new RuntimeException();			
+			LOGGER.fatal("Invalid API crumb received, crumb={}", crumb);
+			throw new RuntimeException();
 		} else {
 			LOGGER.info("API crumb={}", crumb);
 		}
@@ -91,11 +93,11 @@ abstract class YahooApiSource extends YahooSource {
 				response = httpClient.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
 				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
 
-				//ObjectMapper mapper = new ObjectMapper();
-				//ObjectMapper mapper = JsonMapper.builder().enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN).build();
+				// ObjectMapper mapper = new ObjectMapper();
+				// ObjectMapper mapper = JsonMapper.builder().enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN).build();
 				ObjectMapper mapper = JsonMapper.builder().build();
 				JsonNode responseJn = mapper.readTree(response.body());
-	
+
 				if (responseJn.at("/finance/error").has("code")) {
 					throw new APIException("Yahoo Finance API error response: " + responseJn.at("/finance/error").get("code").asText() + ", " + responseJn.at("/finance/error").get("description").asText());
 				}
