@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,39 +37,39 @@ public class YahooApiQuote extends YahooApiSource {
 		String yahooSymbol = "";
 		
 		// Build Yahoo security symbols string
-		String secSymbolsCsv = "";
+		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
 		for (String secSymbol : secSymbols) {
 			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string
 			yahooSymbol = getYahooSymbol(secSymbol, cntryCodes.get(i++));
 			symbolMap.put(yahooSymbol, secSymbol);
-			secSymbolsCsv = secSymbolsCsv + yahooSymbol + ",";
+			secSymbolsSj.add(yahooSymbol);
 		}
 		if (i == 0) {
 			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with {} security {}: {}", i, i == 1 ? "symbol" : "symbols", secSymbolsCsv.substring(0, secSymbolsCsv.length() - 1));
+			LOGGER.info("Building URL with {} security {}: {}", i, i == 1 ? "symbol" : "symbols", secSymbolsSj.toString());
 		}
 
 		// Build Yahoo currency symbols string
-		String fxSymbolsCsv = "";
+		StringJoiner fxSymbolsSj = new StringJoiner(",");
 		i = 0;
 		for (String crncPair : crncPairs) {
 			yahooSymbol = crncPair + "=X";
 			symbolMap.put(yahooSymbol, crncPair);
-			fxSymbolsCsv = fxSymbolsCsv + yahooSymbol + ",";
+			fxSymbolsSj.add(yahooSymbol);
 			i++;
 		}
 		if (i == 0) {
 			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with {} FX {}: {}", i, i == 1 ? "symbol" : "symbols", fxSymbolsCsv.substring(0, fxSymbolsCsv.length() - 1));
+			LOGGER.info("Building URL with {} FX {}: {}", i, i == 1 ? "symbol" : "symbols", fxSymbolsSj.toString());
 		}
 
 		// Get quote data from api
-		String allSymbols = secSymbolsCsv + fxSymbolsCsv;
-		if (!apiUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {
-			resultIt = getJson(apiUrl + allSymbols.substring(0, allSymbols.length() - 1)).at(JSON_ROOT).elements();
+		String allSymbolsCsv = secSymbolsSj.merge(fxSymbolsSj).toString();
+		if (!apiUrl.endsWith("symbols=?") && !allSymbolsCsv.isEmpty()) {
+			resultIt = getJson(apiUrl + allSymbolsCsv).at(JSON_ROOT).elements();
 		}
 	}
 
