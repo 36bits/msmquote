@@ -110,7 +110,7 @@ public class YahooApiQuote extends YahooApiSource {
 			// Add quote values to return row
 			String prop;
 			int n = 1;
-			while ((prop = PROPS.getProperty("api." + quoteType + "." + n++)) != null) {
+			while ((prop = PROPS.getProperty("api." + quoteType + '.' + n++)) != null) {
 				String[] columnMap = prop.split(",");
 				if (result.has(columnMap[0])) {
 					String value = result.get(columnMap[0]).asText();
