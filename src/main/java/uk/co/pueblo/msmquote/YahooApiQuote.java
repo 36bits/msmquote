@@ -32,18 +32,19 @@ public class YahooApiQuote extends YahooApiSource {
 	 * @param cntryCodes the corresponding list of Money country codes for each security symbol
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 */
-	public YahooApiQuote(String apiUrl, List<String> secSymbols, List<String> cntryCodes, List<String> crncPairs) throws APIException {
+	public YahooApiQuote(String apiUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws APIException {
 
 		String yahooSymbol = "";
 		
 		// Build Yahoo security symbols string
 		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
-		for (String secSymbol : secSymbols) {
-			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string
-			yahooSymbol = getYahooSymbol(secSymbol, cntryCodes.get(i++));
-			symbolMap.put(yahooSymbol, secSymbol);
+		for (String secSymbol[] : secSymbols) {
+			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string joiner
+			yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1]);
+			symbolMap.put(yahooSymbol, secSymbol[0]);
 			secSymbolsSj.add(yahooSymbol);
+			i++;
 		}
 		if (i == 0) {
 			LOGGER.warn("No security symbols found to update in Money file");
@@ -54,9 +55,9 @@ public class YahooApiQuote extends YahooApiSource {
 		// Build Yahoo currency symbols string
 		StringJoiner fxSymbolsSj = new StringJoiner(",");
 		i = 0;
-		for (String crncPair : crncPairs) {
-			yahooSymbol = crncPair + "=X";
-			symbolMap.put(yahooSymbol, crncPair);
+		for (String crncPair[] : crncPairs) {
+			yahooSymbol = crncPair[0] + "=X";
+			symbolMap.put(yahooSymbol, crncPair[0]);
 			fxSymbolsSj.add(yahooSymbol);
 			i++;
 		}

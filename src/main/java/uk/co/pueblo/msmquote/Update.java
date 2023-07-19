@@ -46,10 +46,10 @@ public class Update {
 				// Instantiate quote object according to quote source
 				final QuoteSource quoteSource;
 				if (args.length == 2) {
-					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(), msmSecurity.getCntryCodes(), msmCurrency.getSymbols());
+					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(), msmCurrency.getSymbols());
 				} else if (args[2].matches("^https://query2.finance.yahoo.com/v[0-9]+/finance/quote.*")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
-						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(), msmSecurity.getCntryCodes(), msmCurrency.getSymbols());
+						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(), msmCurrency.getSymbols());
 					} else {
 						quoteSource = new YahooApiQuote(args[2]);
 					}
