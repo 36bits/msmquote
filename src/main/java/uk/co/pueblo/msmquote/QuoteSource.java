@@ -2,6 +2,7 @@ package uk.co.pueblo.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Properties;
 
@@ -67,14 +68,18 @@ public abstract class QuoteSource {
 	static String adjustQuote(String value, String operation, int adjuster) {
 		if (operation != null) {
 			try {
-				switch (operation) {
-				case ("d"):
-					value = String.valueOf(Double.parseDouble(value) / adjuster);
+				double adjValue = Double.parseDouble(value);
+				switch (operation.charAt(0)) {
+				case ('d'):
+					adjValue = adjValue / adjuster;
 					break;
-				case ("m"):
-					value = String.valueOf(Double.parseDouble(value) * 100 * adjuster);
+				case ('m'):
+					adjValue = adjValue * 100 * adjuster;
 					break;
 				}
+				DecimalFormat df = new DecimalFormat("0.#");
+				df.setMaximumFractionDigits(50);
+				value = df.format(adjValue);		
 			} catch (NumberFormatException e) {
 				// Do nothing
 			}
