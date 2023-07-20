@@ -22,6 +22,7 @@ abstract class YahooApiSource extends YahooSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
+	private static final String HTTP_REQ_UA = PROPS.getProperty("httprequest.useragent");
 
 	// Class variables
 	private static HttpClient httpClient;
@@ -29,15 +30,15 @@ abstract class YahooApiSource extends YahooSource {
 
 	static {
 		// Set up http client
-		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
+		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));		
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 		CookieManager cm = new CookieManager();
 		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
 
 		// Get Yahoo cookie and crumb
-		int n = 0;
-		String cookieUrl;
 		try {
+			int n = 0;
+			String cookieUrl;			
 			while (true) {
 				if ((cookieUrl = PROPS.getProperty("cookie.url." + ++n)) == null) {
 					break;
@@ -48,7 +49,7 @@ abstract class YahooApiSource extends YahooSource {
 					break;
 				}
 			}
-			crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("crumb.url"))).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+			crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("crumb.url"))).setHeader("User-Agent", HTTP_REQ_UA).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 		} catch (Exception e) {
 			setStatus(SOURCE_FATAL);
 			LOGGER.debug("Exception occurred!", e);
@@ -58,7 +59,7 @@ abstract class YahooApiSource extends YahooSource {
 		// Validate crumb
 		if (crumb.isEmpty() || crumb.contains(" ")) {
 			setStatus(SOURCE_FATAL);
-			LOGGER.fatal("Received invalid API crumb, crumb=\"{}\"", crumb);
+			LOGGER.fatal("Received invalid API crumb, crumb=\"{}\"", crumb.trim());
 			throw new RuntimeException();
 		} else {
 			LOGGER.info("API crumb={}", crumb);
