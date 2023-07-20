@@ -7,7 +7,7 @@ param (
 $mnyFile = (Get-Item $mnyFile).FullName
 $log = $env:LOCALAPPDATA + "\log\msmquote.log"
 $jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
-$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.1.8.jar"
+$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.2.0.jar"
 $jreOpts = @()
 
 if (Get-WinEvent -LogName msmquote/Operational -ErrorAction SilentlyContinue) {
