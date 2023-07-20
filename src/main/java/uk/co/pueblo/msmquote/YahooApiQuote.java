@@ -28,8 +28,7 @@ public class YahooApiQuote extends YahooApiSource {
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
 	 * @param apiUrl     the base URL for the Yahoo Finance API
-	 * @param secSymbols the list of Money security symbols for which to get quotes
-	 * @param cntryCodes the corresponding list of Money country codes for each security symbol
+	 * @param secSymbols the list of Money security symbols and associated country codes for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 */
 	public YahooApiQuote(String apiUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws APIException {
