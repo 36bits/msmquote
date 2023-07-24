@@ -1,11 +1,52 @@
+
+<#PSScriptInfo
+
+.VERSION 1.0.0
+
+.GUID 895933f5-356e-4a39-9b98-c2f2df5cd211
+
+.AUTHOR jonathan@pueblo.co.uk
+
+.COMPANYNAME
+
+.COPYRIGHT
+
+.TAGS
+
+.LICENSEURI
+
+.PROJECTURI
+
+.ICONURI
+
+.EXTERNALMODULEDEPENDENCIES 
+
+.REQUIREDSCRIPTS
+
+.EXTERNALSCRIPTDEPENDENCIES
+
+.RELEASENOTES
+
+
+.PRIVATEDATA
+
+#>
+
+<# 
+
+.DESCRIPTION 
+ Run msmquote 
+
+#> 
+
 param (
     [Parameter(Mandatory = $true)][string]$mnyFile,
     [Parameter(Mandatory = $true)][string]$mnyPswd,
-    [Parameter(Mandatory = $false)][string[]]$source
+    [Parameter(Mandatory = $false)][string[]]$source,
+    [Parameter(Mandatory = $false)][string]$log = $env:LOCALAPPDATA + "\log\msmquote.log"
 )
 
 $mnyFile = (Get-Item $mnyFile).FullName
-$log = $env:LOCALAPPDATA + "\log\msmquote.log"
 $jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
 $jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.2.0.jar"
 $jreOpts = @()
