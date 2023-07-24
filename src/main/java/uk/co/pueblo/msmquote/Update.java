@@ -32,7 +32,7 @@ public class Update {
 		try {
 			// Process command-line arguments
 			if (args.length < 2) {
-				throw new IllegalArgumentException("Usage: filename password [source]");
+				throw new IllegalArgumentException("Usage: <filename> <password> [source]");
 			}
 
 			// Open Money database
