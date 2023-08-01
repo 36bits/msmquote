@@ -51,14 +51,14 @@ abstract class YahooApiSource extends YahooSource {
 			}
 			crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("crumb.url"))).setHeader("User-Agent", HTTP_REQ_UA).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 		} catch (Exception e) {
-			setStatus(SOURCE_FATAL);
+			setStatus(SourceStatus.FATAL);
 			LOGGER.debug("Exception occurred!", e);
 			LOGGER.fatal(e);
 		}
 
 		// Validate crumb
 		if (crumb.isEmpty() || crumb.contains(" ")) {
-			setStatus(SOURCE_FATAL);
+			setStatus(SourceStatus.FATAL);
 			LOGGER.fatal("Received invalid API crumb, crumb=\"{}\"", crumb.trim());
 			throw new RuntimeException();
 		} else {
@@ -105,7 +105,7 @@ abstract class YahooApiSource extends YahooSource {
 				return responseJn;
 			} catch (Exception e) {
 				LOGGER.error(e);
-				setStatus(SOURCE_ERROR);
+				setStatus(SourceStatus.ERROR);
 			}
 		}
 		throw new APIException("All Yahoo Finance API requests failed!");

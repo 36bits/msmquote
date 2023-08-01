@@ -16,13 +16,20 @@ public abstract class QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
-	static final int SOURCE_OK = 0;
-	static final int SOURCE_WARN = 1;
-	static final int SOURCE_ERROR = 2;
-	static final int SOURCE_FATAL = 3;
 
 	// Class variables
-	private static int finalStatus = SOURCE_OK;
+	private static SourceStatus finalStatus = SourceStatus.OK;
+
+	// Source status
+	enum SourceStatus {
+		OK(0), WARN(1), ERROR(2), FATAL(3);
+
+		final int code;
+
+		SourceStatus(int code) {
+			this.code = code;
+		}
+	}
 
 	/**
 	 * Gets the next row of quote data from the quote source.
@@ -37,11 +44,11 @@ public abstract class QuoteSource {
 	 * @return status code
 	 */
 	public static int getStatus() {
-		return finalStatus;
+		return finalStatus.code;
 	}
 
-	static void setStatus(int status) {
-		if (status > finalStatus) {
+	static void setStatus(SourceStatus status) {
+		if (status.code > finalStatus.code) {
 			finalStatus = status;
 		}
 		return;
@@ -79,7 +86,7 @@ public abstract class QuoteSource {
 				}
 				DecimalFormat df = new DecimalFormat("0.#");
 				df.setMaximumFractionDigits(50);
-				value = df.format(adjValue);		
+				value = df.format(adjValue);
 			} catch (NumberFormatException e) {
 				// Do nothing
 			}
