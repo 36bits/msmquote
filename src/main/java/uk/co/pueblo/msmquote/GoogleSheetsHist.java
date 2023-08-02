@@ -33,7 +33,7 @@ public class GoogleSheetsHist extends GoogleSheetsSource {
 	public GoogleSheetsHist(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
 		super(spreadsheetId, range);
 		quoteMeta = range.substring(range.indexOf(" ") + 1, range.indexOf("!")).split(" "); // symbol, currency, quote type
-		quoteAdjuster = getAdjuster(quoteMeta[1]);
+		quoteAdjuster = getAdjuster(PROPS, quoteMeta[1]);
 	}
 
 	public Map<String, String> getNext() throws IOException {

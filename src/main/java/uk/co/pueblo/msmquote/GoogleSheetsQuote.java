@@ -50,7 +50,7 @@ public class GoogleSheetsQuote extends GoogleSheetsSource {
 				if (!value.equals(VALUE_NA)) {
 					headerCol = (String) headerRow.get(n);
 					if (headerCol.equals("currency")) {
-						quoteAdjuster = getAdjuster(value);
+						quoteAdjuster = getAdjuster(PROPS, value);
 					} else {
 						returnRow.put((String) headerCol, adjustQuote(value, PROPS.getProperty("column." + headerCol), quoteAdjuster));
 					}

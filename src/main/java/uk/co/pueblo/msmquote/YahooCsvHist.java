@@ -23,12 +23,9 @@ public class YahooCsvHist extends YahooSource {
 	private String[] quoteMeta;
 	private int quoteAdjuster;
 
-	
-	
-	
 	/**
 	 * Constructs a Yahoo Finance CSV file historical quote source.
-	 *  
+	 * 
 	 * @param fileName the name of the CSV file containing the historical quote data
 	 */
 	public YahooCsvHist(String fileName) throws IOException {
@@ -42,9 +39,9 @@ public class YahooCsvHist extends YahooSource {
 		// Get quote metadata from CSV file name
 		String tmp = csvFile.getName();
 		quoteMeta = tmp.substring(0, tmp.length() - 4).split(" "); // symbol, currency, quote type
-		
+
 		// Get quote adjuster for currency
-		quoteAdjuster = getAdjuster(quoteMeta[1]); 
+		quoteAdjuster = getAdjuster(PROPS, quoteMeta[1], quoteMeta[2]);
 	}
 
 	public Map<String, String> getNext() throws IOException {

@@ -65,13 +65,28 @@ public abstract class QuoteSource {
 		return props;
 	}
 
-	static int getAdjuster(String currency) {
-		if (currency.matches("(..[a-z]|..X|ZAC)")) { // minor currency units: cents, pence, etc.
-			return 100;
+	static int getAdjuster(Properties props, String currency) {
+		int adjuster = 1;
+		String prop;
+		if ((prop = props.getProperty("adjust." + currency)) != null) {
+			adjuster = Integer.parseInt(prop);
+		} else if (currency.matches("(..[a-z]|..X)")) { // minor currency units: cents, pence, etc.
+			adjuster = 100;
 		}
-		return 1;
+		return adjuster;
 	}
-
+	
+	static int getAdjuster(Properties props, String currency, String quoteType) {
+		int adjuster = 1;
+		String prop;
+		if ((prop = props.getProperty("adjust." + currency + "." + quoteType)) != null) {
+			adjuster = Integer.parseInt(prop);
+		} else {
+			adjuster = getAdjuster(props, currency);
+		}
+		return adjuster;
+	}
+	
 	static String adjustQuote(String value, String operation, int adjuster) {
 		if (operation != null) {
 			try {

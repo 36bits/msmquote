@@ -34,7 +34,7 @@ public class YahooApiQuote extends YahooApiSource {
 	public YahooApiQuote(String apiUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws APIException {
 
 		String yahooSymbol = "";
-		
+
 		// Build Yahoo security symbols string
 		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
@@ -82,7 +82,6 @@ public class YahooApiQuote extends YahooApiSource {
 		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
 	}
 
-	
 	public Map<String, String> getNext() {
 		// Get next JSON node from iterator
 		Map<String, String> returnRow = new HashMap<>();
@@ -104,8 +103,8 @@ public class YahooApiQuote extends YahooApiSource {
 				returnRow.put("xSymbol", symbolMap.get(yahooSymbol));
 			}
 
-			// Get quote adjuster for currency
-			int quoteAdjuster = getAdjuster(result.get("currency").asText());
+			// Get quote adjuster for currency and quote type
+			int quoteAdjuster = getAdjuster(PROPS, result.get("currency").asText(), result.get("quoteType").asText());
 
 			// Add quote values to return row
 			String prop;

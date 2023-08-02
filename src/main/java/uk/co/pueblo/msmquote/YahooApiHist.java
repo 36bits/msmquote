@@ -36,7 +36,7 @@ public class YahooApiHist extends YahooApiSource {
 		quoteType = resultJn.at("/meta").get("instrumentType").asText();
 
 		// Get quote adjuster for currency
-		quoteAdjuster = getAdjuster(resultJn.at("/meta").get("currency").asText());
+		quoteAdjuster = getAdjuster(PROPS, resultJn.at("/meta").get("currency").asText(), quoteType);
 	}
 
 	public Map<String, String> getNext() {

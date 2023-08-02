@@ -16,7 +16,7 @@ abstract class YahooSource extends QuoteSource {
 	/**
 	 * Attempts to generate a Yahoo Finance symbol from a Money symbol and country code.
 	 * 
-	 * @param symbol the Money symbol for the security
+	 * @param symbol  the Money symbol for the security
 	 * @param country the Money country code for the security
 	 * @return the equivalent Yahoo Finance symbol
 	 */
@@ -57,5 +57,5 @@ abstract class YahooSource extends QuoteSource {
 		}
 
 		return yahooSymbol.toUpperCase();
-	}
+	}	
 }
