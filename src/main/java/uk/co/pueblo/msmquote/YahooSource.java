@@ -24,17 +24,21 @@ abstract class YahooSource extends QuoteSource {
 		String yahooSymbol = symbol;
 		String prop;
 		boolean exchangeNotFound = false;
-		if (symbol.matches("^\\$US:.*")) {
-			// Symbol is in Money index format '$US:symbol'
-			if ((prop = PROPS.getProperty("index." + symbol.substring(4))) != null) {
+		if (symbol.charAt(0) == '$') {
+			// Symbol is in Money index format
+			if (symbol.matches("^\\$US:.*") && (prop = PROPS.getProperty("index." + symbol.substring(4))) != null) {
+				// Symbol is in Money index format '$US:symbol' and has a predefined Yahoo equivalent
 				yahooSymbol = prop;
+			} else if (symbol.matches("^\\$..:.*")) {
+				// Symbol is in Money index format '$xx:symbol'
+				yahooSymbol = "^" + symbol.substring(4);
+			} else if (symbol.matches("^\\$.*") && (prop = PROPS.getProperty("index." + symbol.substring(1))) != null) {
+				// Symbol is in Money index format '$symbol' and has a predefined Yahoo equivalent
+				yahooSymbol = prop;
+			} else {
+				// Symbol is in Money index format '$symbol'
+				yahooSymbol = "^" + symbol.substring(1);
 			}
-		} else if (symbol.matches("^\\$..:.*")) {
-			// Symbol is in Money index format '$xx:symbol'
-			yahooSymbol = "^" + symbol.substring(4);
-		} else if (symbol.matches("^\\$.*")) {
-			// Symbol is in Money index format '$symbol'
-			yahooSymbol = "^" + symbol.substring(1);
 		} else if (symbol.matches("^..:.*")) {
 			// Symbol is in Money security format 'xx:symbol'
 			if ((prop = PROPS.getProperty("exchange." + country)) == null) {
