@@ -55,7 +55,7 @@ public class YahooApiQuote extends YahooApiSource {
 		StringJoiner fxSymbolsSj = new StringJoiner(",");
 		i = 0;
 		for (String crncPair[] : crncPairs) {
-			yahooSymbol = crncPair[0] + "=X";
+			yahooSymbol = crncPair[0];
 			symbolMap.put(yahooSymbol, crncPair[0]);
 			fxSymbolsSj.add(yahooSymbol);
 			i++;
