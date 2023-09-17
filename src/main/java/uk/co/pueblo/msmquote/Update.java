@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.co.pueblo.msmcore.MsmCurrency;
 import uk.co.pueblo.msmcore.MsmDb;
-import uk.co.pueblo.msmcore.MsmDb.CliDatRow;
+import uk.co.pueblo.msmcore.MsmDb.CliDatValue;
 import uk.co.pueblo.msmcore.MsmSecurity;
 import uk.co.pueblo.msmcore.MsmInstrument;
 
@@ -78,8 +78,8 @@ public class Update {
 				}
 
 				// Post update processing
-				msmSecurity.addNewSpRows(); // add any new rows to the SP table
-				msmDb.updateCliDatVal(CliDatRow.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
+				msmSecurity.addNewRows(); // add any new rows to the SP table
+				msmDb.updateCliDatVal(CliDatValue.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
