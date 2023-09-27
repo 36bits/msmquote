@@ -2,10 +2,11 @@ package uk.co.pueblo.msmquote;
 
 import java.net.CookieManager;
 import java.net.URI;
-import java.net.URL;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 import org.apache.logging.log4j.LogManager;
@@ -81,15 +82,15 @@ abstract class YahooApiSource extends YahooSource {
 				if ((apiUrl = PROPS.getProperty("api.url." + ++n)) == null) {
 					break;
 				} else {
-					apiUrl = apiUrl + param;
+					apiUrl = apiUrl + URLEncoder.encode(param, StandardCharsets.UTF_8);
 				}
 			}
 
 			apiUrl = apiUrl + "&crumb=" + crumb; // add crumb parameter to url
+			LOGGER.debug("URL={}", apiUrl);
 
 			try {
-				URL url = new URL(apiUrl);
-				URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+				URI uri = new URI(apiUrl);
 				LOGGER.info("Requesting quote data from Yahoo Finance API, url={}", n);
 				response = httpClient.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
 				LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
