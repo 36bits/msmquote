@@ -64,6 +64,7 @@ abstract class YahooApiSource extends YahooSource {
 			throw new RuntimeException();
 		} else {
 			LOGGER.info("API crumb={}", crumb);
+			crumb = "&crumb=" + URLEncoder.encode(crumb, StandardCharsets.UTF_8); // create crumb parameter
 		}
 	}
 
@@ -82,11 +83,11 @@ abstract class YahooApiSource extends YahooSource {
 				if ((apiUrl = PROPS.getProperty("api.url." + ++n)) == null) {
 					break;
 				} else {
-					apiUrl = apiUrl + URLEncoder.encode(param, StandardCharsets.UTF_8);
+					apiUrl = apiUrl + "symbols=" + URLEncoder.encode(param, StandardCharsets.UTF_8);
 				}
 			}
 
-			apiUrl = apiUrl + "&crumb=" + crumb; // add crumb parameter to url
+			apiUrl = apiUrl + crumb; // add crumb parameter to url
 			LOGGER.debug("URL={}", apiUrl);
 
 			try {
