@@ -26,18 +26,12 @@ abstract class YahooSource extends QuoteSource {
 		boolean exchangeNotFound = false;
 		if (symbol.charAt(0) == '$') {
 			// Symbol is in Money index format
-			if (symbol.matches("^\\$US:.*") && (prop = PROPS.getProperty("index." + symbol.substring(4))) != null) {
-				// Symbol is in Money index format '$US:symbol' and has a predefined Yahoo equivalent
-				yahooSymbol = prop;
-			} else if (symbol.matches("^\\$..:.*")) {
-				// Symbol is in Money index format '$xx:symbol'
-				yahooSymbol = "^" + symbol.substring(4);
-			} else if (symbol.matches("^\\$.*") && (prop = PROPS.getProperty("index." + symbol.substring(1))) != null) {
-				// Symbol is in Money index format '$symbol' and has a predefined Yahoo equivalent
+			symbol = symbol.matches("^\\$..:.*") ? symbol.substring(4) : symbol.substring(1);			
+			if ((prop = PROPS.getProperty("index." + symbol)) != null) {
+				// Symbol has a predefined Yahoo equivalent
 				yahooSymbol = prop;
 			} else {
-				// Symbol is in Money index format '$symbol'
-				yahooSymbol = "^" + symbol.substring(1);
+				yahooSymbol = "^" + symbol;
 			}
 		} else if (symbol.matches("^..:.*")) {
 			// Symbol is in Money security format 'xx:symbol'
