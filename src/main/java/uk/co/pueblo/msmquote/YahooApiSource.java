@@ -60,7 +60,7 @@ abstract class YahooApiSource extends YahooSource {
 		// Validate crumb
 		if (crumb.isEmpty() || crumb.contains(" ")) {
 			setStatus(SourceStatus.FATAL);
-			LOGGER.fatal("Received invalid API crumb, crumb=\"{}\"", crumb.trim());
+			LOGGER.fatal("Received invalid API crumb, crumb={}", crumb.trim());
 			throw new RuntimeException();
 		} else {
 			LOGGER.info("API crumb={}", crumb);
