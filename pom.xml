@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>uk.co.pueblo</groupId>
 	<artifactId>msmquote</artifactId>
-	<version>4.4.1-SNAPSHOT</version>
+	<version>4.5.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>msmquote</name>
 	<url>https://github.com/36bits/msmquote</url>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>uk.co.pueblo</groupId>
 			<artifactId>msmcore</artifactId>
-			<version>2.1.1</version>
+			<version>2.1.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
