@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,17 +19,24 @@ public abstract class QuoteSource {
 	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
 
 	// Class variables
-	private static SourceStatus finalStatus = SourceStatus.OK;
+	static SourceStatus sourceClassStatus = SourceStatus.OK;
+
+	// Instance variables
+	SourceStatus sourceStatus = SourceStatus.OK;
 
 	// Source status
 	enum SourceStatus {
-		OK(0), WARN(1), ERROR(2), FATAL(3);
+		OK(Level.INFO), WARN(Level.WARN), ERROR(Level.ERROR), FATAL(Level.FATAL);
 
-		final int code;
+		public final Level level;
 
-		SourceStatus(int code) {
-			this.code = code;
+		SourceStatus(Level level) {
+			this.level = level;
 		}
+	}
+
+	QuoteSource() {
+		sourceStatus = sourceClassStatus;
 	}
 
 	/**
@@ -39,19 +47,12 @@ public abstract class QuoteSource {
 	public abstract Map<String, String> getNext() throws IOException;
 
 	/**
-	 * Gets the highest status code for all quote source instances.
+	 * Gets the status of the quote source instance.
 	 * 
-	 * @return status code
+	 * @return source status
 	 */
-	public static int getStatus() {
-		return finalStatus.code;
-	}
-
-	static void setStatus(SourceStatus status) {
-		if (status.code > finalStatus.code) {
-			finalStatus = status;
-		}
-		return;
+	SourceStatus getStatus() {
+		return sourceStatus;
 	}
 
 	static Properties getProps(String propsFile) {
@@ -75,7 +76,7 @@ public abstract class QuoteSource {
 		}
 		return adjuster;
 	}
-	
+
 	static int getAdjuster(Properties props, String currency, String quoteType) {
 		int adjuster = 1;
 		String prop;
@@ -86,7 +87,7 @@ public abstract class QuoteSource {
 		}
 		return adjuster;
 	}
-	
+
 	static String adjustQuote(String value, String operation, int adjuster) {
 		if (operation != null) {
 			try {

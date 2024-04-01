@@ -27,8 +27,9 @@ public class YahooApiHist extends YahooApiSource {
 	 * Constructs a Yahoo Finance API historical quote source.
 	 * 
 	 * @param apiUrl the URL of the Yahoo Finance quote history API
+	 * @throws QuoteSourceException 
 	 */
-	public YahooApiHist(String apiUrl) throws APIException {
+	public YahooApiHist(String apiUrl) throws QuoteSourceException {
 
 		// Get symbol and quote type
 		resultJn = getJson(apiUrl).at("/chart/result/0");

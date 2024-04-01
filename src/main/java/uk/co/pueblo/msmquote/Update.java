@@ -5,29 +5,30 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
+
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.co.pueblo.msmcore.MsmCurrency;
 import uk.co.pueblo.msmcore.MsmDb;
 import uk.co.pueblo.msmcore.MsmDb.CliDatValue;
 import uk.co.pueblo.msmcore.MsmSecurity;
-import uk.co.pueblo.msmcore.MsmInstrument;
+import uk.co.pueblo.msmcore.MsmInstrument.UpdateStatus;
+import uk.co.pueblo.msmcore.MsmInstrumentException;
 
 public class Update {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
-	private static final int EXIT_OK = 0;
-	// private static final int EXIT_WARN = 1;
-	// private static final int EXIT_ERROR = 2;
-	private static final int EXIT_FATAL = 3;
 
 	public static void main(String[] args) {
 
-		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
-
-		int finalExit = EXIT_OK;
 		final Instant startTime = Instant.now();
+		Level maxLevel = Level.INFO;
+		Map<String, int[]> summary = new HashMap<>();
+
+		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
 
 		try {
 			// Process command-line arguments
@@ -65,15 +66,31 @@ public class Update {
 					throw new IllegalArgumentException("Unrecognised quote source");
 				}
 
+				// Get level from quote source
+				maxLevel = quoteSource.getStatus().level;
+
 				// Do update
 				Map<String, String> quoteRow = new HashMap<>();
-				String quoteType;
 				while (!(quoteRow = quoteSource.getNext()).isEmpty()) {
-					quoteType = quoteRow.get("xType").toString();
-					if (quoteType.equals("CURRENCY")) {
-						msmCurrency.update(quoteRow); // update currency FX rates
-					} else {
-						msmSecurity.update(quoteRow); // update other security types
+					String quoteType = quoteRow.get("xType").toString();
+					try {
+						UpdateStatus updateStatus;
+						if (quoteType.equals("CURRENCY")) {
+							updateStatus = msmCurrency.update(quoteRow); // update currency FX rates
+							incSummary(quoteType, updateStatus, summary);
+						} else {
+							updateStatus = msmSecurity.update(quoteRow); // update other security types
+							incSummary(quoteType, updateStatus, summary);
+						}
+						if (updateStatus.level.isMoreSpecificThan(maxLevel)) {
+							maxLevel = updateStatus.level;
+						}
+					} catch (MsmInstrumentException e) {
+						incSummary(quoteType, e.getUpdateStatus(), summary);
+						LOGGER.log(e.getUpdateStatus().level, e.getMessage());
+						if (e.getUpdateStatus().level.isMoreSpecificThan(maxLevel)) {
+							maxLevel = e.getUpdateStatus().level;
+						}
 					}
 				}
 
@@ -82,26 +99,44 @@ public class Update {
 				msmDb.updateCliDatVal(CliDatValue.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
 
 			} catch (Exception e) {
-				LOGGER.fatal(e);
+				LOGGER.fatal(e.getMessage());
 				LOGGER.debug("Exception occurred!", e);
-				finalExit = EXIT_FATAL;
+				maxLevel = Level.FATAL;
 			} finally {
 				msmDb.closeDb(); // close Money database
 			}
 
 		} catch (Exception e) {
-			LOGGER.fatal(e);
+			LOGGER.fatal(e.getMessage());
 			LOGGER.debug("Exception occurred!", e);
-			finalExit = EXIT_FATAL;
+			maxLevel = Level.FATAL;
 		} finally {
-			// Set exit code and finish
-			int sourceStatus = QuoteSource.getStatus();
-			int updateStatus = MsmInstrument.logSummary();
-			int tmpExit = updateStatus > sourceStatus ? updateStatus : sourceStatus;
-			finalExit = finalExit > tmpExit ? finalExit : tmpExit;
-
+			logSummary(summary);
 			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-			System.exit(finalExit);
+			System.exit(4 - maxLevel.intLevel() / 100);
 		}
+	}
+
+	private static void incSummary(String quoteType, UpdateStatus updateStatus, Map<String, int[]> summary) {
+		summary.putIfAbsent(quoteType, new int[UpdateStatus.size]); // OK, warning, error, fatal, skipped, stale
+		int[] count = summary.get(quoteType);
+		count[updateStatus.index]++;
+		summary.put(quoteType, count);
+		return;
+	}
+
+	private static void logSummary(Map<String, int[]> summary) {
+		summary.forEach((key, count) -> {
+			StringJoiner logSj = new StringJoiner(", ");
+			int sum = 0;
+			for (UpdateStatus updateStatus : UpdateStatus.values()) {
+				if (updateStatus.label != null) {
+					logSj.add(updateStatus.label + count[updateStatus.index]);
+					sum += count[updateStatus.index];
+				}
+			}
+			LOGGER.info("Summary for quote type {}: processed={} [{}]", key, sum, logSj.toString());
+		});
+		return;
 	}
 }

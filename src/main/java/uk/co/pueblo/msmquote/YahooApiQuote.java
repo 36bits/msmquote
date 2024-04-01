@@ -1,5 +1,7 @@
 package uk.co.pueblo.msmquote;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,11 +29,12 @@ public class YahooApiQuote extends YahooApiSource {
 	/**
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
-	 * @param apiUrl     the base URL for the Yahoo Finance API
+	 * @param baseUrl     the base URL for the Yahoo Finance API
 	 * @param secSymbols the list of Money security symbols and associated country codes for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
+	 * @throws QuoteSourceException
 	 */
-	public YahooApiQuote(String apiUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws APIException {
+	public YahooApiQuote(String baseUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws QuoteSourceException {
 
 		String yahooSymbol = "";
 
@@ -40,7 +43,11 @@ public class YahooApiQuote extends YahooApiSource {
 		int i = 0;
 		for (String secSymbol[] : secSymbols) {
 			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string joiner
-			yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1]);
+			if ((yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1])) == null) {
+				LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", secSymbol[0], secSymbol[1]);
+				sourceStatus = SourceStatus.WARN;
+				yahooSymbol = secSymbol[0];
+			}
 			symbolMap.put(yahooSymbol, secSymbol[0]);
 			secSymbolsSj.add(yahooSymbol);
 			i++;
@@ -67,9 +74,30 @@ public class YahooApiQuote extends YahooApiSource {
 		}
 
 		// Get quote data from api
-		String allSymbolsCsv = secSymbolsSj.merge(fxSymbolsSj).toString();
-		if (!apiUrl.endsWith("symbols=?") && !allSymbolsCsv.isEmpty()) {
-			resultIt = getJson(apiUrl + allSymbolsCsv).at(JSON_ROOT).elements();
+		String allSymbols = URLEncoder.encode(secSymbolsSj.merge(fxSymbolsSj).toString(), StandardCharsets.UTF_8);
+		if (!baseUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {			
+			boolean loop = true;
+			i = 1;
+			while (loop) {
+				String fullUrl;
+				if (baseUrl.endsWith("symbols=")) {
+					fullUrl = baseUrl + allSymbols; 
+					loop = false;
+				} else if ((baseUrl = PROPS.getProperty("api.url." + i)) == null) {
+					break;
+				} else { 
+					fullUrl = baseUrl + "symbols=" + allSymbols;
+				}
+				LOGGER.info("Trying Yahoo Finance API url #{}", i++);
+				JsonNode jn;
+				if ((jn = getJson(fullUrl)) == null) {
+					sourceStatus = SourceStatus.WARN;
+				} else {
+					resultIt = jn.at(JSON_ROOT).elements();
+					return;
+				}
+			}
+			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
 		}
 	}
 
@@ -77,9 +105,15 @@ public class YahooApiQuote extends YahooApiSource {
 	 * Constructs a Yahoo Finance API quote source from a user-supplied URL.
 	 * 
 	 * @param apiUrl the complete URL for the Yahoo Finance API
+	 * @throws QuoteSourceException
 	 */
-	public YahooApiQuote(String apiUrl) throws APIException {
-		resultIt = getJson(apiUrl).at(JSON_ROOT).elements();
+	public YahooApiQuote(String apiUrl) throws QuoteSourceException {
+		JsonNode jn;
+		if ((jn = getJson(apiUrl)) != null) {
+			resultIt = jn.at(JSON_ROOT).elements();
+		} else {
+			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
+		}
 	}
 
 	public Map<String, String> getNext() {
