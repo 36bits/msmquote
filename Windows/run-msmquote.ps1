@@ -43,12 +43,17 @@ param (
     [Parameter(Mandatory = $true)][string]$mnyFile,
     [Parameter(Mandatory = $true)][string]$mnyPswd,
     [Parameter(Mandatory = $false)][string[]]$source,
-    [Parameter(Mandatory = $false)][string]$log = $env:LOCALAPPDATA + "\log\msmquote.log"
+    [Parameter(Mandatory = $false)][string]$log = (Join-Path $env:LOCALAPPDATA "Log" "msmquote.log"),
+    [Parameter(Mandatory = $false)][boolean]$job = $false
 )
 
+if ($job) {
+    $log = New-TemporaryFile
+}
+
 $mnyFile = (Get-Item $mnyFile).FullName
-$jre = $env:LOCALAPPDATA + "\Programs\msmquote\bin\java.exe"
-$jar = $env:LOCALAPPDATA + "\Programs\msmquote\msmquote-4.5.0.jar"
+$jre = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "bin" "java.exe"
+$jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.5.0.jar"
 $jreOpts = @()
 
 if (Get-WinEvent -LogName msmquote/Operational -ErrorAction SilentlyContinue) {
@@ -68,4 +73,8 @@ if (Get-WinEvent -LogName msmquote/Operational -ErrorAction SilentlyContinue) {
 }
 else {
     & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log -Encoding utf8
+}
+
+if ($job) {
+    Get-Content $log
 }
