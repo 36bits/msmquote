@@ -69,7 +69,7 @@ abstract class YahooApiSource extends YahooSource {
 				}
 			} catch (Exception e) {
 				LOGGER.debug("Exception occurred!", e);
-				LOGGER.warn(e.getMessage());
+				LOGGER.warn(e);
 			}
 		}
 	}
@@ -100,7 +100,7 @@ abstract class YahooApiSource extends YahooSource {
 			jn = mapper.readTree(response.body());
 		} catch (Exception e) {
 			LOGGER.debug("Exception occurred!", e);
-			LOGGER.warn(e.getMessage());
+			LOGGER.warn(e);
 		}
 
 		// Validate received JSON data

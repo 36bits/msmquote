@@ -99,7 +99,7 @@ public class Update {
 				msmDb.updateCliDatVal(CliDatValue.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
 
 			} catch (Exception e) {
-				LOGGER.fatal(e.getMessage());
+				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
 				maxLevel = Level.FATAL;
 			} finally {
@@ -107,7 +107,7 @@ public class Update {
 			}
 
 		} catch (Exception e) {
-			LOGGER.fatal(e.getMessage());
+			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
 			maxLevel = Level.FATAL;
 		} finally {
