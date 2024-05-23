@@ -37,6 +37,7 @@ public abstract class QuoteSource {
 
 	QuoteSource() {
 		sourceStatus = sourceClassStatus;
+		LOGGER.info(this.getClass().getSimpleName());
 	}
 
 	/**
