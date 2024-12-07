@@ -1,7 +1,7 @@
 
 <#PSScriptInfo
 
-.VERSION 1.0.0
+.VERSION 1.0.1
 
 .GUID 895933f5-356e-4a39-9b98-c2f2df5cd211
 
@@ -56,19 +56,19 @@ $jre = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "bin" "java.exe"
 $jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.8.0.jar"
 $jreOpts = @()
 
-if (Get-WinEvent -LogName msmquote/Operational -ErrorAction SilentlyContinue) {
+if (Get-WinEvent -LogName Pueblo-applications-msmquote/Operational -ErrorAction SilentlyContinue) {
     $duration = Measure-Command -Expression { & $jre $jreOpts -jar $jar $mnyFile $mnyPswd $source | Out-File -Append $log -Encoding utf8 }
     if ($LASTEXITCODE -eq 1) {
-        New-WinEvent -ProviderName msmquote -Id 1001 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # warnings
+        New-WinEvent -ProviderName Pueblo-applications-msmquote -Id 1001 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # warnings
     }
     elseif ($LASTEXITCODE -eq 2) {
-        New-WinEvent -ProviderName msmquote -Id 1002 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # errors
+        New-WinEvent -ProviderName Pueblo-applications-msmquote -Id 1002 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # errors
     }
     elseif ($LASTEXITCODE -eq 3) {
-        New-WinEvent -ProviderName msmquote -Id 1003 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # critical errors
+        New-WinEvent -ProviderName Pueblo-applications-msmquote -Id 1003 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # critical errors
     }
     else {
-        New-WinEvent -ProviderName msmquote -Id 1000 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # OK
+        New-WinEvent -ProviderName Pueblo-applications-msmquote -Id 1000 -Payload @($mnyFile, $LASTEXITCODE, $duration)     # OK
     }
 }
 else {

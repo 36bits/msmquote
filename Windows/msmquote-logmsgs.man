@@ -8,26 +8,26 @@
     xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
     <instrumentation>
         <events>
-            <provider name="msmquote"
+            <provider name="Pueblo-applications-msmquote"
                 symbol="msmquote"
                 guid="{8e72e1e7-ba54-4ed5-be88-f5a85c47d1d5}"
-                resourceFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll"
-                messageFileName="%ProgramData%\msmquote\msmquote-log-msgs.dll">
+                resourceFileName="%ProgramData%\Pueblo\msmquote-logmsgs.dll"
+                messageFileName="%ProgramData%\Pueblo\msmquote-logmsgs.dll">
                 <events>
                     <event symbol="msmquote_info" value="1000" version="1"
-                        channel="msmquote/Operational" level="win:Informational"
+                        channel="Pueblo-applications-msmquote/Operational" level="win:Informational"
                         template="msmquote"
                         message="$(string.msmquote.event.1000.message)" />
                     <event symbol="msmquote_warn" value="1001" version="1"
-                        channel="msmquote/Operational" level="win:Warning"
+                        channel="Pueblo-applications-msmquote/Operational" level="win:Warning"
                         template="msmquote"
                         message="$(string.msmquote.event.1001.message)" />
                     <event symbol="msmquote_error" value="1002" version="1"
-                        channel="msmquote/Operational" level="win:Error"
+                        channel="Pueblo-applications-msmquote/Operational" level="win:Error"
                         template="msmquote"
                         message="$(string.msmquote.event.1002.message)" />
                     <event symbol="msmquote_critical" value="1003" version="1"
-                        channel="msmquote/Operational" level="win:Critical"
+                        channel="Pueblo-applications-msmquote/Operational" level="win:Critical"
                         template="msmquote"
                         message="$(string.msmquote.event.1003.message)" />
                 </events>
@@ -35,7 +35,7 @@
                 <tasks />
                 <opcodes />
                 <channels>
-                    <channel name="msmquote/Operational" value="0x10" type="Operational"
+                    <channel name="Pueblo-applications-msmquote/Operational" value="0x10" type="Operational"
                         enabled="true" />
                 </channels>
                 <templates>
