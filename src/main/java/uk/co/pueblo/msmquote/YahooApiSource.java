@@ -83,25 +83,24 @@ abstract class YahooApiSource extends YahooSource {
 
 	static JsonNode getJson(String apiUrl) {
 		// Get data from the API
-		HttpResponse<String> response = null;
+		String apiResponse = null;
 		JsonNode jn = null;
 		apiUrl = apiUrl + crumb; // add crumb parameter to url
 		LOGGER.debug("URL={}", apiUrl);
 
 		try {
-			LOGGER.info("Requesting quote data from Yahoo Finance API");
-			URI uri = new URI(apiUrl);
-			response = httpClient.send(HttpRequest.newBuilder(uri).setHeader("User-Agent", HTTP_REQ_UA).GET().build(), HttpResponse.BodyHandlers.ofString());			
-			LOGGER.info("Received {} bytes from Yahoo Finance API", response.body().length());
+			LOGGER.info("Requesting quote data from Yahoo Finance API");			
+			apiResponse = httpClient.send(HttpRequest.newBuilder(new URI(apiUrl)).setHeader("User-Agent", HTTP_REQ_UA).GET().build(), HttpResponse.BodyHandlers.ofString()).body();		
+			LOGGER.info("Received {} bytes from Yahoo Finance API", apiResponse.length());
 			// ObjectMapper mapper = new ObjectMapper();
 			// ObjectMapper mapper =
 			// JsonMapper.builder().enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN).build();			
 			ObjectMapper mapper = JsonMapper.builder().build();
-			jn = mapper.readTree(response.body());
+			jn = mapper.readTree(apiResponse);
 		} catch (Exception e) {
 			LOGGER.debug("Exception occurred!", e);
 			LOGGER.error(e);
-			LOGGER.error("Received data from Yahoo Finance API={}", response.body());
+			LOGGER.error("Received data from Yahoo Finance API={}", apiResponse);
 		}
 
 		// Validate received JSON data
