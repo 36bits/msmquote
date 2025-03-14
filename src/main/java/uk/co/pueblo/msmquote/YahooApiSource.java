@@ -3,11 +3,9 @@ package uk.co.pueblo.msmquote;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
@@ -27,6 +25,7 @@ abstract class YahooApiSource extends YahooSource {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
 	private static final String HTTP_REQ_UA = PROPS.getProperty("httprequest.useragent");
 	private static final String COOKIE_NAME = "A3";
+	static final String SYMBOLS_PARAM = "symbols=";
 
 	// Class variables
 	private static HttpClient httpClient;
@@ -56,7 +55,7 @@ abstract class YahooApiSource extends YahooSource {
 						// Validate crumb
 						if (crumb.matches("^\\S{11}$")) {
 							LOGGER.info("API crumb={}", crumb);
-							crumb = "&crumb=" + URLEncoder.encode(crumb, StandardCharsets.UTF_8); // create crumb parameter
+							crumb = "&crumb=" + crumb; // create crumb parameter
 						} else {
 							LOGGER.warn("Received invalid API crumb, data={}", crumb.trim());
 							sourceClassStatus = SourceStatus.WARN;

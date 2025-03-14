@@ -29,7 +29,7 @@ public class YahooApiQuote extends YahooApiSource {
 	/**
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
-	 * @param baseUrl     the base URL for the Yahoo Finance API
+	 * @param baseUrl    the base URL for the Yahoo Finance API
 	 * @param secSymbols the list of Money security symbols and associated country codes for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 * @throws QuoteSourceException
@@ -75,18 +75,18 @@ public class YahooApiQuote extends YahooApiSource {
 
 		// Get quote data from api
 		String allSymbols = URLEncoder.encode(secSymbolsSj.merge(fxSymbolsSj).toString(), StandardCharsets.UTF_8);
-		if (!baseUrl.endsWith("symbols=?") && !allSymbols.isEmpty()) {			
+		if (!baseUrl.endsWith(SYMBOLS_PARAM + "?") && !allSymbols.isEmpty()) {
 			boolean loop = true;
 			i = 1;
 			while (loop) {
 				String fullUrl;
-				if (baseUrl.endsWith("symbols=")) {
-					fullUrl = baseUrl + allSymbols; 
+				if (baseUrl.endsWith(SYMBOLS_PARAM)) {
+					fullUrl = baseUrl + allSymbols;
 					loop = false;
 				} else if ((baseUrl = PROPS.getProperty("api.url." + i)) == null) {
 					break;
-				} else { 
-					fullUrl = baseUrl + "symbols=" + allSymbols;
+				} else {
+					fullUrl = baseUrl + SYMBOLS_PARAM + allSymbols;
 				}
 				LOGGER.info("Trying Yahoo Finance API url #{}", i++);
 				JsonNode jn;
@@ -108,6 +108,14 @@ public class YahooApiQuote extends YahooApiSource {
 	 * @throws QuoteSourceException
 	 */
 	public YahooApiQuote(String apiUrl) throws QuoteSourceException {
+
+		// Encode symbols
+		if (apiUrl.contains(SYMBOLS_PARAM)) {
+			String[] apiUrlParts = apiUrl.split(SYMBOLS_PARAM, 2);
+			apiUrl = apiUrlParts[0] + SYMBOLS_PARAM + URLEncoder.encode(apiUrlParts[1], StandardCharsets.UTF_8);
+		}
+
+		// Get quote data from api
 		JsonNode jn;
 		if ((jn = getJson(apiUrl)) != null) {
 			resultIt = jn.at(JSON_ROOT).elements();
