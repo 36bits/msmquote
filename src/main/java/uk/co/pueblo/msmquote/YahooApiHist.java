@@ -3,9 +3,6 @@ package uk.co.pueblo.msmquote;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
@@ -14,10 +11,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class YahooApiHist extends YahooApiSource {
 
 	// Constants
-	static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
-
+	//private static final Logger LOGGER = LogManager.getLogger(YahooApiHist.class);
+	private static final String JSON_ROOT = "/chart/result/0";
+	
 	// Instance variables
-	private JsonNode resultJn;
+	private JsonNode jn;
 	private String symbol;
 	private int quoteAdjuster;
 	private int quoteIndex = 0;
@@ -30,19 +28,25 @@ public class YahooApiHist extends YahooApiSource {
 	 * @throws QuoteSourceException 
 	 */
 	public YahooApiHist(String apiUrl) throws QuoteSourceException {
+		
+		// Get quote data
+		jn = getJson(apiUrl);
+		if (!jn.at(JSON_ROOT + "/meta").has("symbol")) {
+			throw new QuoteSourceException("Received invalid quote data from Yahoo Finance historical quote data API: " + jn);
+		}		
 
 		// Get symbol and quote type
-		resultJn = getJson(apiUrl).at("/chart/result/0");
-		symbol = resultJn.at("/meta").get("symbol").asText();
-		quoteType = resultJn.at("/meta").get("instrumentType").asText();
+		jn =jn.at(JSON_ROOT);
+		symbol = jn.at("/meta").get("symbol").asText();
+		quoteType = jn.at("/meta").get("instrumentType").asText();
 
 		// Get quote adjuster for currency
-		quoteAdjuster = getAdjuster(PROPS, resultJn.at("/meta").get("currency").asText(), quoteType);
+		quoteAdjuster = getAdjuster(PROPS, jn.at("/meta").get("currency").asText(), quoteType);
 	}
 
 	public Map<String, String> getNext() {
 		Map<String, String> returnRow = new HashMap<>();
-		if (!resultJn.at("/timestamp").has(quoteIndex)) {
+		if (!jn.at("/timestamp").has(quoteIndex)) {
 			return returnRow;
 		}
 
@@ -55,7 +59,7 @@ public class YahooApiHist extends YahooApiSource {
 		String prop;
 		while ((prop = PROPS.getProperty("hist.api." + n++)) != null) {
 			String columnMap[] = prop.split(",");
-			String value = resultJn.at(columnMap[0]).get(quoteIndex).asText();
+			String value = jn.at(columnMap[0]).get(quoteIndex).asText();
 			value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteAdjuster) : value;
 			returnRow.put(columnMap[1], value);
 		}

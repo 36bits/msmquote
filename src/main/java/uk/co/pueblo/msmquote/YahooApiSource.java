@@ -80,7 +80,7 @@ abstract class YahooApiSource extends YahooSource {
 		}
 	}
 
-	static JsonNode getJson(String apiUrl) {
+	static JsonNode getJson(String apiUrl) throws QuoteSourceException {
 		// Get data from the API
 		String apiResponse = null;
 		JsonNode jn = null;
@@ -102,13 +102,11 @@ abstract class YahooApiSource extends YahooSource {
 			LOGGER.error("Received data from Yahoo Finance API={}", apiResponse);
 		}
 
-		// Validate received JSON data
+		// General validation of received JSON data
 		if (jn.isEmpty()) {
-			LOGGER.warn("Received empty JSON response from Yahoo Finance API");
-			return null;
+			throw new QuoteSourceException("Received empty JSON response from Yahoo Finance API");			
 		} else if (jn.at("/finance/error").has("code")) {
-			LOGGER.warn("Received JSON error response from Yahoo Finance API: {} {}", jn.at("/finance/error").get("code").asText(), jn.at("/finance/error").get("description").asText());
-			return null;
+			throw new QuoteSourceException("Received JSON error response from Yahoo Finance API: " + jn);
 		}
 		return jn;
 	}

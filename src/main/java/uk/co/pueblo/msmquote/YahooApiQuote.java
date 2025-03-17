@@ -89,15 +89,18 @@ public class YahooApiQuote extends YahooApiSource {
 					fullUrl = baseUrl + SYMBOLS_PARAM + allSymbols;
 				}
 				LOGGER.info("Trying Yahoo Finance API url #{}", i++);
-				JsonNode jn;
-				if ((jn = getJson(fullUrl)) == null) {
-					sourceStatus = SourceStatus.WARN;
-				} else {
+				try {
+					JsonNode jn = getJson(fullUrl);
+					validateJsonRoot(jn);
 					resultIt = jn.at(JSON_ROOT).elements();
 					return;
+				} catch (QuoteSourceException e) {
+					LOGGER.error(e.getMessage());
+					sourceStatus = SourceStatus.WARN;
+					continue;
 				}
 			}
-			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
+			throw new QuoteSourceException("All Yahoo Finance API requests failed!");			
 		}
 	}
 
@@ -116,12 +119,17 @@ public class YahooApiQuote extends YahooApiSource {
 		}
 
 		// Get quote data from api
-		JsonNode jn;
-		if ((jn = getJson(apiUrl)) != null) {
-			resultIt = jn.at(JSON_ROOT).elements();
-		} else {
-			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
+		JsonNode jn = getJson(apiUrl);
+		validateJsonRoot(jn);
+		resultIt = jn.at(JSON_ROOT).elements();
+		return;		
+	}
+
+	static void validateJsonRoot(JsonNode jn) throws QuoteSourceException {
+		if (jn.at(JSON_ROOT).isArray()) {			
+			return;
 		}
+		throw new QuoteSourceException("Received invalid quote data from Yahoo Finance API: " + jn);
 	}
 
 	public Map<String, String> getNext() {
