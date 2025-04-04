@@ -42,7 +42,8 @@ public class YahooApiQuote extends YahooApiSource {
 		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
 		for (String secSymbol[] : secSymbols) {
-			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string joiner
+			// Append the symbols pair to the symbol translation map and the Yahoo symbol to
+			// the investment symbols string joiner
 			if ((yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1])) == null) {
 				LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", secSymbol[0], secSymbol[1]);
 				sourceStatus = SourceStatus.WARN;
@@ -96,11 +97,11 @@ public class YahooApiQuote extends YahooApiSource {
 					return;
 				} catch (QuoteSourceException e) {
 					LOGGER.error(e.getMessage());
-					sourceStatus = SourceStatus.WARN;
+					sourceStatus = SourceStatus.ERROR;
 					continue;
 				}
 			}
-			throw new QuoteSourceException("All Yahoo Finance API requests failed!");			
+			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
 		}
 	}
 
@@ -122,11 +123,11 @@ public class YahooApiQuote extends YahooApiSource {
 		JsonNode jn = getJson(apiUrl);
 		validateJsonRoot(jn);
 		resultIt = jn.at(JSON_ROOT).elements();
-		return;		
+		return;
 	}
 
 	static void validateJsonRoot(JsonNode jn) throws QuoteSourceException {
-		if (jn.at(JSON_ROOT).isArray()) {			
+		if (jn.at(JSON_ROOT).isArray()) {
 			return;
 		}
 		throw new QuoteSourceException("Received invalid quote data from Yahoo Finance API: " + jn);

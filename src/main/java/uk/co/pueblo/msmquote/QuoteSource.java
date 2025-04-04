@@ -6,7 +6,6 @@ import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +16,9 @@ public abstract class QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
+	static final int SOURCE_OK = 0;
+	static final int SOURCE_WARN = 1;
+	static final int SOURCE_ERROR = 2;
 
 	// Class variables
 	static SourceStatus sourceClassStatus = SourceStatus.OK;
@@ -25,13 +27,13 @@ public abstract class QuoteSource {
 	SourceStatus sourceStatus = SourceStatus.OK;
 
 	// Source status
-	enum SourceStatus {
-		OK(Level.INFO), WARN(Level.WARN), ERROR(Level.ERROR), FATAL(Level.FATAL);
+	public enum SourceStatus {
+		OK(SOURCE_OK), WARN(SOURCE_WARN), ERROR(SOURCE_ERROR);
 
-		public final Level level;
+		public final int status;
 
-		SourceStatus(Level level) {
-			this.level = level;
+		SourceStatus(int status) {
+			this.status = status;
 		}
 	}
 
@@ -52,8 +54,8 @@ public abstract class QuoteSource {
 	 * 
 	 * @return source status
 	 */
-	SourceStatus getStatus() {
-		return sourceStatus;
+	int getStatus() {
+		return sourceStatus.status;
 	}
 
 	static Properties getProps(String propsFile) {
