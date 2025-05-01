@@ -16,9 +16,9 @@ public abstract class QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
-	static final int SOURCE_OK = 0;
-	static final int SOURCE_WARN = 1;
-	static final int SOURCE_ERROR = 2;
+	static final int EXIT_OK = 0;
+	static final int EXIT_WARN = 1;
+	static final int EXIT_ERROR = 2;
 
 	// Class variables
 	static SourceStatus sourceClassStatus = SourceStatus.OK;
@@ -28,12 +28,12 @@ public abstract class QuoteSource {
 
 	// Source status
 	public enum SourceStatus {
-		OK(SOURCE_OK), WARN(SOURCE_WARN), ERROR(SOURCE_ERROR);
+		OK(EXIT_OK), WARN(EXIT_WARN), ERROR(EXIT_ERROR);
 
-		public final int status;
+		public final int exitCode;
 
-		SourceStatus(int status) {
-			this.status = status;
+		SourceStatus(int exitCode) {
+			this.exitCode = exitCode;
 		}
 	}
 
@@ -54,8 +54,8 @@ public abstract class QuoteSource {
 	 * 
 	 * @return source status
 	 */
-	int getStatus() {
-		return sourceStatus.status;
+	SourceStatus getStatus() {
+		return sourceStatus;
 	}
 
 	static Properties getProps(String propsFile) {

@@ -17,15 +17,15 @@ public class Update {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(Update.class);
-	private static final int STATUS_OK = 0;
-	private static final int STATUS_FATAL = 3;
+	private static final int EXIT_OK = 0;
+	private static final int EXIT_FATAL = 3;
 
 	public static void main(String[] args) {
 
 		final Instant startTime = Instant.now();
 
 		LOGGER.info("Version {}", Update.class.getPackage().getImplementationVersion());
-		int maxStatus = STATUS_OK;
+		int maxExitCode = EXIT_OK;
 
 		try {
 			// Process command-line arguments
@@ -64,7 +64,7 @@ public class Update {
 				}
 
 				// Get exit code from quote source
-				maxStatus = quoteSource.getStatus();
+				maxExitCode = quoteSource.getStatus().exitCode;
 
 				// Do update
 				Map<String, String> quoteRow = new HashMap<>();
@@ -86,18 +86,18 @@ public class Update {
 				msmDb.updateCliDatVal(CliDatValue.OLUPDATE, LocalDateTime.now()); // update online update time-stamp
 
 				// Output update summaries to log and set status
-				int updateStatus;
-				if ((updateStatus = msmSecurity.printSummary()) > maxStatus) {
-					maxStatus = updateStatus;
+				int exitCode;
+				if ((exitCode = msmSecurity.printSummary().exitCode) > maxExitCode) {
+					maxExitCode = exitCode;
 				}
-				if ((updateStatus = msmCurrency.printSummary()) > maxStatus) {
-					maxStatus = updateStatus;
+				if ((exitCode = msmCurrency.printSummary().exitCode) > maxExitCode) {
+					maxExitCode = exitCode;
 				}
 
 			} catch (Exception e) {
 				LOGGER.fatal(e);
 				LOGGER.debug("Exception occurred!", e);
-				maxStatus = STATUS_FATAL;
+				maxExitCode = EXIT_FATAL;
 			} finally {
 				msmDb.closeDb(); // close Money database
 			}
@@ -105,10 +105,10 @@ public class Update {
 		} catch (Exception e) {
 			LOGGER.fatal(e);
 			LOGGER.debug("Exception occurred!", e);
-			maxStatus = STATUS_FATAL;
+			maxExitCode = EXIT_FATAL;
 		} finally {
 			LOGGER.info("Duration: {}", Duration.between(startTime, Instant.now()).toString());
-			System.exit(maxStatus);
+			System.exit(maxExitCode);
 		}
 	}
 }
