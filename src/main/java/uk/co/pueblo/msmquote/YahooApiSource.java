@@ -52,7 +52,7 @@ abstract class YahooApiSource extends YahooSource {
 			}
 			try {
 				LOGGER.info("Getting cookie from {}", cookieUrl);
-				httpClient.send(HttpRequest.newBuilder(new URI(cookieUrl)).GET().build(), HttpResponse.BodyHandlers.ofString());
+				httpClient.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_REQ_UA).GET().build(), HttpResponse.BodyHandlers.ofString());
 				List<HttpCookie> cookies = cm.getCookieStore().getCookies();
 				for (HttpCookie cookie : cookies) {
 					if (cookie.getName().equals(COOKIE_NAME)) {
