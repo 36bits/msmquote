@@ -39,9 +39,9 @@ abstract class YahooApiSource extends YahooSource {
 		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 		CookieManager cm = new CookieManager();
-		SSLParameters sp = new SSLParameters();
-		sp.setProtocols(TLS_VERSIONS);
-		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).sslParameters(sp).build();
+		SSLParameters sslParams = new SSLParameters();
+		sslParams.setProtocols(TLS_VERSIONS);
+		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).sslParameters(sslParams).build();
 
 		// Get Yahoo cookie and crumb
 		int n = 0;
