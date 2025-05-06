@@ -9,6 +9,8 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 
+import javax.net.ssl.SSLParameters;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,6 +27,7 @@ abstract class YahooApiSource extends YahooSource {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
 	private static final String HTTP_REQ_UA = PROPS.getProperty("httprequest.useragent");
 	private static final String COOKIE_NAME = "A3";
+	private static final String[] TLS_VERSIONS = { "TLSv1.3" };
 	static final String SYMBOLS_PARAM = "symbols=";
 
 	// Class variables
@@ -36,7 +39,9 @@ abstract class YahooApiSource extends YahooSource {
 		int httpClientTimeout = Integer.parseInt(PROPS.getProperty("httpclient.timeout"));
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 		CookieManager cm = new CookieManager();
-		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).build();
+		SSLParameters sp = new SSLParameters();
+		sp.setProtocols(TLS_VERSIONS);
+		httpClient = HttpClient.newBuilder().cookieHandler(cm).connectTimeout(Duration.ofSeconds(httpClientTimeout)).sslParameters(sp).build();
 
 		// Get Yahoo cookie and crumb
 		int n = 0;
