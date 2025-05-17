@@ -27,8 +27,7 @@ abstract class YahooApiSource extends YahooSource {
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
 	private static final String HTTP_REQ_UA = PROPS.getProperty("httprequest.useragent");
 	private static final String COOKIE_NAME = "A3";
-	private static final String[] TLS_VERSIONS = { "TLSv1.3" };
-	static final String SYMBOLS_PARAM = "symbols=";
+	private static final String[] TLS_VERSIONS = { "TLSv1.3" };	
 
 	// Class variables
 	private static HttpClient httpClient;

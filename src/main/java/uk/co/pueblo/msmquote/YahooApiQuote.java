@@ -20,6 +20,7 @@ public class YahooApiQuote extends YahooApiSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
+	static final String SYMBOLS_PARAM = "symbols=";
 	private static final String JSON_ROOT = "/quoteResponse/result";
 
 	// Instance variables
