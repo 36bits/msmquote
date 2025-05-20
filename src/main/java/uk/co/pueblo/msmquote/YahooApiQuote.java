@@ -92,7 +92,7 @@ public class YahooApiQuote extends YahooApiSource {
 				}
 				LOGGER.info("Trying Yahoo Finance API url #{}", i++);
 				try {
-					JsonNode jn = getJson(fullUrl);
+					JsonNode jn = getQuoteData(fullUrl);
 					validateJsonRoot(jn);
 					resultIt = jn.at(JSON_ROOT).elements();
 					return;
@@ -121,7 +121,7 @@ public class YahooApiQuote extends YahooApiSource {
 		}
 
 		// Get quote data from api
-		JsonNode jn = getJson(apiUrl);
+		JsonNode jn = getQuoteData(apiUrl);
 		validateJsonRoot(jn);
 		resultIt = jn.at(JSON_ROOT).elements();
 		return;

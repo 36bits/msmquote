@@ -30,7 +30,7 @@ public class YahooApiHist extends YahooApiSource {
 	public YahooApiHist(String apiUrl) throws QuoteSourceException {
 		
 		// Get quote data
-		jn = getJson(apiUrl);
+		jn = getQuoteData(apiUrl);
 		if (!jn.at(JSON_ROOT + "/meta").has("symbol")) {
 			throw new QuoteSourceException("Received invalid quote data from Yahoo Finance historical quote data API: " + jn);
 		}		
