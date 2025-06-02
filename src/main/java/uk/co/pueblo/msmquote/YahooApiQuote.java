@@ -85,7 +85,7 @@ public class YahooApiQuote extends YahooApiSource {
 				if (baseUrl.endsWith(SYMBOLS_PARAM)) {
 					fullUrl = baseUrl + allSymbols;
 					loop = false;
-				} else if ((baseUrl = PROPS.getProperty("api.url." + i)) == null) {
+				} else if ((baseUrl = PROPS.getProperty("url.api." + i)) == null) {
 					break;
 				} else {
 					fullUrl = baseUrl + SYMBOLS_PARAM + allSymbols;
