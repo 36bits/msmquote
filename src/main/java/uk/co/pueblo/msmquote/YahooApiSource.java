@@ -109,7 +109,7 @@ abstract class YahooApiSource extends YahooSource {
 					if (cookie.getName().equals(COOKIE_NAME)) {
 						crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 						if (crumb.matches("^\\S{11}$")) {
-							LOGGER.info("Got API crumb, response={}", crumb);
+							LOGGER.info("Got API crumb, value={}", crumb);
 							// Create Set-Cookie header
 							String expires = OffsetDateTime.now(ZoneOffset.UTC).plus(Duration.ofSeconds(cookie.getMaxAge())).format(DateTimeFormatter.RFC_1123_DATE_TIME);
 							cookieSj.add(cookie.toString());
