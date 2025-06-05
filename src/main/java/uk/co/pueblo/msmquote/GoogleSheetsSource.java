@@ -26,7 +26,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 abstract class GoogleSheetsSource extends QuoteSource {
 	
 	// Constants
-	static final Properties PROPS = getProps("GoogleSheetsSource.properties");
+	static final Properties PROPS = loadProperties("GoogleSheetsSource.properties");
 
 	// Constants for Google API
 	private static final String APPLICATION_NAME = "msmquote Google Sheets source";

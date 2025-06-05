@@ -8,7 +8,7 @@ import java.util.Properties;
 abstract class YahooSource extends QuoteSource {
 
 	// Constants
-	static final Properties PROPS = getProps("YahooSource.properties");
+	static final Properties PROPS = loadProperties("YahooSource.properties");
 
 	/**
 	 * Attempts to generate a Yahoo Finance symbol from a Money symbol and country code.
