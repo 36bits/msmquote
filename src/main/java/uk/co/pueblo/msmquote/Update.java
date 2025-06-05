@@ -95,7 +95,7 @@ public class Update {
 				}
 
 			} catch (Exception e) {
-				LOGGER.fatal(e);
+				LOGGER.fatal(e.getMessage());
 				LOGGER.debug("Exception occurred!", e);
 				maxExitCode = EXIT_FATAL;
 			} finally {
@@ -103,7 +103,7 @@ public class Update {
 			}
 
 		} catch (Exception e) {
-			LOGGER.fatal(e);
+			LOGGER.fatal(e.getMessage());
 			LOGGER.debug("Exception occurred!", e);
 			maxExitCode = EXIT_FATAL;
 		} finally {

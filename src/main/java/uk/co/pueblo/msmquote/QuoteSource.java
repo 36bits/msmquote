@@ -64,7 +64,7 @@ public abstract class QuoteSource {
 			InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(propsFile);
 			props.load(propsIs);
 		} catch (IOException e) {
-			LOGGER.fatal(e);
+			LOGGER.fatal(e.getMessage());
 		}
 		return props;
 	}

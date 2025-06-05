@@ -73,7 +73,7 @@ public class YahooCsvHist extends YahooSource {
 				}
 			}
 		} catch (NumberFormatException e) {
-			LOGGER.warn(e);
+			LOGGER.warn(e.getMessage());
 			LOGGER.debug("Exception occurred!", e);
 		}
 

@@ -50,8 +50,8 @@ abstract class YahooApiSource extends YahooSource {
 			crumb = PREFS_NODE.get(PREF_KEY_CRUMB, null);
 			LOGGER.info("Using cached Yahoo cookie and API crumb");
 		} catch (Exception e) {
-			LOGGER.debug(e);
-			LOGGER.warn("Failed to get cached Yahoo cookie and API crumb");
+			LOGGER.debug("Exception occurred!",e);
+			LOGGER.warn("Failed to get cached Yahoo cookie and API crumb: {}", e.getMessage());
 			sourceClassStatus = SourceStatus.WARN;
 		}
 
@@ -90,7 +90,7 @@ abstract class YahooApiSource extends YahooSource {
 					return jn;
 				}
 			} catch (Exception e) {
-				LOGGER.debug(e);
+				LOGGER.debug("Exception occurred!",e);
 				LOGGER.warn(e.getMessage());
 				sourceClassStatus = SourceStatus.WARN;
 			}
@@ -132,7 +132,7 @@ abstract class YahooApiSource extends YahooSource {
 					sourceClassStatus = SourceStatus.WARN;
 				}
 			} catch (Exception e) {
-				LOGGER.debug(e);
+				LOGGER.debug("Exception occurred!",e);
 				LOGGER.warn(e.getMessage());
 				sourceClassStatus = SourceStatus.WARN;
 			}
