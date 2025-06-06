@@ -2,14 +2,29 @@ package uk.co.pueblo.msmquote;
 
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Parent class for the Yahoo Finance quote sources.
  */
 abstract class YahooSource extends QuoteSource {
 
 	// Constants
-	static final Properties PROPS = loadProperties("YahooSource.properties");
+	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
+	static final Properties PROPS;
 
+	static {
+		Properties props = null;
+		try {
+			props = loadProperties("YahooSource.properties");
+		} catch (Exception e) {
+			LOGGER.debug("Exception occured!", e);
+			LOGGER.fatal("Failed to load properties: {}", e.getMessage());
+		}
+		PROPS = props;
+	}
+		
 	/**
 	 * Attempts to generate a Yahoo Finance symbol from a Money symbol and country code.
 	 * 

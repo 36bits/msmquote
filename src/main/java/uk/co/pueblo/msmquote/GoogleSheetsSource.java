@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -26,7 +29,8 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 abstract class GoogleSheetsSource extends QuoteSource {
 	
 	// Constants
-	static final Properties PROPS = loadProperties("GoogleSheetsSource.properties");
+	private static final Logger LOGGER = LogManager.getLogger(GoogleSheetsSource.class);
+	static final Properties PROPS;
 
 	// Constants for Google API
 	private static final String APPLICATION_NAME = "msmquote Google Sheets source";
@@ -39,6 +43,17 @@ abstract class GoogleSheetsSource extends QuoteSource {
 	final List<List<Object>> quoteRows;
 	List<Object> headerRow;
 	int quoteIndex = 0;
+	
+	static {
+		Properties props = null;
+		try {
+			props = loadProperties("GoogleSheetsSource.properties");
+		} catch (Exception e) {
+			LOGGER.debug("Exception occured!", e);
+			LOGGER.fatal("Failed to load properties: {}", e.getMessage());
+		}
+		PROPS = props;
+	}
 
 	// Constructor
 	GoogleSheetsSource(String spreadsheetId, String range) throws IOException, GeneralSecurityException {

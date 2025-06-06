@@ -58,15 +58,10 @@ public abstract class QuoteSource {
 		return sourceStatus;
 	}
 
-	static Properties loadProperties(String propsFile) {
+	static Properties loadProperties(String propsFile) throws IOException {
 		final Properties props = new Properties();
-		try {
-			InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(propsFile);
-			props.load(propsIs);
-		} catch (IOException e) {
-			LOGGER.debug("Exception occured!", e);
-			LOGGER.fatal("Failed to load properties: {}", e.getMessage());
-		}
+		InputStream propsIs = QuoteSource.class.getClassLoader().getResourceAsStream(propsFile);
+		props.load(propsIs);
 		return props;
 	}
 
