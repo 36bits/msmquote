@@ -30,6 +30,8 @@ abstract class YahooApiSource extends YahooSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiSource.class);
+	private static final HttpClient HTTP_CLIENT;
+	private static final CookieManager COOKIE_MGR = new CookieManager();
 	private static final String HTTP_USER_AGENT = PROPS.getProperty("http.user-agent");
 	private static final String COOKIE_NAME = PROPS.getProperty("http.cookie-name");
 	private static final Preferences PREFS_NODE = Preferences.userNodeForPackage(QuoteSource.class);
@@ -37,8 +39,6 @@ abstract class YahooApiSource extends YahooSource {
 	private static final String PREF_KEY_CRUMB = PROPS.getProperty("pref-key.crumb");
 
 	// Class variables
-	private static HttpClient httpClient;
-	private static CookieManager cookieMgr = new CookieManager();
 	private static String crumb = null;
 
 	static {
@@ -46,7 +46,7 @@ abstract class YahooApiSource extends YahooSource {
 		try {
 			List<HttpCookie> cookies = HttpCookie.parse(PREFS_NODE.get(PREF_KEY_COOKIE, null));
 			HttpCookie cookie = cookies.get(0);
-			cookieMgr.getCookieStore().add(null, cookie);
+			COOKIE_MGR.getCookieStore().add(null, cookie);
 			crumb = PREFS_NODE.get(PREF_KEY_CRUMB, null);
 			LOGGER.info("Using cached Yahoo cookie and API crumb");
 		} catch (Exception e) {
@@ -61,7 +61,7 @@ abstract class YahooApiSource extends YahooSource {
 		LOGGER.info("HTTP client timeout={}s", httpClientTimeout);
 		SSLParameters sslParams = new SSLParameters();
 		sslParams.setProtocols(tlsVersions);
-		httpClient = HttpClient.newBuilder().cookieHandler(cookieMgr).connectTimeout(Duration.ofSeconds(httpClientTimeout)).sslParameters(sslParams).build();
+		HTTP_CLIENT = HttpClient.newBuilder().cookieHandler(COOKIE_MGR).connectTimeout(Duration.ofSeconds(httpClientTimeout)).sslParameters(sslParams).build();
 	}
 
 	YahooApiSource() {
@@ -77,7 +77,7 @@ abstract class YahooApiSource extends YahooSource {
 
 		while (true) {
 			try {
-				apiResponse = httpClient.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+				apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 				if (apiResponse.matches("^\\{\"(quoteResponse|chart)\":\\{\"result\":\\[.*\\Q],\"error\":null}}\\E$")) {
 					// Write cookie and crumb to preferences
 					if (cookieSj.length() > 0) {
@@ -103,11 +103,11 @@ abstract class YahooApiSource extends YahooSource {
 
 			try {
 				LOGGER.info("Getting cookie from cookie URL #{}: {}", n, cookieUrl);
-				httpClient.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
-				List<HttpCookie> cookies = cookieMgr.getCookieStore().getCookies();
+				HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
+				List<HttpCookie> cookies = COOKIE_MGR.getCookieStore().getCookies();
 				for (HttpCookie cookie : cookies) {
 					if (cookie.getName().equals(COOKIE_NAME)) {
-						crumb = httpClient.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+						crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 						if (crumb.matches("^\\S{11}$")) {
 							LOGGER.info("Got API crumb, value={}", crumb);
 							// Create Set-Cookie header
