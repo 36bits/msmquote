@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msm.msmquote;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -7,11 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.co.pueblo.msmcore.MsmCurrency;
-import uk.co.pueblo.msmcore.MsmDb;
-import uk.co.pueblo.msmcore.MsmDb.CliDatValue;
-import uk.co.pueblo.msmcore.MsmSecurity;
-import uk.co.pueblo.msmcore.MsmInstrumentException;
+
+import uk.co.pueblo.msm.msmcore.MsmCurrency;
+import uk.co.pueblo.msm.msmcore.MsmDb;
+import uk.co.pueblo.msm.msmcore.MsmInstrumentException;
+import uk.co.pueblo.msm.msmcore.MsmSecurity;
+import uk.co.pueblo.msm.msmcore.MsmDb.CliDatValue;
 
 public class Update {
 

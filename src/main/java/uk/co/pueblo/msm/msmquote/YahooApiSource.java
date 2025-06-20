@@ -1,4 +1,4 @@
-package uk.co.pueblo.msmquote;
+package uk.co.pueblo.msm.msmquote;
 
 import java.net.CookieManager;
 import java.net.HttpCookie;

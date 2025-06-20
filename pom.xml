@@ -44,7 +44,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>uk.co.pueblo.msmquote.Update</mainClass>
+							<mainClass>uk.co.pueblo.msm.msmquote.Update</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
