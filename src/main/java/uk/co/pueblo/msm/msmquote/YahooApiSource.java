@@ -42,16 +42,16 @@ abstract class YahooApiSource extends YahooSource {
 	private static String crumb = null;
 
 	static {
-		// Get cached Yahoo API cookie and crumb from preferences
+		// Get cached Yahoo cookie and API crumb from preferences
 		try {
 			List<HttpCookie> cookies = HttpCookie.parse(PREFS_NODE.get(PREF_KEY_COOKIE, null));
-			HttpCookie cookie = cookies.get(0);
-			COOKIE_MGR.getCookieStore().add(null, cookie);
+			HttpCookie yahooCookie = cookies.get(0);
+			COOKIE_MGR.getCookieStore().add(null, yahooCookie);
 			crumb = PREFS_NODE.get(PREF_KEY_CRUMB, null);
 			LOGGER.info("Using cached Yahoo cookie and API crumb");
 		} catch (Exception e) {
-			LOGGER.debug("Exception occurred!",e);
-			LOGGER.warn("Failed to get cached Yahoo cookie and API crumb: {}", e.getMessage());
+			LOGGER.debug("Exception occurred!", e);
+			LOGGER.warn("Failed to get cached Yahoo cookie and API crumb");
 			sourceClassStatus = SourceStatus.WARN;
 		}
 
@@ -70,7 +70,7 @@ abstract class YahooApiSource extends YahooSource {
 	static JsonNode getQuoteData(String apiUrl) throws QuoteSourceException {
 		// Get data from the API
 		String apiResponse = null;
-		StringJoiner cookieSj = new StringJoiner("; ");
+		StringJoiner yahooCookieHdr = new StringJoiner("; ");
 		JsonNode jn = null;
 		int n = 0;
 		LOGGER.debug("URL={}", apiUrl);
@@ -80,61 +80,80 @@ abstract class YahooApiSource extends YahooSource {
 				apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 				if (apiResponse.matches("^\\{\"(quoteResponse|chart)\":\\{\"result\":\\[.*\\Q],\"error\":null}}\\E$")) {
 					// Write cookie and crumb to preferences
-					if (cookieSj.length() > 0) {
-						PREFS_NODE.put(PREF_KEY_COOKIE, cookieSj.toString());
+					if (yahooCookieHdr.length() > 0) {
+						PREFS_NODE.put(PREF_KEY_COOKIE, yahooCookieHdr.toString());
 						PREFS_NODE.put(PREF_KEY_CRUMB, crumb);
 					}
 					// Return quote data as JSON node
 					ObjectMapper mapper = JsonMapper.builder().build();
 					jn = mapper.readTree(apiResponse);
 					return jn;
+				} else {
+					LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
+					sourceClassStatus = SourceStatus.WARN;
 				}
 			} catch (Exception e) {
-				LOGGER.debug("Exception occurred!",e);
-				LOGGER.warn(e.getMessage());
-				sourceClassStatus = SourceStatus.WARN;
+				LOGGER.debug("Exception occurred!", e);
+				LOGGER.warn("Failed to get valid quote data: {}", e.toString());
+				sourceClassStatus = SourceStatus.WARN;				
 			}
 
-			LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
+			crumb = null;
+			String cookieUrl;
+			HttpCookie yahooCookie = null;
+			while (crumb == null) {
+				if ((cookieUrl = PROPS.getProperty("url.cookie." + ++n)) == null)
+					throw new QuoteSourceException("Failed to get valid quote data");
 
-			String cookieUrl = PROPS.getProperty("url.cookie." + ++n);
-			if (cookieUrl == null)
-				throw new QuoteSourceException("Failed to get any valid quote data!");
+				// Get cookie
+				try {
+					LOGGER.info("Getting cookie from cookie URL #{}: {}", n, cookieUrl);
+					HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
+					List<HttpCookie> cookies = COOKIE_MGR.getCookieStore().getCookies();
+					for (HttpCookie cookie : cookies) {
+						if (cookie.getName().equals(COOKIE_NAME)) {
+							yahooCookie = cookie;
+							break;
+						}
+					}
+				} catch (Exception e) {
+					LOGGER.debug("Exception occurred!", e);
+					LOGGER.warn("Failed to get cookie: {}", e.toString());
+					sourceClassStatus = SourceStatus.WARN;
+					continue;
+				}
 
-			try {
-				LOGGER.info("Getting cookie from cookie URL #{}: {}", n, cookieUrl);
-				HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
-				List<HttpCookie> cookies = COOKIE_MGR.getCookieStore().getCookies();
-				for (HttpCookie cookie : cookies) {
-					if (cookie.getName().equals(COOKIE_NAME)) {
+				// Get crumb
+				if (yahooCookie != null) {
+					try {
 						crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 						if (crumb.matches("^\\S{11}$")) {
 							LOGGER.info("Got API crumb, value={}", crumb);
 							// Create Set-Cookie header
-							String expires = OffsetDateTime.now(ZoneOffset.UTC).plus(Duration.ofSeconds(cookie.getMaxAge())).format(DateTimeFormatter.RFC_1123_DATE_TIME);
-							cookieSj.add(cookie.toString());
-							cookieSj.add("Expires=" + expires);
-							cookieSj.add("Domain=" + cookie.getDomain());
-							cookieSj.add("Path=" + cookie.getPath());
+							String expires = OffsetDateTime.now(ZoneOffset.UTC).plus(Duration.ofSeconds(yahooCookie.getMaxAge())).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+							yahooCookieHdr.add(yahooCookie.toString());
+							yahooCookieHdr.add("Expires=" + expires);
+							yahooCookieHdr.add("Domain=" + yahooCookie.getDomain());
+							yahooCookieHdr.add("Path=" + yahooCookie.getPath());
 							// cacheCookie.add("SameSite=None");
-							if (cookie.getSecure())
-								cookieSj.add("Secure");
-							if (cookie.isHttpOnly())
-								cookieSj.add("HttpOnly");
-							break;
+							if (yahooCookie.getSecure())
+								yahooCookieHdr.add("Secure");
+							if (yahooCookie.isHttpOnly())
+								yahooCookieHdr.add("HttpOnly");
+						} else {
+							LOGGER.warn("Failed to get valid API crumb, response={}", crumb.trim());
+							sourceClassStatus = SourceStatus.WARN;
+							crumb = null;
 						}
-						LOGGER.warn("Failed to get valid API crumb, response={}", crumb.trim());
+					} catch (Exception e) {
+						LOGGER.debug("Exception occurred!", e);
+						LOGGER.warn("Failed to get crumb: {}", e.toString());
 						sourceClassStatus = SourceStatus.WARN;
-						crumb = null;
-						continue;
 					}
+				} else {
 					LOGGER.warn("Failed to get cookie");
 					sourceClassStatus = SourceStatus.WARN;
 				}
-			} catch (Exception e) {
-				LOGGER.debug("Exception occurred!",e);
-				LOGGER.warn(e.getMessage());
-				sourceClassStatus = SourceStatus.WARN;
 			}
 		}
 	}

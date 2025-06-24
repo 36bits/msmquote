@@ -90,7 +90,7 @@ public class YahooApiQuote extends YahooApiSource {
 				} else {
 					fullUrl = baseUrl + SYMBOLS_PARAM + allSymbols;
 				}
-				LOGGER.info("Trying Yahoo Finance API url #{}", i++);
+				LOGGER.info("Trying Yahoo Finance API URL #{}", i++);
 				try {
 					JsonNode jn = getQuoteData(fullUrl);
 					validateJsonRoot(jn);
