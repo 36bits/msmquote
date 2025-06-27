@@ -2,6 +2,8 @@ package uk.co.pueblo.msm.msmquote;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -78,31 +80,19 @@ public class YahooApiQuote extends YahooApiSource {
 		// Get quote data from api
 		String allSymbols = URLEncoder.encode(secSymbolsSj.merge(fxSymbolsSj).toString(), StandardCharsets.UTF_8);
 		if (!baseUrl.endsWith(SYMBOLS_PARAM + "?") && !allSymbols.isEmpty()) {
-			boolean loop = true;
-			i = 1;
-			while (loop) {
-				String fullUrl;
-				if (baseUrl.endsWith(SYMBOLS_PARAM)) {
-					fullUrl = baseUrl + allSymbols;
-					loop = false;
-				} else if ((baseUrl = PROPS.getProperty("url.api." + i)) == null) {
-					break;
-				} else {
-					fullUrl = baseUrl + SYMBOLS_PARAM + allSymbols;
-				}
-				LOGGER.info("Trying Yahoo Finance API URL #{}", i++);
-				try {
-					JsonNode jn = getQuoteData(fullUrl);
-					resultIt = jn.at(JSON_ROOT).elements();
-					return;
-				} catch (QuoteSourceException e) {
-					LOGGER.error(e.getMessage());
-					sourceStatus = SourceStatus.ERROR;
-					continue;
+			List<String> fullUrls = new ArrayList<>();
+			if (baseUrl.endsWith(SYMBOLS_PARAM))
+				fullUrls.add(baseUrl + allSymbols);
+			else {
+				int urlIndex = 1;
+				while ((baseUrl = PROPS.getProperty("url.api." + urlIndex++)) != null) {
+					fullUrls.add(baseUrl + SYMBOLS_PARAM + allSymbols);
 				}
 			}
-			throw new QuoteSourceException("All Yahoo Finance API requests failed!");
-		}
+			JsonNode jn = getQuoteData(fullUrls);
+			resultIt = jn.at(JSON_ROOT).elements();
+			return;
+		}			
 	}
 
 	/**
@@ -120,7 +110,8 @@ public class YahooApiQuote extends YahooApiSource {
 		}
 
 		// Get quote data from api
-		JsonNode jn = getQuoteData(apiUrl);
+		List<String> apiUrls = Arrays.asList(apiUrl);		
+		JsonNode jn = getQuoteData(apiUrls);
 		resultIt = jn.at(JSON_ROOT).elements();
 		return;
 	}

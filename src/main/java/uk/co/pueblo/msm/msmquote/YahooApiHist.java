@@ -1,6 +1,8 @@
 package uk.co.pueblo.msm.msmquote;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,7 +32,8 @@ public class YahooApiHist extends YahooApiSource {
 	public YahooApiHist(String apiUrl) throws QuoteSourceException {
 		
 		// Get quote data
-		jn = getQuoteData(apiUrl);
+		List<String> apiUrls = Arrays.asList(apiUrl);
+		jn = getQuoteData(apiUrls);
 		if (!jn.at(JSON_ROOT + "/meta").has("symbol")) {
 			throw new QuoteSourceException("Received invalid quote data from Yahoo Finance historical quote data API: " + jn);
 		}		

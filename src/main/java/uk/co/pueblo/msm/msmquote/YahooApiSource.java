@@ -67,70 +67,25 @@ abstract class YahooApiSource extends YahooSource {
 	YahooApiSource() {
 	}
 
-	static JsonNode getQuoteData(String apiUrl) throws QuoteSourceException {
-		// Get data from the API
-		String apiResponse = null;
-		StringJoiner yahooCookieHdr = new StringJoiner("; ");
-		JsonNode jn = null;
-		int n = 0;
-		LOGGER.debug("URL={}", apiUrl);
-
-		while (true) {
-			try {
-				apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
-				if (apiResponse.matches("^\\{\"(quoteResponse|chart)\":\\{\"result\":\\[.*\\Q],\"error\":null}}\\E$")) {
-					// Write cookie and crumb to preferences
-					if (yahooCookieHdr.length() > 0) {
-						PREFS_NODE.put(PREF_KEY_COOKIE, yahooCookieHdr.toString());
-						PREFS_NODE.put(PREF_KEY_CRUMB, crumb);
-					}
-					// Return quote data as JSON node
-					ObjectMapper mapper = JsonMapper.builder().build();
-					jn = mapper.readTree(apiResponse);
-					return jn;
-				} else {
-					LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
-					sourceClassStatus = SourceStatus.WARN;
-				}
-			} catch (Exception e) {
-				LOGGER.debug("Exception occurred!", e);
-				LOGGER.warn("Failed to get valid quote data: {}", e.toString());
-				sourceClassStatus = SourceStatus.WARN;				
-			}
-
-			crumb = null;
-			String cookieUrl;
-			HttpCookie yahooCookie = null;
-			while (crumb == null) {
-				if ((cookieUrl = PROPS.getProperty("url.cookie." + ++n)) == null)
-					throw new QuoteSourceException("Failed to get valid quote data");
-
-				// Get cookie
+	static JsonNode getQuoteData(List<String> apiUrls) throws QuoteSourceException {
+		
+		HttpCookie yahooCookie = null;
+		int apiUrlIdx = 1;
+		
+		for (String apiUrl : apiUrls) {
+			LOGGER.debug("URL={}", apiUrl);
+			LOGGER.info("Trying Yahoo Finance API URL #{}", apiUrlIdx++);
+			int cookieUrlIdx = 1;
+			while (true) {
 				try {
-					LOGGER.info("Getting cookie from cookie URL #{}: {}", n, cookieUrl);
-					HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
-					List<HttpCookie> cookies = COOKIE_MGR.getCookieStore().getCookies();
-					for (HttpCookie cookie : cookies) {
-						if (cookie.getName().equals(COOKIE_NAME)) {
-							yahooCookie = cookie;
-							break;
-						}
-					}
-				} catch (Exception e) {
-					LOGGER.debug("Exception occurred!", e);
-					LOGGER.warn("Failed to get cookie: {}", e.toString());
-					sourceClassStatus = SourceStatus.WARN;
-					continue;
-				}
-
-				// Get crumb
-				if (yahooCookie != null) {
-					try {
-						crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
-						if (crumb.matches("^\\S{11}$")) {
-							LOGGER.info("Got API crumb, value={}", crumb);
-							// Create Set-Cookie header
+					String apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+					LOGGER.info("Received {} bytes from Yahoo Finance API", apiResponse.length());
+					if (apiResponse.matches("^\\{\"(quoteResponse|chart)\":\\{\"result\":\\[.*\\Q],\"error\":null}}\\E$")) {
+						// Write new cookie and crumb to preferences
+						if (yahooCookie != null) {
+							// Build Set-Cookie header
 							String expires = OffsetDateTime.now(ZoneOffset.UTC).plus(Duration.ofSeconds(yahooCookie.getMaxAge())).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+							StringJoiner yahooCookieHdr = new StringJoiner("; ");
 							yahooCookieHdr.add(yahooCookie.toString());
 							yahooCookieHdr.add("Expires=" + expires);
 							yahooCookieHdr.add("Domain=" + yahooCookie.getDomain());
@@ -140,21 +95,71 @@ abstract class YahooApiSource extends YahooSource {
 								yahooCookieHdr.add("Secure");
 							if (yahooCookie.isHttpOnly())
 								yahooCookieHdr.add("HttpOnly");
-						} else {
-							LOGGER.warn("Failed to get valid API crumb, response={}", crumb.trim());
-							sourceClassStatus = SourceStatus.WARN;
-							crumb = null;
+							PREFS_NODE.put(PREF_KEY_COOKIE, yahooCookieHdr.toString());
+							PREFS_NODE.put(PREF_KEY_CRUMB, crumb);
+						}
+						// Return quote data as JSON node
+						ObjectMapper mapper = JsonMapper.builder().build();
+						JsonNode jn = mapper.readTree(apiResponse);
+						return jn;
+					} else {
+						LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
+						sourceClassStatus = SourceStatus.WARN;
+					}
+				} catch (Exception e) {
+					LOGGER.debug("Exception occurred!", e);
+					LOGGER.warn("Failed to get valid quote data: {}", e.toString());
+					sourceClassStatus = SourceStatus.WARN;
+				}
+
+				// Get new Yahoo cookie and API crumb
+				crumb = null;
+				String cookieUrl;				
+				while ((cookieUrl = PROPS.getProperty("url.cookie." + cookieUrlIdx)) != null) {
+					// First get cookie
+					try {
+						LOGGER.info("Getting cookie from cookie URL #{}: {}", cookieUrlIdx++, cookieUrl);
+						HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(cookieUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString());
+						List<HttpCookie> cookies = COOKIE_MGR.getCookieStore().getCookies();
+						for (HttpCookie cookie : cookies) {
+							if (cookie.getName().equals(COOKIE_NAME)) {
+								yahooCookie = cookie;
+								break;
+							}
 						}
 					} catch (Exception e) {
 						LOGGER.debug("Exception occurred!", e);
-						LOGGER.warn("Failed to get crumb: {}", e.toString());
+						LOGGER.warn("Failed to get cookie: {}", e.toString());
+						sourceClassStatus = SourceStatus.WARN;
+						continue;
+					}
+					// Then get crumb
+					if (yahooCookie != null) {
+						try {
+							crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+							if (crumb.matches("^\\S{11}$")) {
+								LOGGER.info("Got API crumb, value={}", crumb);
+								break;
+							} else {
+								LOGGER.warn("Failed to get valid API crumb, response={}", crumb.trim());
+								sourceClassStatus = SourceStatus.WARN;
+								crumb = null;
+							}
+						} catch (Exception e) {
+							LOGGER.debug("Exception occurred!", e);
+							LOGGER.warn("Failed to get crumb: {}", e.toString());
+							sourceClassStatus = SourceStatus.WARN;
+						}
+					} else {
+						LOGGER.warn("Failed to get cookie");
 						sourceClassStatus = SourceStatus.WARN;
 					}
-				} else {
-					LOGGER.warn("Failed to get cookie");
-					sourceClassStatus = SourceStatus.WARN;
 				}
-			}
+				// If no crumb then try next API URL
+				if (crumb == null)
+					break;
+			}			
 		}
+		throw new QuoteSourceException("All Yahoo Finance API requests failed!");
 	}
 }
