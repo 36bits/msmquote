@@ -69,6 +69,10 @@ abstract class YahooApiSource extends YahooSource {
 
 	static JsonNode getQuoteData(List<String> apiUrls) throws QuoteSourceException {
 		
+		final String regexCrumb = PROPS.getProperty("regex.crumb");
+		final String regexQuoteData = PROPS.getProperty("regex.quote-data");
+		LOGGER.debug("Regex: crumb={}, quote data={}", regexCrumb, regexQuoteData);
+		
 		HttpCookie yahooCookie = null;
 		int apiUrlIdx = 1;
 		
@@ -80,7 +84,7 @@ abstract class YahooApiSource extends YahooSource {
 				try {
 					String apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl + "&crumb=" + crumb)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 					LOGGER.info("Received {} bytes from Yahoo Finance API", apiResponse.length());
-					if (apiResponse.matches("^\\{\"(quoteResponse|chart)\":\\{\"result\":\\[.*\\Q],\"error\":null}}\\E$")) {
+					if (apiResponse.matches(regexQuoteData)) {
 						// Write new cookie and crumb to preferences
 						if (yahooCookie != null) {
 							// Build Set-Cookie header
@@ -137,7 +141,7 @@ abstract class YahooApiSource extends YahooSource {
 					if (yahooCookie != null) {
 						try {
 							crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
-							if (crumb.matches("^\\S{11}$")) {
+							if (crumb.matches(regexCrumb)) {
 								LOGGER.info("Got API crumb, value={}", crumb);
 								break;
 							} else {
