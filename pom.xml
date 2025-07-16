@@ -8,7 +8,7 @@
 	<name>msmquote</name>
 
 	<parent>
-		<groupId>uk.co.pueblo</groupId>
+		<groupId>uk.co.pueblo.msm</groupId>
 		<artifactId>parent-pom</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
