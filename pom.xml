@@ -30,7 +30,7 @@
 			<version>2.19.1</version>
 		</dependency>
 		<dependency>
-			<groupId>uk.co.pueblo</groupId>
+			<groupId>uk.co.pueblo.msm</groupId>
 			<artifactId>msmcore</artifactId>
 			<version>3.1.0-SNAPSHOT</version>
 		</dependency>
