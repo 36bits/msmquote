@@ -53,7 +53,7 @@ if ($job) {
 
 $mnyFile = (Get-Item $mnyFile).FullName
 $jre = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "bin" "java.exe"
-$jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.10.0.jar"
+$jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.11.0.jar"
 $jreOpts = @()
 
 if (Get-WinEvent -LogName Pueblo-applications-msmquote/Operational -ErrorAction SilentlyContinue) {
