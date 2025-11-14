@@ -38,7 +38,7 @@ abstract class YahooSource extends QuoteSource {
 		// Index symbols
 		if (symbol.charAt(0) == '$') {
 			// Symbol is in Money index format
-			symbol = symbol.matches("^\\$..:.*") ? symbol.substring(4) : symbol.substring(1);
+			symbol = symbol.matches("^\\$..:.+") ? symbol.substring(4) : symbol.substring(1);
 			if ((prop = PROPS.getProperty("index." + symbol)) != null) {
 				// Symbol has a predefined Yahoo equivalent
 				return prop.toUpperCase();
@@ -47,12 +47,12 @@ abstract class YahooSource extends QuoteSource {
 			}
 		}
 
-		// Security symbols
-		if ((prop = PROPS.getProperty("exchange." + country)) != null) {
-			if (symbol.matches("^..:.*")) {
+		// Security and currency symbols
+		if ((prop = PROPS.getProperty("country." + country)) != null) {
+			if (symbol.matches("^..:.+")) {
 				// Symbol is in Money security format 'xx:symbol'
 				return (symbol.substring(3) + prop).toUpperCase();
-			} else if (!symbol.matches("(.*\\..{1,3}$|^\\^.*)")) {
+			} else if (!symbol.matches("(.+\\..{1,3}$|^\\^.+)")) {
 				// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx', 'symbol.xxx' or '^symbol"
 				return (symbol + prop).toUpperCase();
 			}

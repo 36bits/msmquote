@@ -52,6 +52,8 @@ public class Update {
 					} else {
 						quoteSource = new YahooApiQuote(args[2]);
 					}
+				} else if (args[2].matches("^https://assets.msn.com/service/finance/quotes.+")) {
+					quoteSource = new MsnApiQuote(args[2]);				
 				} else if (args[2].matches("^https://query[0-9].finance.yahoo.com/v[0-9]+/finance/chart.+")) {
 					quoteSource = new YahooApiHist(args[2]);
 				} else if (args[2].endsWith(".csv")) {
@@ -72,7 +74,7 @@ public class Update {
 				while (!(quoteRow = quoteSource.getNext()).isEmpty()) {
 					String quoteType = quoteRow.get("xType").toString();
 					try {
-						if (quoteType.equals("CURRENCY")) {
+						if (quoteType.equals("CURRENCY") || quoteType.equals("currencyPair")) {
 							msmCurrency.update(quoteRow); // update currency FX rates
 						} else {
 							msmSecurity.update(quoteRow); // update other security types

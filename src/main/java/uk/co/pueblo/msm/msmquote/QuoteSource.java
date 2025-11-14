@@ -2,7 +2,6 @@ package uk.co.pueblo.msm.msmquote;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Properties;
 
@@ -65,10 +64,12 @@ public abstract class QuoteSource {
 		return props;
 	}
 
-	static int getAdjuster(Properties props, String currency) {
+	static int getAdjuster(Properties props, String currency, String quoteType) {
 		int adjuster = 1;
 		String prop;
-		if ((prop = props.getProperty("adjust." + currency)) != null) {
+		if ((prop = props.getProperty("adjust." + currency + "." + quoteType)) != null) {
+			adjuster = Integer.parseInt(prop);
+		} else if ((prop = props.getProperty("adjust." + currency)) != null) {
 			adjuster = Integer.parseInt(prop);
 		} else if (currency.matches("(..[a-z]|..X)")) { // minor currency units: cents, pence, etc.
 			adjuster = 100;
@@ -76,36 +77,19 @@ public abstract class QuoteSource {
 		return adjuster;
 	}
 
-	static int getAdjuster(Properties props, String currency, String quoteType) {
-		int adjuster = 1;
-		String prop;
-		if ((prop = props.getProperty("adjust." + currency + "." + quoteType)) != null) {
-			adjuster = Integer.parseInt(prop);
-		} else {
-			adjuster = getAdjuster(props, currency);
-		}
-		return adjuster;
-	}
-
-	static String adjustQuote(String value, String operation, int adjuster) {
+	static String adjustQuote(String value, String operation, int adjuster) {		
 		if (operation != null) {
-			try {
-				double adjValue = Double.parseDouble(value);
-				switch (operation.charAt(0)) {
-				case ('d'):
-					adjValue = adjValue / adjuster;
-					break;
-				case ('m'):
-					adjValue = adjValue * 100 * adjuster;
-					break;
-				}
-				DecimalFormat df = new DecimalFormat("0.#");
-				df.setMaximumFractionDigits(50);
-				value = df.format(adjValue);
-			} catch (NumberFormatException e) {
-				// Do nothing
+			double adjValue = Double.parseDouble(value);
+			switch (operation.charAt(0)) {
+			case ('d'):
+				adjValue = adjValue / adjuster;
+				break;
+			case ('m'):
+				adjValue = adjValue * 100 * adjuster;
+				break;
 			}
+			value = String.valueOf(adjValue);
 		}
-		return value;
+		return value;		
 	}
 }

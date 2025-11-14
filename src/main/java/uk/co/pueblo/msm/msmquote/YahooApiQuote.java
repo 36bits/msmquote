@@ -45,8 +45,7 @@ public class YahooApiQuote extends YahooApiSource {
 		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
 		for (String secSymbol[] : secSymbols) {
-			// Append the symbols pair to the symbol translation map and the Yahoo symbol to
-			// the investment symbols string joiner
+			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string joiner
 			if ((yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1])) == null) {
 				LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", secSymbol[0], secSymbol[1]);
 				sourceStatus = SourceStatus.WARN;
@@ -66,7 +65,7 @@ public class YahooApiQuote extends YahooApiSource {
 		StringJoiner fxSymbolsSj = new StringJoiner(",");
 		i = 0;
 		for (String crncPair[] : crncPairs) {
-			yahooSymbol = crncPair[0];
+			yahooSymbol = getYahooSymbol(crncPair[0], crncPair[1]);
 			symbolMap.put(yahooSymbol, crncPair[0]);
 			fxSymbolsSj.add(yahooSymbol);
 			i++;
@@ -138,7 +137,7 @@ public class YahooApiQuote extends YahooApiSource {
 			}
 
 			// Get quote adjuster for currency and quote type
-			int quoteAdjuster = getAdjuster(PROPS, result.get("currency").asText(), result.get("quoteType").asText());
+			int quoteAdjuster = getAdjuster(PROPS, result.get("currency").asText(), quoteType);
 
 			// Add quote values to return row
 			String prop;
@@ -147,7 +146,7 @@ public class YahooApiQuote extends YahooApiSource {
 				String[] columnMap = prop.split(",");
 				if (result.has(columnMap[0])) {
 					String value = result.get(columnMap[0]).asText();
-					value = columnMap.length == 3 ? adjustQuote(value, columnMap[2], quoteAdjuster) : value;
+					if (columnMap.length == 3) value = adjustQuote(value, columnMap[2], quoteAdjuster);
 					returnRow.put(columnMap[1], value);
 				}
 			}
