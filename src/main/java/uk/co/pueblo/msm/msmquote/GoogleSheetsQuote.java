@@ -17,20 +17,21 @@ public class GoogleSheetsQuote extends GoogleSheetsSource {
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsQuote.class);
 	private static final int HEADER_INDEX = 0;
 	private static final String HEADER_FLAG = "xSymbol";
-	private static final String VALUE_NA = "#N/A";
 
 	/**
 	 * Constructs a Google Sheets quote source.
 	 * 
-	 * @param spreadsheetId	the ID of the spreadsheet containing the GOOGLEFINANCE quote data
-	 * @param range			the range containing the quote data within the spreadsheet
+	 * @param spreadsheetId the ID of the spreadsheet containing the GOOGLEFINANCE
+	 *                      quote data
+	 * @param range         the range containing the quote data within the
+	 *                      spreadsheet
 	 */
 	public GoogleSheetsQuote(String spreadsheetId, String range) throws IOException, GeneralSecurityException {
 		super(spreadsheetId, range);
 	}
 
-	public Map<String, String> getNext() throws IOException {
-		Map<String, String> returnRow = new HashMap<>();
+	public Map<String, Object> getNext() throws IOException {
+		Map<String, Object> returnRow = new HashMap<>();
 		List<Object> quoteRow;
 
 		// Get quote row
@@ -41,19 +42,20 @@ public class GoogleSheetsQuote extends GoogleSheetsSource {
 				continue;
 			}
 			// Build return row
-			String headerCol;
-			String value;
+			String prop;
 			int quoteAdjuster = 1;
 			int n = 0;
 			for (Object object : quoteRow) {
-				value = object.toString();
-				if (!value.equals(VALUE_NA)) {
-					headerCol = (String) headerRow.get(n);
-					if (headerCol.equals("currency")) {
-						quoteAdjuster = getAdjuster(PROPS, value, null);
-					} else {
-						returnRow.put((String) headerCol, adjustQuote(value, PROPS.getProperty("column." + headerCol), quoteAdjuster));
-					}
+				String objectStr = object.toString(); // Google Sheets cell values are all presented as string objects
+				String headerCol = headerRow.get(n).toString();
+				if (headerCol.equals("currency")) {
+					quoteAdjuster = getAdjuster(PROPS, objectStr, null);
+				} else if (!MATCH_NUM.reset(objectStr).matches()) {
+					returnRow.put(headerCol, objectStr);
+				} else if ((prop = PROPS.getProperty("column." + headerCol)) != null) {
+					returnRow.put(headerCol, adjustQuote((Double.parseDouble(objectStr)), prop, quoteAdjuster));
+				} else {
+					returnRow.put(headerCol, (Double.parseDouble(objectStr)));
 				}
 				n++;
 			}

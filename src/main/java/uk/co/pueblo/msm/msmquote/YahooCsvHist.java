@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,9 +43,9 @@ public class YahooCsvHist extends YahooSource {
 		quoteAdjuster = getAdjuster(PROPS, quoteMeta[1], quoteMeta[2]);
 	}
 
-	public Map<String, String> getNext() throws IOException {
+	public Map<String, Object> getNext() throws IOException {
 
-		Map<String, String> returnRow = new HashMap<>();
+		Map<String, Object> returnRow = new HashMap<>();
 
 		// Get next row from CSV file
 		String csvRow = csvBr.readLine();
@@ -62,21 +61,21 @@ public class YahooCsvHist extends YahooSource {
 		returnRow.put("xType", quoteMeta[2]);
 
 		// Add quote values to return row
-		try {
-			String prop;
-			for (int n = 0; n < csvColumn.length; n++) {
-				if ((prop = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
-					String[] columnMap = prop.split(",");
-					String value = csvColumn[n];
-					value = columnMap.length == 2 ? adjustQuote(value, columnMap[1], quoteAdjuster) : value;
+		String prop;
+		for (int n = 0; n < csvColumn.length; n++) {
+			if ((prop = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
+				String[] columnMap = prop.split(",");
+				String value = csvColumn[n];
+				if (MATCH_NUM.reset(value).matches()) {
+					double valueNum = Double.parseDouble(value);
+					if (columnMap.length == 2)
+						valueNum = adjustQuote(valueNum, columnMap[1], quoteAdjuster);
+					returnRow.put(columnMap[0], valueNum);
+				} else {
 					returnRow.put(columnMap[0], value);
 				}
 			}
-		} catch (NumberFormatException e) {
-			LOGGER.warn(e.getMessage());
-			LOGGER.debug("Exception occurred!", e);
 		}
-
 		return returnRow;
 	}
 }

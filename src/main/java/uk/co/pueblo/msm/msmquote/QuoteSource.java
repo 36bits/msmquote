@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,11 +16,12 @@ import org.apache.logging.log4j.Logger;
 public abstract class QuoteSource {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
+	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);	
+	static final Matcher MATCH_NUM = Pattern.compile("-?\\d+(\\.\\d+|\\.\\d+E\\d+)?").matcher("");
 	static final int EXIT_OK = 0;
 	static final int EXIT_WARN = 1;
 	static final int EXIT_ERROR = 2;
-
+	
 	// Class variables
 	static SourceStatus sourceClassStatus = SourceStatus.OK;
 
@@ -46,7 +49,7 @@ public abstract class QuoteSource {
 	 * 
 	 * @return a populated quote row or an empty row if there is no more quote data
 	 */
-	public abstract Map<String, String> getNext() throws IOException;
+	public abstract Map<String, Object> getNext() throws IOException;
 
 	/**
 	 * Gets the status of the quote source instance.
@@ -77,19 +80,13 @@ public abstract class QuoteSource {
 		return adjuster;
 	}
 
-	static String adjustQuote(String value, String operation, int adjuster) {		
-		if (operation != null) {
-			double adjValue = Double.parseDouble(value);
-			switch (operation.charAt(0)) {
-			case ('d'):
-				adjValue = adjValue / adjuster;
-				break;
-			case ('m'):
-				adjValue = adjValue * 100 * adjuster;
-				break;
-			}
-			value = String.valueOf(adjValue);
+	static double adjustQuote(double value, String operation, int adjuster) {
+		switch (operation.charAt(0)) {
+		case ('d'):
+			return value / adjuster;
+		case ('m'):
+			return value * 100 * adjuster;
 		}
-		return value;		
+		return value;
 	}
 }

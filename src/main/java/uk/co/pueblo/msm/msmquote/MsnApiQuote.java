@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 /**
  * An MSN API quote source.
@@ -37,9 +38,9 @@ public class MsnApiQuote extends MsnApiSource {
 		return;
 	}
 
-	public Map<String, String> getNext() {
+	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
-		Map<String, String> returnRow = new HashMap<>();
+		Map<String, Object> returnRow = new HashMap<>();
 		if (resultIt == null || !resultIt.hasNext()) {
 			return returnRow;
 		}
@@ -71,10 +72,16 @@ public class MsnApiQuote extends MsnApiSource {
 			int n = 1;
 			while ((prop = PROPS.getProperty("api." + securityType + '.' + n++)) != null) {
 				String[] columnMap = prop.split(",");
-				if (result.has(columnMap[0])) {					
-					String value = result.get(columnMap[0]).asText();
-					if (columnMap.length == 3) value = adjustQuote(value, columnMap[2], quoteAdjuster);
-					returnRow.put(columnMap[1], value);
+				if (result.has(columnMap[0])) {
+					JsonNode valueJn = result.get(columnMap[0]);
+					if (valueJn.getNodeType().equals(JsonNodeType.NUMBER)) {
+						double value = valueJn.asDouble();
+						if (columnMap.length == 3)
+							value = adjustQuote(value, columnMap[2], quoteAdjuster);
+						returnRow.put(columnMap[1], value);
+					} else if (valueJn.getNodeType().equals(JsonNodeType.STRING)) {
+						returnRow.put(columnMap[1], valueJn.asText());
+					}
 				}
 			}
 

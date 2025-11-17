@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 /**
  * A Yahoo Finance API quote source.
@@ -33,7 +34,8 @@ public class YahooApiQuote extends YahooApiSource {
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
 	 * @param baseUrl    the base URL for the Yahoo Finance API
-	 * @param secSymbols the list of Money security symbols and associated country codes for which to get quotes
+	 * @param secSymbols the list of Money security symbols and associated country
+	 *                   codes for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 * @throws QuoteSourceException
 	 */
@@ -45,7 +47,8 @@ public class YahooApiQuote extends YahooApiSource {
 		StringJoiner secSymbolsSj = new StringJoiner(",");
 		int i = 0;
 		for (String secSymbol[] : secSymbols) {
-			// Append the symbols pair to the symbol translation map and the Yahoo symbol to the investment symbols string joiner
+			// Append the symbols pair to the symbol translation map and the Yahoo symbol to
+			// the investment symbols string joiner
 			if ((yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1])) == null) {
 				LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", secSymbol[0], secSymbol[1]);
 				sourceStatus = SourceStatus.WARN;
@@ -91,7 +94,7 @@ public class YahooApiQuote extends YahooApiSource {
 			JsonNode jn = getQuoteData(fullUrls);
 			resultIt = jn.at(JSON_ROOT).elements();
 			return;
-		}			
+		}
 	}
 
 	/**
@@ -109,15 +112,15 @@ public class YahooApiQuote extends YahooApiSource {
 		}
 
 		// Get quote data from api
-		List<String> apiUrls = Arrays.asList(apiUrl);		
+		List<String> apiUrls = Arrays.asList(apiUrl);
 		JsonNode jn = getQuoteData(apiUrls);
 		resultIt = jn.at(JSON_ROOT).elements();
 		return;
 	}
 
-	public Map<String, String> getNext() {
+	public Map<String, Object> getNext() {
 		// Get next JSON node from iterator
-		Map<String, String> returnRow = new HashMap<>();
+		Map<String, Object> returnRow = new HashMap<>();
 		if (resultIt == null || !resultIt.hasNext()) {
 			return returnRow;
 		}
@@ -145,9 +148,15 @@ public class YahooApiQuote extends YahooApiSource {
 			while ((prop = PROPS.getProperty("api." + quoteType + '.' + n++)) != null) {
 				String[] columnMap = prop.split(",");
 				if (result.has(columnMap[0])) {
-					String value = result.get(columnMap[0]).asText();
-					if (columnMap.length == 3) value = adjustQuote(value, columnMap[2], quoteAdjuster);
-					returnRow.put(columnMap[1], value);
+					JsonNode valueJn = result.get(columnMap[0]);
+					if (valueJn.getNodeType().equals(JsonNodeType.NUMBER)) {
+						double value = valueJn.asDouble();
+						if (columnMap.length == 3)
+							value = adjustQuote(value, columnMap[2], quoteAdjuster);
+						returnRow.put(columnMap[1], value);
+					} else if (valueJn.getNodeType().equals(JsonNodeType.STRING)) {
+						returnRow.put(columnMap[1], valueJn.asText());
+					}
 				}
 			}
 

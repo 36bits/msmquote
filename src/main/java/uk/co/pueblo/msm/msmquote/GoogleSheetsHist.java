@@ -18,7 +18,6 @@ public class GoogleSheetsHist extends GoogleSheetsSource {
 	static final Logger LOGGER = LogManager.getLogger(GoogleSheetsHist.class);
 	private static final int HEADER_INDEX = 0;
 	private static final String HEADER_FLAG = "dPrice";
-	private static final String VALUE_NA = "#N/A";
 
 	// Instance variables
 	private String[] quoteMeta;
@@ -36,8 +35,8 @@ public class GoogleSheetsHist extends GoogleSheetsSource {
 		quoteAdjuster = getAdjuster(PROPS, quoteMeta[1], null);
 	}
 
-	public Map<String, String> getNext() throws IOException {
-		Map<String, String> returnRow = new HashMap<>();
+	public Map<String, Object> getNext() throws IOException {
+		Map<String, Object> returnRow = new HashMap<>();
 		List<Object> quoteRow;
 
 		// Get quote row
@@ -48,17 +47,22 @@ public class GoogleSheetsHist extends GoogleSheetsSource {
 				continue;
 			}
 			// Build return row
-			String headerCol;
-			String value;
+			String prop;
 			int n = 0;
 			returnRow.put("xSymbol", quoteMeta[0]);
 			returnRow.put("xType", quoteMeta[2]);
 			for (Object object : quoteRow) {
-				value = object.toString();
-				if (!value.equals(VALUE_NA)) {
-					headerCol = (String) headerRow.get(n);
-					returnRow.put((String) headerCol, adjustQuote(value, PROPS.getProperty("column." + headerCol), quoteAdjuster));
-				}
+				String objectStr = object.toString(); // Google Sheets cell values are all presented as string objects
+					String headerCol = headerRow.get(n).toString();
+					if (headerCol.equals("currency")) {
+						quoteAdjuster = getAdjuster(PROPS, objectStr, null);
+					} else if (!MATCH_NUM.reset(objectStr).matches()) {
+						returnRow.put(headerCol, objectStr);
+					} else if ((prop = PROPS.getProperty("column." + headerCol)) != null) {
+						returnRow.put(headerCol, adjustQuote((Double.parseDouble(objectStr)), prop, quoteAdjuster));
+					} else {
+						returnRow.put(headerCol, (Double.parseDouble(objectStr)));
+					}
 				n++;
 			}
 			break;
