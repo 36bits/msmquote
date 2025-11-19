@@ -1,6 +1,8 @@
 package uk.co.pueblo.msm.msmquote;
 
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +14,9 @@ abstract class YahooSource extends QuoteSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooSource.class);
+	private static final Pattern PATTERN_MSM_INDEX = Pattern.compile("\\$..:.+");
+	private static final Pattern PATTERN_MSM_SECURITY = Pattern.compile("..:.+");
+	private static final Pattern PATTERN_YF_SYMBOL = Pattern.compile("(.+\\..{1,3}$|\\^.+)");
 	static final Properties PROPS;
 
 	static {
@@ -38,7 +43,8 @@ abstract class YahooSource extends QuoteSource {
 		// Index symbols
 		if (symbol.charAt(0) == '$') {
 			// Symbol is in Money index format
-			symbol = symbol.matches("\\$..:.+") ? symbol.substring(4) : symbol.substring(1);
+			Matcher matchMsmIndex = PATTERN_MSM_INDEX.matcher(symbol);
+			symbol = matchMsmIndex.matches() ? symbol.substring(4) : symbol.substring(1);
 			if ((prop = PROPS.getProperty("index." + symbol)) != null) {
 				// Symbol has a predefined Yahoo equivalent
 				return prop.toUpperCase();
@@ -49,10 +55,12 @@ abstract class YahooSource extends QuoteSource {
 
 		// Security and currency symbols
 		if ((prop = PROPS.getProperty("country." + country)) != null) {
-			if (symbol.matches("..:.+")) {
+			Matcher matchMsmSecurity = PATTERN_MSM_SECURITY.matcher(symbol);
+			Matcher matchYfSymbol = PATTERN_YF_SYMBOL.matcher(symbol);
+			if (matchMsmSecurity.matches()) {
 				// Symbol is in Money security format 'xx:symbol'
 				return (symbol.substring(3) + prop).toUpperCase();
-			} else if (!symbol.matches("(.+\\..{1,3}$|\\^.+)")) {
+			} else if (!matchYfSymbol.matches()) {
 				// Symbol is not already in Yahoo format 'symbol.x', 'symbol.xx', 'symbol.xxx' or '^symbol"
 				return (symbol + prop).toUpperCase();
 			}

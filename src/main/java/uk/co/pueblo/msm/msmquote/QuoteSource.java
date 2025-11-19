@@ -16,8 +16,9 @@ import org.apache.logging.log4j.Logger;
 public abstract class QuoteSource {
 
 	// Constants
-	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);	
-	static final Matcher MATCH_NUM = Pattern.compile("-?\\d+(\\.\\d+|\\.\\d+E\\d+)?").matcher("");
+	private static final Logger LOGGER = LogManager.getLogger(QuoteSource.class);
+	private static final Pattern PATTERN_MINOR_CURRENCY = Pattern.compile("..([a-z]|X)");
+	static final Pattern PATTERN_NUM = Pattern.compile("-?\\d+(\\.\\d+|\\.\\d+E\\d+)?");
 	static final int EXIT_OK = 0;
 	static final int EXIT_WARN = 1;
 	static final int EXIT_ERROR = 2;
@@ -70,11 +71,12 @@ public abstract class QuoteSource {
 	static int getAdjuster(Properties props, String currency, String quoteType) {
 		int adjuster = 1;
 		String prop;
+		Matcher matchMinorCurrency = PATTERN_MINOR_CURRENCY.matcher(currency);
 		if ((prop = props.getProperty("adjust." + currency + "." + quoteType)) != null) {
 			adjuster = Integer.parseInt(prop);
 		} else if ((prop = props.getProperty("adjust." + currency)) != null) {
 			adjuster = Integer.parseInt(prop);
-		} else if (currency.matches("(..[a-z]|..X)")) { // minor currency units: cents, pence, etc.
+		} else if (matchMinorCurrency.matches()) { // minor currency units: cents, pence, etc.
 			adjuster = 100;
 		}
 		return adjuster;

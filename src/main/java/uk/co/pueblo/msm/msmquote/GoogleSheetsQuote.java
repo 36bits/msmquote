@@ -5,6 +5,8 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,9 +50,10 @@ public class GoogleSheetsQuote extends GoogleSheetsSource {
 			for (Object object : quoteRow) {
 				String objectStr = object.toString(); // Google Sheets cell values are all presented as string objects
 				String headerCol = headerRow.get(n).toString();
+				Matcher matchNum = PATTERN_NUM.matcher(objectStr);
 				if (headerCol.equals("currency")) {
 					quoteAdjuster = getAdjuster(PROPS, objectStr, null);
-				} else if (!MATCH_NUM.reset(objectStr).matches()) {
+				} else if (!matchNum.matches()) {
 					returnRow.put(headerCol, objectStr);
 				} else if ((prop = PROPS.getProperty("column." + headerCol)) != null) {
 					returnRow.put(headerCol, adjustQuote((Double.parseDouble(objectStr)), prop, quoteAdjuster));

@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -66,13 +68,13 @@ public class YahooCsvHist extends YahooSource {
 			if ((prop = PROPS.getProperty("hist.csv." + (n + 1))) != null) {
 				String[] columnMap = prop.split(",");
 				String value = csvColumn[n];
-				if (MATCH_NUM.reset(value).matches()) {
-					double valueNum = Double.parseDouble(value);
-					if (columnMap.length == 2)
-						valueNum = adjustQuote(valueNum, columnMap[1], quoteAdjuster);
-					returnRow.put(columnMap[0], valueNum);
-				} else {
+				Matcher matchNum = PATTERN_NUM.matcher(value);
+				if (!matchNum.matches()) {
 					returnRow.put(columnMap[0], value);
+				} else if (columnMap.length == 2) { 
+					returnRow.put(columnMap[0], adjustQuote(Double.parseDouble(value), columnMap[1], quoteAdjuster));
+				} else {
+					returnRow.put(columnMap[0], Double.parseDouble(value));
 				}
 			}
 		}
