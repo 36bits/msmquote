@@ -6,6 +6,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import javax.net.ssl.SSLParameters;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +26,8 @@ abstract class MsnApiSource extends MsnSource {
 	private static final Logger LOGGER = LogManager.getLogger(MsnApiSource.class);
 	private static final HttpClient HTTP_CLIENT;
 	private static final String HTTP_USER_AGENT = PROPS.getProperty("http.user-agent");
+	static final ObjectMapper MAPPER = JsonMapper.builder().build();
+	static final Pattern PATTERN_ALT_SYMBOL = Pattern.compile("AltSymbol=[a-z0-9#]{6}");
 
 	static {
 		// Set up http client
@@ -52,9 +56,8 @@ abstract class MsnApiSource extends MsnSource {
 				String apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 				LOGGER.info("Received {} bytes from MSN API", apiResponse.length());
 				if (apiResponse.matches(regexQuoteData)) {
-					// Return quote data as JSON node
-					ObjectMapper mapper = JsonMapper.builder().build();
-					JsonNode jn = mapper.readTree(apiResponse);
+					// Return quote data as Jackson tree model
+					JsonNode jn = MAPPER.readTree(apiResponse);
 					return jn;
 				} else {
 					LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
