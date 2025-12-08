@@ -5,6 +5,7 @@
 Quote data can be updated for any security or currency where a quote is available from these supported sources:
 
 * The [Yahoo Finance](https://finance.yahoo.com) quote data API;
+* The [MSN Money](https://www.msn.com/en-us/money) quote data API;
 * A Google Sheets spreadsheet with quote data provided by the [GOOGLEFINANCE](https://support.google.com/docs/answer/3093281) security information function.
 
 Historical data for a single security can be updated where a quote is available from the following sources:

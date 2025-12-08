@@ -44,15 +44,14 @@ public class Update {
 
 				// Instantiate quote object according to quote source
 				final QuoteSource quoteSource;
-				if (args.length == 2) {
-					quoteSource = new YahooApiQuote("", msmSecurity.getSymbols(), msmCurrency.getSymbols());
+				if (args.length == 2 || args[2].equals("yf")) {
+					quoteSource = new YahooApiQuote(msmSecurity.getSymbols(), msmCurrency.getSymbols());
 				} else if (args[2].matches("https://query[0-9].finance.yahoo.com/v[0-9]+/finance/quote.+")) {
 					if (args[2].endsWith("symbols=") || args[2].endsWith("symbols=?")) {
 						quoteSource = new YahooApiQuote(args[2], msmSecurity.getSymbols(), msmCurrency.getSymbols());
 					} else {
 						quoteSource = new YahooApiQuote(args[2]);
 					}
-				// MSN quote source
 				} else if (args[2].equals("msn")) {
 					quoteSource = new MsnApiQuote(msmSecurity.getSymbols(), msmCurrency.getSymbols());
 				} else if (args[2].startsWith("https://assets.msn.com/service/finance/quotes?")) {
@@ -81,7 +80,7 @@ public class Update {
 				while (!(quoteRow = quoteSource.getNext()).isEmpty()) {
 					String quoteType = quoteRow.get("xType").toString();
 					try {
-						if (quoteType.equals("CURRENCY") || quoteType.equals("currencyPair")) {
+						if (quoteType.equals("CURRENCY")) {
 							msmCurrency.update(quoteRow); // update currency FX rates
 						} else {
 							msmSecurity.update(quoteRow); // update other security types

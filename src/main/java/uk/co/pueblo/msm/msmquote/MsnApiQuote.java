@@ -44,14 +44,12 @@ public class MsnApiQuote extends MsnApiSource {
 		StringJoiner msnIdsSj = new StringJoiner(",");
 		int msnIdCount = 0;
 		for (String secSymbol[] : secSymbols) {
-			if (secSymbol.length == 3) {
-				Matcher altSymbolMatcher = PATTERN_ALT_SYMBOL.matcher(secSymbol[2]);
-				if (altSymbolMatcher.find()) {
-					String msnId = secSymbol[2].substring(altSymbolMatcher.start() + 10, altSymbolMatcher.start() + 16);
-					msnIdsSj.add(msnId);
-					symbolMap.put(msnId, secSymbol[0]);
-					msnIdCount++;
-				}
+			Matcher altSymbolMatcher = PATTERN_ALT_SYMBOL.matcher(secSymbol[2]);
+			if (altSymbolMatcher.find()) {
+				String msnId = secSymbol[2].substring(altSymbolMatcher.start() + 10, altSymbolMatcher.start() + 16);
+				msnIdsSj.add(msnId);
+				symbolMap.put(msnId, secSymbol[0]);
+				msnIdCount++;
 			}
 		}
 		String msnIds = msnIdsSj.toString();

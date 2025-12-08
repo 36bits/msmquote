@@ -23,7 +23,7 @@ public class YahooApiQuote extends YahooApiSource {
 
 	// Constants
 	private static final Logger LOGGER = LogManager.getLogger(YahooApiQuote.class);
-	static final String SYMBOLS_PARAM = "symbols=";
+	private static final String URL_PARAM_SYMBOLS = PROPS.getProperty("url.param.symbols");
 	private static final String JSON_ROOT = "/quoteResponse/result";
 
 	// Instance variables
@@ -34,8 +34,7 @@ public class YahooApiQuote extends YahooApiSource {
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
 	 * 
 	 * @param baseUrl    the base URL for the Yahoo Finance API
-	 * @param secSymbols the list of Money security symbols and associated country
-	 *                   codes for which to get quotes
+	 * @param secSymbols the list of Money security symbols for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
 	 * @throws QuoteSourceException
 	 */
@@ -45,7 +44,7 @@ public class YahooApiQuote extends YahooApiSource {
 
 		// Build Yahoo security symbols string
 		StringJoiner secSymbolsSj = new StringJoiner(",");
-		int i = 0;
+		int secCount = 0;
 		for (String secSymbol[] : secSymbols) {
 			// Append the symbols pair to the symbol translation map and the Yahoo symbol to
 			// the investment symbols string joiner
@@ -56,45 +55,57 @@ public class YahooApiQuote extends YahooApiSource {
 			}
 			symbolMap.put(yahooSymbol, secSymbol[0]);
 			secSymbolsSj.add(yahooSymbol);
-			i++;
+			secCount++;
 		}
-		if (i == 0) {
+		if (secCount == 0) {
 			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with {} security {}: {}", i, i == 1 ? "symbol" : "symbols", secSymbolsSj.toString());
+			LOGGER.info("Building URL with {} security symbol{}: {}", secCount, secCount == 1 ? "" : "s", secSymbolsSj.toString());
 		}
 
 		// Build Yahoo currency symbols string
-		StringJoiner fxSymbolsSj = new StringJoiner(",");
-		i = 0;
+		StringJoiner cpSymbolsSj = new StringJoiner(",");
+		int cpCount = 0;
 		for (String crncPair[] : crncPairs) {
 			yahooSymbol = getYahooSymbol(crncPair[0], crncPair[1]);
 			symbolMap.put(yahooSymbol, crncPair[0]);
-			fxSymbolsSj.add(yahooSymbol);
-			i++;
+			cpSymbolsSj.add(yahooSymbol);
+			cpCount++;
 		}
-		if (i == 0) {
+		if (cpCount == 0) {
 			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
-			LOGGER.info("Building URL with {} FX {}: {}", i, i == 1 ? "symbol" : "symbols", fxSymbolsSj.toString());
+			LOGGER.info("Building URL with {} currency pair{}: {}", cpCount, secCount == 1 ? "" : "s", cpSymbolsSj.toString());
 		}
 
 		// Get quote data from api
-		String allSymbols = URLEncoder.encode(secSymbolsSj.merge(fxSymbolsSj).toString(), StandardCharsets.UTF_8);
-		if (!baseUrl.endsWith(SYMBOLS_PARAM + "?") && !allSymbols.isEmpty()) {
-			List<String> fullUrls = new ArrayList<>();
-			if (baseUrl.endsWith(SYMBOLS_PARAM))
-				fullUrls.add(baseUrl + allSymbols);
+		String allSymbols = URLEncoder.encode(secSymbolsSj.merge(cpSymbolsSj).toString(), StandardCharsets.UTF_8);
+		if (!baseUrl.endsWith(URL_PARAM_SYMBOLS + "?") && secCount + cpCount > 0) {
+			List<String> apiUrls = new ArrayList<>();
+			if (baseUrl.endsWith(URL_PARAM_SYMBOLS))
+				apiUrls.add(baseUrl + allSymbols);
 			else {
 				int urlIndex = 1;
 				while ((baseUrl = PROPS.getProperty("url.api." + urlIndex++)) != null) {
-					fullUrls.add(baseUrl + SYMBOLS_PARAM + allSymbols);
+					apiUrls.add(baseUrl + URL_PARAM_SYMBOLS + allSymbols);
 				}
 			}
-			JsonNode jn = getQuoteData(fullUrls);
+			JsonNode jn = getQuoteData(apiUrls);
 			resultIt = jn.at(JSON_ROOT).elements();
 			return;
 		}
+	}
+
+	/**
+	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
+	 * 
+	 * @param baseUrl    the base URL for the Yahoo Finance API
+	 * @param secSymbols the list of Money security symbols for which to get quotes
+	 * @param crncPairs  the list of Money currency pairs for which to get quotes
+	 * @throws QuoteSourceException
+	 */
+	public YahooApiQuote(List<String[]> secSymbols, List<String[]> crncPairs) throws QuoteSourceException {
+		this("", secSymbols, crncPairs);
 	}
 
 	/**
@@ -106,9 +117,9 @@ public class YahooApiQuote extends YahooApiSource {
 	public YahooApiQuote(String apiUrl) throws QuoteSourceException {
 
 		// Encode symbols
-		if (apiUrl.contains(SYMBOLS_PARAM)) {
-			String[] apiUrlParts = apiUrl.split(SYMBOLS_PARAM, 2);
-			apiUrl = apiUrlParts[0] + SYMBOLS_PARAM + URLEncoder.encode(apiUrlParts[1], StandardCharsets.UTF_8);
+		if (apiUrl.contains(URL_PARAM_SYMBOLS)) {
+			String[] apiUrlParts = apiUrl.split(URL_PARAM_SYMBOLS, 2);
+			apiUrl = apiUrlParts[0] + URL_PARAM_SYMBOLS + URLEncoder.encode(apiUrlParts[1], StandardCharsets.UTF_8);
 		}
 
 		// Get quote data from api

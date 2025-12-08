@@ -37,6 +37,7 @@ abstract class YahooApiSource extends YahooSource {
 	private static final Preferences PREFS_NODE = Preferences.userNodeForPackage(QuoteSource.class);
 	private static final String PREF_KEY_COOKIE = PROPS.getProperty("pref-key.cookie");
 	private static final String PREF_KEY_CRUMB = PROPS.getProperty("pref-key.crumb");
+	private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
 	// Class variables
 	private static String crumb = null;
@@ -103,8 +104,7 @@ abstract class YahooApiSource extends YahooSource {
 							PREFS_NODE.put(PREF_KEY_CRUMB, crumb);
 						}
 						// Return quote data as JSON node
-						ObjectMapper mapper = JsonMapper.builder().build();
-						JsonNode jn = mapper.readTree(apiResponse);
+						JsonNode jn = MAPPER.readTree(apiResponse);
 						return jn;
 					} else {
 						LOGGER.warn("Failed to get valid quote data, API response={}", apiResponse);
@@ -140,7 +140,7 @@ abstract class YahooApiSource extends YahooSource {
 					// Then get crumb
 					if (yahooCookie != null) {
 						try {
-							crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
+							crumb = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(PROPS.getProperty("url.api.crumb"))).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
 							if (crumb.matches(regexCrumb)) {
 								LOGGER.info("Got API crumb, value={}", crumb);
 								break;
