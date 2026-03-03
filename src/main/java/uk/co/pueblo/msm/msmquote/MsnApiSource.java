@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
 /**
- * Parent class for MSN API quote sources.
+ * Parent class for MSN Money API quote sources.
  */
 abstract class MsnApiSource extends MsnSource {
 
@@ -51,10 +51,10 @@ abstract class MsnApiSource extends MsnSource {
 
 		for (String apiUrl : apiUrls) {
 			LOGGER.debug("URL={}", apiUrl);
-			LOGGER.info("Trying MSN API URL #{}", apiUrlIdx++);
+			LOGGER.info("Trying MSN Money API URL #{}", apiUrlIdx++);
 			try {
 				String apiResponse = HTTP_CLIENT.send(HttpRequest.newBuilder(new URI(apiUrl)).setHeader("User-Agent", HTTP_USER_AGENT).GET().build(), HttpResponse.BodyHandlers.ofString()).body();
-				LOGGER.info("Received {} bytes from MSN API", apiResponse.length());
+				LOGGER.info("Received {} bytes from MSN Money API", apiResponse.length());
 				if (apiResponse.matches(regexQuoteData)) {
 					// Return quote data as Jackson tree model
 					JsonNode jn = MAPPER.readTree(apiResponse);
@@ -69,6 +69,6 @@ abstract class MsnApiSource extends MsnSource {
 				sourceClassStatus = SourceStatus.WARN;
 			}
 		}
-		throw new QuoteSourceException("All MSN API requests failed!");
+		throw new QuoteSourceException("All MSN Money API requests failed!");
 	}
 }
