@@ -39,6 +39,9 @@ abstract class YahooSource extends QuoteSource {
 	 */
 	static String getYahooSymbol(String symbol, String country) {
 		String prop;
+		
+		// Remove any symbol index suffix
+		symbol = symbol.replaceFirst("#\\d+$", "");
 
 		// Index symbols
 		if (symbol.charAt(0) == '$') {

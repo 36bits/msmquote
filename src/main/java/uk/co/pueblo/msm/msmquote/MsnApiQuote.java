@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 /**
- * An MSN API quote source.
+ * An MSN Money API quote source.
  */
 public class MsnApiQuote extends MsnApiSource {
 
@@ -31,7 +31,7 @@ public class MsnApiQuote extends MsnApiSource {
 	private Map<String, String> symbolMap = new HashMap<>();
 
 	/**
-	 * Constructs an MSN API quote source using an auto-generated URL.
+	 * Constructs an MSN Money API quote source using an auto-generated URL.
 	 * 
 	 * @param baseUrl    the base URL for the Yahoo Finance API
 	 * @param secSymbols the list of Money security symbols for which to get quotes
@@ -40,23 +40,24 @@ public class MsnApiQuote extends MsnApiSource {
 	 */
 	public MsnApiQuote(String baseUrl, List<String[]> secSymbols, List<String[]> crncPairs) throws QuoteSourceException {
 
-		// Build MSN instrument IDs string
+		// Build security symbol map and MSN Money instrument IDs string
+		Map<String, String> secSymbolMap = new HashMap<>();
 		StringJoiner msnIdsSj = new StringJoiner(",");
-		int msnIdCount = 0;
 		for (String secSymbol[] : secSymbols) {
 			Matcher altSymbolMatcher = PATTERN_ALT_SYMBOL.matcher(secSymbol[2]);
 			if (altSymbolMatcher.find()) {
 				String msnId = secSymbol[2].substring(altSymbolMatcher.start() + 10, altSymbolMatcher.start() + 16);
-				msnIdsSj.add(msnId);
-				symbolMap.put(msnId, secSymbol[0]);
-				msnIdCount++;
+				if (updateSymbolMap(msnId, secSymbol[0], secSymbolMap))
+					msnIdsSj.add(msnId);
 			}
 		}
+		int msnIdCount = secSymbolMap.size();
 		String msnIds = msnIdsSj.toString();
 		if (msnIdCount == 0) {
 			LOGGER.warn("No instrument IDs found to update in Money file");
 		} else {
 			LOGGER.info("Building URL with {} instrument ID{}: {}", msnIdCount, msnIdCount == 1 ? "" : "s", msnIds);
+			symbolMap.putAll(secSymbolMap);
 		}
 		
 		// Print currency pair symbols to log
@@ -72,7 +73,7 @@ public class MsnApiQuote extends MsnApiSource {
 			LOGGER.info("Obtaining exchange rate data for {} currency pair{}: {}", cpCount, cpCount == 1 ? "" : "s", cpSymbolsSj.toString());
 		}
 
-		// Get quote data from MSN APIs
+		// Get quote data from MSN Money APIs
 		JsonNode jn = null;
 		if (!baseUrl.endsWith(URL_PARAM_IDS + "?") && msnIdCount + cpCount > 0) {
 
@@ -122,7 +123,7 @@ public class MsnApiQuote extends MsnApiSource {
 	}
 
 	/**
-	 * Constructs an MSN API quote source using an auto-generated URL.
+	 * Constructs an MSN Money API quote source using an auto-generated URL.
 	 * 
 	 * @param secSymbols the list of Money security symbols for which to get quotes
 	 * @param crncPairs  the list of Money currency pairs for which to get quotes
@@ -133,9 +134,9 @@ public class MsnApiQuote extends MsnApiSource {
 	}
 
 	/**
-	 * Constructs an MSN API quote source from a user-supplied URL.
+	 * Constructs an MSN Money API quote source from a user-supplied URL.
 	 * 
-	 * @param apiUrl the complete URL for the MSN API
+	 * @param apiUrl the complete URL for the MSN Money API
 	 * @throws QuoteSourceException
 	 */
 	public MsnApiQuote(String apiUrl) throws QuoteSourceException {

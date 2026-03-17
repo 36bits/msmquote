@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -91,4 +92,16 @@ public abstract class QuoteSource {
 		}
 		return value;
 	}
+	
+	boolean updateSymbolMap(String sourceSymbol, String msmSymbol, Map<String, String> symbolMap) {
+		boolean newSymbol = true;
+		StringJoiner msmSymbols = new StringJoiner(",");
+		if (symbolMap.containsKey(sourceSymbol)) {
+			msmSymbols.add(symbolMap.get(sourceSymbol));
+			newSymbol = false;
+		}
+		msmSymbols.add(msmSymbol);
+		symbolMap.put(sourceSymbol, msmSymbols.toString());		
+		return newSymbol;
+	}	
 }

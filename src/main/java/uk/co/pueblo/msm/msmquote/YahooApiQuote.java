@@ -28,7 +28,7 @@ public class YahooApiQuote extends YahooApiSource {
 
 	// Instance variables
 	private Iterator<JsonNode> resultIt;
-	private Map<String, String> symbolMap = new HashMap<>();
+	Map<String, String> symbolMap = new HashMap<>();
 
 	/**
 	 * Constructs a Yahoo Finance API quote source using an auto-generated URL.
@@ -42,40 +42,44 @@ public class YahooApiQuote extends YahooApiSource {
 
 		String yahooSymbol = "";
 
-		// Build Yahoo security symbols string
+		// Build security symbol map and Yahoo Finance symbols string
+		Map<String, String> secSymbolMap = new HashMap<>();
 		StringJoiner secSymbolsSj = new StringJoiner(",");
-		int secCount = 0;
 		for (String secSymbol[] : secSymbols) {
-			// Append the symbols pair to the symbol translation map and the Yahoo symbol to
-			// the investment symbols string joiner
 			if ((yahooSymbol = getYahooSymbol(secSymbol[0], secSymbol[1])) == null) {
 				LOGGER.warn("Cannot find Yahoo Finance exchange suffix for symbol {}, country code={}", secSymbol[0], secSymbol[1]);
 				sourceStatus = SourceStatus.WARN;
 				yahooSymbol = secSymbol[0];
 			}
-			symbolMap.put(yahooSymbol, secSymbol[0]);
-			secSymbolsSj.add(yahooSymbol);
-			secCount++;
+			// Update the symbol translation map and add the Yahoo symbol to the security
+			// symbols string joiner
+			if (updateSymbolMap(yahooSymbol, secSymbol[0], secSymbolMap))
+				secSymbolsSj.add(yahooSymbol);
 		}
+		int secCount = secSymbolMap.size();
 		if (secCount == 0) {
 			LOGGER.warn("No security symbols found to update in Money file");
 		} else {
 			LOGGER.info("Building URL with {} security symbol{}: {}", secCount, secCount == 1 ? "" : "s", secSymbolsSj.toString());
+			symbolMap.putAll(secSymbolMap);
 		}
 
-		// Build Yahoo currency symbols string
+		// Build currency pair symbol map and Yahoo Finance symbols string
+		Map<String, String> cpSymbolMap = new HashMap<>();
 		StringJoiner cpSymbolsSj = new StringJoiner(",");
-		int cpCount = 0;
 		for (String crncPair[] : crncPairs) {
 			yahooSymbol = getYahooSymbol(crncPair[0], crncPair[1]);
-			symbolMap.put(yahooSymbol, crncPair[0]);
-			cpSymbolsSj.add(yahooSymbol);
-			cpCount++;
+			// Update the symbol translation map and add the Yahoo symbol to the currency
+			// pair symbols string joiner
+			if (updateSymbolMap(yahooSymbol, crncPair[0], cpSymbolMap))
+				cpSymbolsSj.add(yahooSymbol);
 		}
+		int cpCount = cpSymbolMap.size();
 		if (cpCount == 0) {
 			LOGGER.warn("No FX symbols found to update in Money file");
 		} else {
 			LOGGER.info("Building URL with {} currency pair{}: {}", cpCount, secCount == 1 ? "" : "s", cpSymbolsSj.toString());
+			symbolMap.putAll(cpSymbolMap);
 		}
 
 		// Get quote data from api
@@ -142,7 +146,7 @@ public class YahooApiQuote extends YahooApiSource {
 			String quoteType = result.get("quoteType").asText();
 			returnRow.put("xType", quoteType);
 
-			// Add symbol to return row
+			// Add SEC symbols list to return row
 			String yahooSymbol = result.get("symbol").asText();
 			if (symbolMap.isEmpty()) {
 				returnRow.put("xSymbol", yahooSymbol);
