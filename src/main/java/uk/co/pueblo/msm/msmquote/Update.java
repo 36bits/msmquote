@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
 import uk.co.pueblo.msm.msmcore.MsmCurrency;
 import uk.co.pueblo.msm.msmcore.MsmDb;
@@ -104,6 +105,7 @@ public class Update {
 				}
 
 			} catch (Exception e) {
+				ThreadContext.clearMap();
 				LOGGER.fatal(e.getMessage());
 				LOGGER.debug("Exception occurred!", e);
 				maxExitCode = EXIT_FATAL;
