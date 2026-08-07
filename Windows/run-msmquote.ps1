@@ -55,7 +55,7 @@ if ($job) {
 }
 
 $jre = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "bin" "java.exe"
-$jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.13.0.jar"
+$jar = Join-Path $env:LOCALAPPDATA "Programs" "msmquote" "msmquote-4.14.0.jar"
 $jreOpts = @()
 
 # Escape backslashes in paths
